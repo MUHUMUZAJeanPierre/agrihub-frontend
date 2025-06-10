@@ -666,5 +666,5 @@ const styles = StyleSheet.create({
     height: 20,
   },
 });
-// th
+// thjk
 export default Details;
