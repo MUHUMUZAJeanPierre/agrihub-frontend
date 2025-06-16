@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#4CAF50',
     width: 32,
     height: 32,
     borderRadius: 16,
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#007AFF',
+    color: '#4CAF50',
     marginBottom: 5,
   },
   statLabel: {

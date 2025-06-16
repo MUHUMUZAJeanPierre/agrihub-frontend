@@ -107,12 +107,12 @@ export default function Login({ navigation }) {
               ) : null}
                 <Text onPress={()=>navigation.navigate('forgot')} style={{ fontSize: 16, fontFamily: 'Poppins_600SemiBold', color: '#4BA26A', left: 195, marginTop: 15 }}>Forgot password</Text>
             </View>
-            <TouchableOpacity>
-                <Button title={"Sign In"} onPress={handleSubmit}  loading={loaded}/>
+            <TouchableOpacity  onPress={()=>navigation.navigate('farmer')}>
+                <Button title={"Sign In"} onPress={()=>navigation.navigate('farmer')}   loading={loaded}/>
             </TouchableOpacity>
             <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', paddingVertical: 15 }}>
                 <Text style={{ textAlign: 'center' }}>Don't have an Account?</Text>
-                <TouchableOpacity onPress={()=>navigation.navigate('buyer')}>
+                <TouchableOpacity onPress={()=>navigation.navigate('Register')}>
                     <Text style={{ color: '#4BA26A', fontFamily: 'Poppins_600SemiBold', marginLeft: 2 }}>Sign up</Text></TouchableOpacity>
             </View>
             </KeyboardAvoidingView>

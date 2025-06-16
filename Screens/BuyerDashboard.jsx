@@ -1,205 +1,374 @@
-import React, { useState } from "react";
-import { View, Text, Image, TextInput, ScrollView, TouchableOpacity, FlatList, StyleSheet } from "react-native";
+import React, { useEffect, useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  Image,
+  TouchableOpacity,
+  Modal,
+  Alert,
+  StyleSheet,
+  Dimensions,
+  ScrollView,
+  TextInput,
+  RefreshControl,
+  ActivityIndicator,
+  SafeAreaView,
+} from 'react-native';
+import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
 
-const products = [
-  { id: 1, title: "Ubwoba (Tomatoes)", price: "RWF 800/kg", minOrder: "Min. order: 5 kg", img: "https://images.unsplash.com/photo-1592841200221-a6898f307baa?w=300&h=300&fit=crop", category: "vegetables" },
-  { id: 2, title: "Ibirayi (Potatoes)", price: "RWF 450/kg", minOrder: "Min. order: 10 kg", img: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=300&h=300&fit=crop", category: "tubers" },
-  { id: 3, title: "Ibinyomoro (Carrots)", price: "RWF 600/kg", minOrder: "Min. order: 3 kg", img: "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=300&h=300&fit=crop", category: "vegetables" },
-  { id: 4, title: "Ubwiyunge (Onions)", price: "RWF 1,200/kg", minOrder: "Min. order: 2 kg", img: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=300&h=300&fit=crop", category: "vegetables" },
-  { id: 5, title: "Amasaka (Maize)", price: "RWF 350/kg", minOrder: "Min. order: 20 kg", img: "https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=300&h=300&fit=crop", category: "cereals" },
-  { id: 6, title: "Ubuki (Honey)", price: "RWF 3,500/L", minOrder: "Min. order: 1 L", img: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=300&h=300&fit=crop", category: "organic" },
-];
+const { width } = Dimensions.get('window');
+const BASE_URL = 'https://agrihub-backend-4z99.onrender.com/api';
 
-const topDeals = [
-  { id: 1, title: "Inyama (Fresh Meat)", price: "RWF 2,800/kg", discount: "Fresh from local farms", isFlashDeal: true, img: "https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=300&h=300&fit=crop", farmer: "Cooperative Rwamagana" },
-  { id: 2, title: "Amata (Fresh Milk)", price: "RWF 400/L", discount: "Daily fresh delivery", img: "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=300&h=300&fit=crop", farmer: "Nyamirambo Dairy" },
-  { id: 3, title: "Amagi (Eggs)", price: "RWF 2,500/tray", discount: "Organic free-range", img: "https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=300&h=300&fit=crop", farmer: "Huye Poultry Farm" },
-];
-
-const newArrivals = [
-  { id: 1, title: "Icyayi (Tea Leaves)", price: "RWF 1,800/kg", img: "https://images.unsplash.com/photo-1597318236755-d12d1e2f6c18?w=300&h=300&fit=crop", region: "Nyungwe" },
-  { id: 2, title: "Ikawa (Coffee Beans)", price: "RWF 4,500/kg", img: "https://images.unsplash.com/photo-1497515114629-f71d768fd07c?w=300&h=300&fit=crop", region: "Huye Mountains" },
-  { id: 3, title: "Ubwoba bw'amahoro (Passion Fruits)", price: "RWF 1,200/kg", img: "https://images.unsplash.com/photo-1547504055-7da8db4c24f2?w=300&h=300&fit=crop", region: "Musanze" },
-];
-
-const categories = [
-  { name: 'Byose (All)', key: 'all' },
-  { name: 'Imboga (Vegetables)', key: 'vegetables' },
-  { name: 'Imbuto (Cereals)', key: 'cereals' },
-  { name: 'Ibirayi (Tubers)', key: 'tubers' },
-  { name: 'Organic', key: 'organic' }
-];
-
-const BuyerDashboard = ({navigation}) => {
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [language, setLanguage] = useState('kinyarwanda'); 
+const BuyerDashboard = ({ navigation }) => {
+  const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [categories, setCategories] = useState([{ id: 'all', name: 'Byose (All)' }]);
+  const [cartItems, setCartItems] = useState([]);
+  const [favorites, setFavorites] = useState([]); // Added favorites state
+  const [isCartVisible, setIsCartVisible] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [cartLoading, setCartLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [addingToCart, setAddingToCart] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [activeTab, setActiveTab] = useState('ibicuruzwa');
 
-  const getTranslation = (kinyarwanda, english) => {
-    return language === 'kinyarwanda' ? kinyarwanda : english;
+  const getCategoryDisplayName = (category) => {
+    const categoryMap = {
+      'organic': 'Kamere (Organic)',
+      'vegetables': 'Imboga (Vegetables)', 
+      'fruits': 'Imbuto (Fruits)',
+      'seeds': 'Imbuto (Seeds)',
+      'dairy': 'Amata (Dairy)',
+      'grains': 'Ingano (Grains)',
+      'meat': 'Inyama (Meat)',
+      'beverages': 'Ibinyobwa (Beverages)'
+    };
+    return categoryMap[category] || category.charAt(0).toUpperCase() + category.slice(1);
   };
 
-  const filteredProducts = products.filter(product => 
-    (selectedCategory === 'all' || product.category === selectedCategory) &&
-    (searchQuery === '' || product.title.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  useEffect(() => {
+    fetchProducts();
+    fetchCart();
+    fetchFavorites(); // Added fetch favorites
+  }, []);
+
+  useEffect(() => {
+    filterProducts();
+  }, [searchQuery, products, selectedCategory]);
+
+  const filterProducts = useCallback(() => {
+    let filtered = products;
+    
+    // Filter by search query
+    if (searchQuery.trim()) {
+      filtered = filtered.filter(product =>
+        product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.region?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.farmer?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    // Filter by category
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(product =>
+        product.category?.toLowerCase() === selectedCategory.toLowerCase()
+      );
+    }
+    
+    setFilteredProducts(filtered);
+  }, [searchQuery, products, selectedCategory]);
+
+  const extractCategoriesFromProducts = (products) => {
+    // Get unique categories from products
+    const uniqueCategories = [...new Set(products.map(product => product.category).filter(Boolean))];
+    
+    // Create category objects with proper display names
+    const categoryObjects = uniqueCategories.map(category => ({
+      id: category,
+      name: getCategoryDisplayName(category)
+    }));
+    
+    // Always include "All" as first option
+    return [{ id: 'all', name: 'Byose (All)' }, ...categoryObjects];
+  };
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${BASE_URL}/products`);
+      const productsData = res.data;
+      
+      setProducts(productsData);
+      
+      // Extract and set categories from the products
+      const extractedCategories = extractCategoriesFromProducts(productsData);
+      setCategories(extractedCategories);
+      
+    } catch (err) {
+      console.error('❌ Product fetch error:', err.message);
+      Alert.alert('Error', 'Failed to load products. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCart = async () => {
+    try {
+      setCartLoading(true);
+      const res = await axios.get(`${BASE_URL}/cart`);
+      const items = res.data?.items || [];
+      setCartItems(items.map((i) => ({
+        ...i.product,
+        quantity: i.quantity,
+        id: i.product._id,
+      })));
+    } catch (err) {
+      console.error('❌ Cart fetch error:', err.message);
+    } finally {
+      setCartLoading(false);
+    }
+  };
+
+  const fetchFavorites = async () => {
+    try {
+      const res = await axios.get(`${BASE_URL}/favorites`);
+      setFavorites(res.data?.map(item => item._id) || []);
+    } catch (err) {
+      console.error('❌ Favorites fetch error:', err.message);
+    }
+  };
+
+  const toggleFavorite = async (productId) => {
+    try {
+      const isFavorite = favorites.includes(productId);
+      
+      if (isFavorite) {
+        await axios.delete(`${BASE_URL}/favorites/${productId}`);
+        setFavorites(prev => prev.filter(id => id !== productId));
+      } else {
+        await axios.post(`${BASE_URL}/favorites`, { productId });
+        setFavorites(prev => [...prev, productId]);
+      }
+    } catch (err) {
+      console.error('❌ Toggle favorite error:', err.message);
+      Alert.alert('Error', 'Failed to update favorites. Please try again.');
+    }
+  };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([fetchProducts(), fetchCart(), fetchFavorites()]);
+    setRefreshing(false);
+  }, []);
+
+  const addToCart = async (product) => {
+    try {
+      setAddingToCart(product._id);
+      await axios.post(`${BASE_URL}/cart/add`, {
+        productId: product._id,
+        quantity: 1,
+      });
+      
+      Alert.alert(
+        '✅ Byongeywe mu gikoni', 
+        `${product.title} byongeywe mu gikoni cyawe.`,
+        [
+          { text: 'Komeza ugure', style: 'cancel' },
+          { 
+            text: 'Reba igikoni', 
+            onPress: () => setIsCartVisible(true)
+          }
+        ]
+      );
+      fetchCart();
+    } catch (err) {
+      console.error('❌ Add to cart error:', err.message);
+      Alert.alert('Ikosa', 'Byanze kongera mu gikoni. Ongera ugerageze.');
+    } finally {
+      setAddingToCart(null);
+    }
+  };
+
+  const updateCartQuantity = async (productId, quantity) => {
+    try {
+      setCartItems(prev => prev.map(item => 
+        item.id === productId ? { ...item, quantity } : item
+      ));
+      
+      await axios.put(`${BASE_URL}/cart/update`, { productId, quantity });
+    } catch (err) {
+      console.error('❌ Update cart error:', err.message);
+      Alert.alert('Error', 'Failed to update quantity. Please try again.');
+      fetchCart();
+    }
+  };
+
+  const removeFromCart = async (productId) => {
+    try {
+      setCartItems(prev => prev.filter(item => item.id !== productId));
+      
+      await axios.delete(`${BASE_URL}/cart/remove/${productId}`);
+    } catch (err) {
+      console.error('❌ Remove from cart error:', err.message);
+      Alert.alert('Error', 'Failed to remove item. Please try again.');
+      fetchCart();
+    }
+  };
+
+  const getCartTotal = () => {
+    return cartItems.reduce((total, item) => {
+      const priceMatch = item.price?.match(/RWF\s*([\d,]+)/);
+      const price = priceMatch ? parseFloat(priceMatch[1].replace(/,/g, '')) : 0;
+      return total + (price * item.quantity);
+    }, 0).toLocaleString('en-US');
+  };
+
+  const getCartItemCount = () => {
+    return cartItems.reduce((total, item) => total + item.quantity, 0);
+  };
 
   const renderProduct = ({ item }) => (
     <TouchableOpacity 
-    style={styles.productCard}
-    onPress={() => navigation.navigate("ProductDetail", {
-  product: {
-    ...item,
-    titleEn: item.title,
-    images: [item.img], 
-    farmer: {
-      name: "Jean Uwimana",
-      cooperative: "Rwamagana Coop",
-      location: "Rwamagana",
-      rating: 4.7,
-      completedOrders: 152,
-      yearsExperience: 6
-    },
-    description: {
-      kinyarwanda: "Ibisobanuro birambuye ku bicuruzwa.",
-      english: "Detailed product description."
-    },
-    specifications: {
-      origin: "Rwanda",
-      harvestDate: "2024-06-01",
-      organic: true,
-      certifications: ["Certified"],
-      shelfLife: "7 days",
-      storageTemp: "10-15°C"
-    },
-    availability: {
-      inStock: true,
-      quantity: "100 kg",
-      nextHarvest: "2024-06-20"
-    },
-    pricing: {
-      basePrice: parseInt(item.price.replace(/\D/g, '')) || 800,
-      bulk10kg: 750,
-      bulk50kg: 700,
-      bulk100kg: 650
-    }
-  }
-})}
-
+      style={[styles.productCard, item.isFlashDeal && styles.flashDealCard]}
+      onPress={() => navigation.navigate('ProductDetail', { product: item })}
+      activeOpacity={0.7}
     >
-      <Image source={{ uri: item.img }} style={styles.productImage} />
+      <View style={styles.imageContainer}>
+        {item.img ? (
+          <Image 
+            source={{ uri: item.img }} 
+            style={styles.productImage}
+            onError={() => console.log('Image load error for:', item.title)}
+          />
+        ) : (
+          <View style={styles.placeholderImage}>
+            <Ionicons name="image-outline" size={40} color="#ccc" />
+          </View>
+        )}
+        
+        {item.isFlashDeal && (
+          <View style={styles.flashDealBadge}>
+            <Text style={styles.flashDealText}>FLASH</Text>
+          </View>
+        )}
+        
+        <TouchableOpacity 
+          style={[styles.addButton, item.isFlashDeal && styles.flashDealAddButton]}
+          onPress={(e) => {
+            e.stopPropagation(); 
+            addToCart(item);
+          }}
+          disabled={addingToCart === item._id}
+          activeOpacity={0.8}
+        >
+          {addingToCart === item._id ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Ionicons name="add" size={20} color="#fff" />
+          )}
+        </TouchableOpacity>
+      </View>
+      
       <View style={styles.productInfo}>
-        <Text style={styles.productTitle}>{item.title}</Text>
-        <Text style={styles.productPrice}>{item.price}</Text>
-        <Text style={styles.minOrder}>{item.minOrder}</Text>
-        <View style={styles.locationBadge}>
-          <Ionicons name="location" size={12} color="#666" />
-          <Text style={styles.locationText}>Kigali, Rwanda</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const renderTopDeal = ({ item }) => (
-    <TouchableOpacity style={styles.dealCard}>
-      {item.isFlashDeal && (
-        <View style={styles.flashDealBadge}>
-          <Text style={styles.flashDealText}>⚡ {getTranslation('Igiciro Gito', 'Flash Deal')}</Text>
-        </View>
-      )}
-      <Image source={{ uri: item.img }} style={styles.dealImage} />
-      <View style={styles.dealInfo}>
-        <Text style={styles.dealPrice}>{item.price}</Text>
-        <Text style={styles.dealDiscount}>{item.discount}</Text>
-        <Text style={styles.farmerName}>{item.farmer}</Text>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const renderNewArrival = ({ item }) => (
-    <TouchableOpacity style={styles.arrivalCard}>
-      <Image source={{ uri: item.img }} style={styles.arrivalImage} />
-      <View style={styles.arrivalInfo}>
-        <Text style={styles.arrivalTitle}>{item.title}</Text>
-        <Text style={styles.arrivalPrice}>{item.price}</Text>
-        <View style={styles.regionBadge}>
-          <Text style={styles.regionText}>{item.region}</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-
-  return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <Text style={styles.appName}>AgriHub</Text>
-          <View style={styles.headerActions}>
-            <TouchableOpacity 
-              style={styles.languageButton}
-              onPress={() => setLanguage(language === 'kinyarwanda' ? 'english' : 'kinyarwanda')}
-            >
-              <Text style={styles.languageText}>
-                {language === 'kinyarwanda' ? 'EN' : 'KIN'}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.notificationButton}>
-              <Ionicons name="notifications-outline" size={24} color="#2d5016" />
-            </TouchableOpacity>
+        <View style={styles.productInfoTop}>
+          <View style={styles.productInfoBottom}>
+            <Text style={styles.productTitle} numberOfLines={2}>{item.title}</Text>
+            <Text style={styles.productPrice}>{item.price}</Text>
           </View>
         </View>
         
-        {/* Header Tabs */}
-        <View style={styles.headerTabs}>
-          <TouchableOpacity style={styles.activeTab}>
-            <Text style={styles.activeTabText}>
-              {getTranslation('Ibicuruzwa', 'Products')}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.inactiveTab}>
-            <Text style={styles.inactiveTabText}>
-              {getTranslation('Abahinzi', 'Farmers')}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.inactiveTab}>
-            <Text style={styles.inactiveTabText}>
-              {getTranslation('Amakoperative', 'Cooperatives')}
-            </Text>
+        <View style={styles.productInfoBottom}>
+          <View style={styles.productSecondaryInfo}>
+            {item.discount && (
+              <Text style={styles.productDescription} numberOfLines={1}>{item.discount}</Text>
+            )}
+          </View>
+          <TouchableOpacity 
+            style={styles.favoriteButton}
+            onPress={(e) => {
+              e.stopPropagation();
+              toggleFavorite(item._id);
+            }}
+            activeOpacity={0.7}
+          >
+            <Ionicons 
+              name={favorites.includes(item._id) ? "heart" : "heart-outline"} 
+              size={20} 
+              color={favorites.includes(item._id) ? "#e74c3c" : "#666"} 
+            />
           </TouchableOpacity>
         </View>
       </View>
+    </TouchableOpacity>
+  );
 
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
+  const renderEmptyState = () => (
+    <View style={styles.emptyState}>
+      <Ionicons name="search-outline" size={64} color="#ccc" />
+      <Text style={styles.emptyStateText}>
+        {searchQuery ? 'Nta bicuruzwa byabonetse' : 'Nta bicuruzwa bihari'}
+      </Text>
+      {searchQuery && (
+        <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearSearchBtn}>
+          <Text style={styles.clearSearchText}>Siba ubushakisho</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4CAF50" />
+          <Text style={styles.loadingText}>Search Product...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+    
+
+      <View style={styles.searchSection}>
+        <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchInput}
-            placeholder={getTranslation('Shakisha ibicuruzwa...', 'Search products...')}
-            placeholderTextColor="#666"
+            placeholder="Shakisha ibicuruzwa..."
             value={searchQuery}
             onChangeText={setSearchQuery}
+            returnKeyType="search"
           />
           <TouchableOpacity style={styles.searchButton}>
-            <Ionicons name="search" size={20} color="white" />
+            <Ionicons name="search" size={20} color="#fff" />
           </TouchableOpacity>
         </View>
       </View>
 
-      <View style={styles.categoryContainer}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {categories.map((category, index) => (
+      <View style={styles.categorySection}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoryContainer}
+        >
+          {categories.map((category) => (
             <TouchableOpacity
-              key={index}
+              key={category.id}
               style={[
-                styles.categoryButton,
-                selectedCategory === category.key && styles.activeCategoryButton
+                styles.categoryPill,
+                selectedCategory === category.id && styles.activeCategoryPill
               ]}
-              onPress={() => setSelectedCategory(category.key)}
+              onPress={() => setSelectedCategory(category.id)}
             >
               <Text style={[
                 styles.categoryText,
-                selectedCategory === category.key && styles.activeCategoryText
+                selectedCategory === category.id && styles.activeCategoryText
               ]}>
                 {category.name}
               </Text>
@@ -208,364 +377,699 @@ const BuyerDashboard = ({navigation}) => {
         </ScrollView>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          {getTranslation('Ibicuruzwa Bishya', 'Fresh Products Available')}
-        </Text>
-        <View style={styles.productsGrid}>
-          {filteredProducts.map((item) => (
-            <View key={item.id} style={styles.gridItem}>
-              {renderProduct({ item })}
+      <FlatList
+        data={filteredProducts}
+        keyExtractor={(item) => item._id}
+        renderItem={renderProduct}
+        contentContainerStyle={[
+          styles.productsList,
+          filteredProducts.length === 0 && styles.emptyList
+        ]}
+        numColumns={2}
+        columnWrapperStyle={styles.productRow}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        ListEmptyComponent={renderEmptyState}
+        showsVerticalScrollIndicator={false}
+      />
+
+      {/* Floating Cart Icon */}
+      <TouchableOpacity 
+        style={styles.cartIcon} 
+        onPress={() => setIsCartVisible(true)}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="bag-outline" size={24} color="#fff" />
+        {getCartItemCount() > 0 && (
+          <View style={styles.cartBadge}>
+            <Text style={styles.cartBadgeText}>{getCartItemCount()}</Text>
+          </View>
+        )}
+      </TouchableOpacity>
+
+      {/* Cart Modal */}
+      <Modal visible={isCartVisible} animationType="slide" presentationStyle="pageSheet">
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>🛒 Igikoni cyawe</Text>
+            <TouchableOpacity onPress={() => setIsCartVisible(false)}>
+              <Ionicons name="close" size={24} color="#333" />
+            </TouchableOpacity>
+          </View>
+
+          {cartLoading ? (
+            <View style={styles.cartLoadingContainer}>
+              <ActivityIndicator size="large" color="#4CAF50" />
+              <Text>Gutegura igikoni...</Text>
             </View>
-          ))}
-        </View>
-      </View>
+          ) : cartItems.length === 0 ? (
+            <View style={styles.emptyCart}>
+              <Ionicons name="bag-outline" size={64} color="#ccc" />
+              <Text style={styles.emptyCartText}>Igikoni cyawe nticy uze</Text>
+              <TouchableOpacity 
+                style={styles.shopNowBtn} 
+                onPress={() => setIsCartVisible(false)}
+              >
+                <Text style={styles.buttonText}>Komeza ugure</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <ScrollView style={styles.cartScrollView}>
+                {cartItems.map((item) => (
+                  <TouchableOpacity 
+                    key={item.id} 
+                    style={styles.cartItem}
+                    onPress={() => {
+                      setIsCartVisible(false);
+                      navigation.navigate('ProductDetail', { product: item });
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    {item.img ? (
+                      <Image source={{ uri: item.img }} style={styles.cartItemImage} />
+                    ) : (
+                      <View style={styles.cartItemPlaceholder}>
+                        <Ionicons name="image-outline" size={20} color="#ccc" />
+                      </View>
+                    )}
+                    <View style={styles.cartItemInfo}>
+                      <View style={styles.cartItemHeader}>
+                        <Text style={styles.cartItemTitle} numberOfLines={2}>{item.title}</Text>
+                        <TouchableOpacity 
+                          onPress={(e) => {
+                            e.stopPropagation();
+                            setIsCartVisible(false);
+                            navigation.navigate('ProductDetail', { product: item });
+                          }}
+                          style={styles.cartItemViewButton}
+                        >
+                          <Ionicons name="eye-outline" size={16} color="#4CAF50" />
+                        </TouchableOpacity>
+                      </View>
+                      <Text style={styles.cartItemPrice}>{item.basePrice}</Text>
+                      {item.region && (
+                        <Text style={styles.cartItemRegion}>{item.region}, Rwanda</Text>
+                      )}
+                      <View style={styles.quantityContainer}>
+                        <Text style={styles.quantityLabel}>Umubare: </Text>
+                        <View style={styles.cartActions}>
+                          <TouchableOpacity 
+                            onPress={(e) => {
+                              e.stopPropagation();
+                              item.quantity > 1
+                                ? updateCartQuantity(item.id, item.quantity - 1)
+                                : removeFromCart(item.id);
+                            }}
+                            style={styles.quantityButton}
+                          >
+                            <Ionicons 
+                              name={item.quantity > 1 ? "remove" : "trash-outline"} 
+                              size={16} 
+                              color={item.quantity > 1 ? "#666" : "red"} 
+                            />
+                          </TouchableOpacity>
+                          <Text style={styles.quantityText}>{item.quantity}</Text>
+                          <TouchableOpacity 
+                            onPress={(e) => {
+                              e.stopPropagation();
+                              updateCartQuantity(item.id, item.quantity + 1);
+                            }}
+                            style={styles.quantityButton}
+                          >
+                            <Ionicons name="add" size={16} color="#666" />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
 
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>
-            {getTranslation('Ibiciro Byiza', 'Best Deals')}
-          </Text>
-          <TouchableOpacity>
-            <Ionicons name="arrow-forward" size={24} color="#2d5016" />
-          </TouchableOpacity>
-        </View>
-        <Text style={styles.sectionSubtitle}>
-          {getTranslation('Ibiciro byiza kuva mu bahinzi', 'Great prices directly from farmers')}
-        </Text>
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={topDeals}
-          renderItem={renderTopDeal}
-          keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={styles.horizontalList}
-        />
-      </View>
-
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>
-            {getTranslation('Bishya Bihageze', 'New Arrivals')}
-          </Text>
-          <TouchableOpacity>
-            <Ionicons name="arrow-forward" size={24} color="#2d5016" />
-          </TouchableOpacity>
-        </View>
-        <Text style={styles.sectionSubtitle}>
-          {getTranslation('Ibicuruzwa bishya biva mu turere', 'Fresh products from different regions')}
-        </Text>
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={newArrivals}
-          renderItem={renderNewArrival}
-          keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={styles.horizontalList}
-        />
-      </View>
-
-      <View style={styles.bottomSpacing} />
-    </ScrollView>
+              <View style={styles.cartSummary}>
+                <View style={styles.totalRow}>
+                  <Text style={styles.totalLabel}>Byose ({getCartItemCount()} ibintu):</Text>
+                  <Text style={styles.totalAmount}>RWF {getCartTotal()}</Text>
+                </View>
+                <TouchableOpacity style={styles.checkoutBtn}>
+                  <Text style={styles.buttonText}>Komeza urishyure</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+        </SafeAreaView>
+      </Modal>
+    </SafeAreaView>
   );
 };
 
+export default BuyerDashboard;
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
+  container: { 
+    flex: 1, 
+    backgroundColor: '#f8f9fa' 
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666',
+  },
+  
+
   header: {
-    backgroundColor: 'white',
-    paddingTop: 12,
+    backgroundColor: '#fff',
+    paddingHorizontal: 20,
+    paddingTop: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: '#f0f0f0',
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
+    marginBottom: 20,
   },
-  appName: {
+  logo: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#2d5016',
   },
-  headerActions: {
+  headerIcons: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
   },
-  languageButton: {
-    backgroundColor: '#f0f7e8',
+  languageSelector: {
+    backgroundColor: '#f0f0f0',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 15,
-    marginRight: 12,
+    borderRadius: 20,
   },
   languageText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '600',
-    color: '#2d5016',
+    color: '#666',
   },
-  notificationButton: {
+  notificationIcon: {
     padding: 4,
   },
-  headerTabs: {
+  
+
+  tabContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
+    marginBottom: 0,
+  },
+  tab: {
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    marginRight: 24,
   },
   activeTab: {
     borderBottomWidth: 3,
     borderBottomColor: '#2d5016',
-    paddingBottom: 12,
-    marginRight: 24,
   },
-  inactiveTab: {
-    paddingBottom: 12,
-    marginRight: 24,
+  tabText: {
+    fontSize: 16,
+    color: '#999',
+    fontWeight: '500',
   },
   activeTabText: {
-    fontSize: 16,
-    fontWeight: '600',
     color: '#2d5016',
+    fontWeight: '600',
   },
-  inactiveTabText: {
-    fontSize: 16,
-    color: '#666',
+  
+  searchSection: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
   searchContainer: {
-    backgroundColor: 'white',
-    padding: 16,
-  },
-  searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#fff',
     borderRadius: 25,
-    paddingHorizontal: 16,
-    height: 50,
-  },
-  searchIcon: {
-    marginRight: 8,
+    paddingLeft: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
     color: '#333',
+    paddingVertical: 12,
   },
   searchButton: {
-    backgroundColor: '#2d5016',
-    borderRadius: 20,
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#4CAF50',
+    padding: 12,
+    borderRadius: 25,
+    margin: 4,
+  },
+  
+  // Category Styles
+  categorySection: {
+    backgroundColor: '#fff',
+    paddingBottom: 16,
   },
   categoryContainer: {
-    backgroundColor: 'white',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    paddingHorizontal: 20,
+    gap: 12,
   },
-  categoryButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginRight: 12,
-    borderRadius: 20,
+  categoryPill: {
     backgroundColor: '#f5f5f5',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 25,
   },
-  activeCategoryButton: {
-    backgroundColor: '#2d5016',
+  activeCategoryPill: {
+    backgroundColor: '#4CAF50',
   },
   categoryText: {
     fontSize: 14,
     color: '#666',
-  },
-  activeCategoryText: {
-    color: 'white',
     fontWeight: '500',
   },
-  section: {
-    backgroundColor: 'white',
-    marginTop: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+  activeCategoryText: {
+    color: '#fff',
+    fontWeight: '600',
   },
+  
+  // Section Header
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#f8f9fa',
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#2d5016',
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
   },
-  sectionSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 16,
+  
+  // Products Grid
+  productsList: {
+    paddingHorizontal: 16,
+    paddingBottom: 100,
   },
-  productsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginHorizontal: -8,
+  emptyList: {
+    flexGrow: 1,
   },
-  gridItem: {
-    width: '50%',
-    paddingHorizontal: 8,
-    marginBottom: 16,
+  productRow: {
+    justifyContent: 'space-between',
   },
   productCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
+    backgroundColor: '#fff',
+    borderRadius: 9,
+    margin: 4,
     elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 2,
+    width: (width - 40) / 2,
+    overflow: 'hidden',
+  },
+  flashDealCard: {
+    borderWidth: 2,
+    borderColor: '#ff4757',
+  },
+  imageContainer: {
+    position: 'relative',
   },
   productImage: {
     width: '100%',
-    height: 120,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
+    height: 140,
+    resizeMode: 'cover',
   },
+  placeholderImage: {
+    width: '100%',
+    height: 140,
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  viewDetailsOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  viewDetailsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  viewDetailsText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  addButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: '#4CAF50',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  flashDealBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: '#ff4757',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  flashDealText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  flashDealAddButton: {
+    backgroundColor: '#ff4757',
+  },
+  
   productInfo: {
     padding: 12,
+    flex: 1,
+    justifyContent: 'space-between',
   },
+  productInfoTop: {
+    flex: 1,
+  },
+  productMainInfo: {
+    flex: 1,
+    justifyContent: 'flex-start',
+  },
+  productInfoBottom: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  productSecondaryInfo: {
+    flex: 1,
+  },
+  favoriteButton: {
+    padding: 4,
+    borderRadius: 12,
+    backgroundColor: '#f8f9fa',
+    marginLeft: 8,
+  },
+  
   productTitle: {
-    fontSize: 14,
+    fontSize: 10,
     fontWeight: '600',
     color: '#333',
     marginBottom: 4,
+    lineHeight: 18,
   },
   productPrice: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 10,
+    fontWeight: '600',
     color: '#2d5016',
     marginBottom: 4,
   },
   minOrder: {
     fontSize: 12,
     color: '#666',
+    marginBottom: 4,
+  },
+  productDescription: {
+    fontSize: 11,
+    color: '#888',
+    fontStyle: 'italic',
+    marginBottom: 6,
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 4,
+  },
+  locationText: {
+    fontSize: 12,
+    color: '#666',
+  },
+  farmerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  farmerText: {
+    fontSize: 11,
+    color: '#888',
+    flex: 1,
+  },
+  
+  // Cart Icon
+  cartIcon: {
+    position: 'absolute',
+    bottom: 30,
+    right: 20,
+    backgroundColor: '#4CAF50',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+  },
+  cartBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#e74c3c',
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+  },
+  cartBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold'
+  },
+  
+  // Modal Styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#fff'
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+  },
+  cartLoadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyCart: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  emptyCartText: {
+    fontSize: 18,
+    color: '#666',
+    marginTop: 16,
+    marginBottom: 24,
+  },
+  shopNowBtn: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  cartScrollView: {
+    flex: 1,
+    padding: 20,
+  },
+  cartItem: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderColor: '#eee',
+    paddingVertical: 16,
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  cartItemImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    marginRight: 12,
+  },
+  cartItemPlaceholder: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    marginRight: 12,
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#eee',
+  },
+  cartItemInfo: {
+    flex: 1,
+  },
+  cartItemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 4,
+  },
+  cartItemTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2c3e50',
+    flex: 1,
+    marginRight: 8,
+  },
+  cartItemViewButton: {
+    padding: 4,
+    borderRadius: 12,
+    backgroundColor: '#f0f8f0',
+  },
+  cartItemPrice: {
+    fontSize: 14,
+    color: '#2d5016',
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  cartItemRegion: {
+    fontSize: 12,
+    color: '#666',
     marginBottom: 8,
   },
-  locationBadge: {
+  quantityContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  locationText: {
-    fontSize: 11,
+  quantityLabel: {
+    fontSize: 14,
     color: '#666',
-    marginLeft: 4,
+    marginRight: 8,
   },
-  horizontalList: {
-    paddingRight: 16,
+  cartActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    borderRadius: 20,
+    paddingHorizontal: 4,
   },
-  dealCard: {
-    width: 160,
-    marginRight: 16,
-    position: 'relative',
-    backgroundColor: 'white',
-    borderRadius: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+  quantityButton: {
+    padding: 8,
+    borderRadius: 16,
   },
-  flashDealBadge: {
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    backgroundColor: '#2d5016',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    zIndex: 1,
-  },
-  flashDealText: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  dealImage: {
-    width: '100%',
-    height: 120,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-  },
-  dealInfo: {
-    padding: 12,
-  },
-  dealPrice: {
+  quantityText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2d5016',
-    marginBottom: 4,
-  },
-  dealDiscount: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 4,
-  },
-  farmerName: {
-    fontSize: 12,
-    color: '#2d5016',
-    fontWeight: '500',
-  },
-  arrivalCard: {
-    width: 140,
-    marginRight: 16,
-    backgroundColor: 'white',
-    borderRadius: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  arrivalImage: {
-    width: '100%',
-    height: 100,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-  },
-  arrivalInfo: {
-    padding: 12,
-  },
-  arrivalTitle: {
-    fontSize: 14,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
+    marginHorizontal: 12,
+    minWidth: 20,
+    textAlign: 'center',
   },
-  arrivalPrice: {
-    fontSize: 14,
+  cartSummary: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    backgroundColor: '#f8f9fa',
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  totalLabel: {
+    fontSize: 16,
+    color: '#666',
+  },
+  totalAmount: {
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#2d5016',
-    marginBottom: 8,
+    color: '#2c3e50',
   },
-  regionBadge: {
-    backgroundColor: '#f0f7e8',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+  checkoutBtn: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 14,
     borderRadius: 8,
-    alignSelf: 'flex-start',
+    alignItems: 'center',
   },
-  regionText: {
-    fontSize: 11,
-    color: '#2d5016',
-    fontWeight: '500',
+  buttonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
   },
-  bottomSpacing: {
-    height: 20,
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 8,
+    fontWeight: '600',
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+    marginBottom: 24,
+    paddingHorizontal: 20,
+    lineHeight: 20,
+  },
+  clearSearchBtn: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 6,
+  },
+  clearSearchText: {
+    color: '#fff',
+    fontWeight: '600',
   },
 });
-
-export default BuyerDashboard;

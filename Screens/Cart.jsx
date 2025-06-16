@@ -72,7 +72,7 @@ const CartScreen = () => {
             style={styles.quantityButton}
             onPress={() => updateQuantity(item.id, -1)}
           >
-            <Ionicons name="remove" size={20} color="#007AFF" />
+            <Ionicons name="remove" size={20} color="#4CAF50" />
           </TouchableOpacity>
           
           <Text style={styles.quantity}>{item.quantity}</Text>
@@ -81,7 +81,7 @@ const CartScreen = () => {
             style={styles.quantityButton}
             onPress={() => updateQuantity(item.id, 1)}
           >
-            <Ionicons name="add" size={20} color="#007AFF" />
+            <Ionicons name="add" size={20} color="#4CAF50" />
           </TouchableOpacity>
         </View>
       </View>
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   },
   itemPrice: {
     fontSize: 14,
-    color: '#007AFF',
+    color: '#4CAF50',
     fontWeight: '500',
     marginBottom: 10,
   },
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#007AFF',
+    borderColor: '#4CAF50',
   },
   quantity: {
     marginHorizontal: 15,
@@ -254,10 +254,10 @@ const styles = StyleSheet.create({
   totalAmount: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#007AFF',
+    color: '#4CAF50',
   },
   checkoutButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#4CAF50',
     borderRadius: 10,
     paddingVertical: 15,
     flexDirection: 'row',
@@ -272,4 +272,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CartScreen;
+export default CartScreen;  

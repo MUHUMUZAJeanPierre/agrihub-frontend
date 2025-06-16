@@ -216,14 +216,14 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   activeTab: {
-    borderBottomColor: '#007AFF',
+    borderBottomColor: '#4CAF50',
   },
   tabText: {
     fontSize: 16,
     color: '#666',
   },
   activeTabText: {
-    color: '#007AFF',
+    color: '#4CAF50',
     fontWeight: '600',
   },
   content: {
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
   orderTotal: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#007AFF',
+    color: '#4CAF50',
   },
   itemsList: {
     marginBottom: 15,
@@ -298,14 +298,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#007AFF',
+    borderColor: '#4CAF50',
   },
   reorderButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#4CAF50',
   },
   actionButtonText: {
     fontSize: 14,
-    color: '#007AFF',
+    color: '#4CAF50',
     fontWeight: '500',
   },
   reorderText: {

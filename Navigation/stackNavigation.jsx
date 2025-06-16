@@ -2,22 +2,18 @@ import React, { useContext} from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import BottomNav from './Bottomnav';
-import Details from '../Screens/description';
-
-
-
+import Details from '../Screens/ProductDetail';
 const Stack = createNativeStackNavigator();
-
+import Register from '../Screens/Register';
+import Login from '../Screens/Login';
+import Onboarding from '../Components/onboarding';
 export default function StackNavigation() {
-
-  // const { isLog, logged} = useContext(Context)
-
   return (
     <NavigationContainer>
-
-      <Stack.Navigator >
-
-        
+      <Stack.Navigator >        
+            <Stack.Screen name="onboarding" component={Onboarding} options={{ headerShown: false }} />
+            <Stack.Screen name="login" component={Login} options={{ headerShown: false }} />
+            <Stack.Screen name="Register" component={Register} options={{ headerShown: false }} />
             <Stack.Screen name="farmer" component={BottomNav} options={{ headerShown: false }} />
             <Stack.Screen name="ProductDetail" component={Details} options={{ headerShown: false }} />
       </Stack.Navigator>
