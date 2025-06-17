@@ -6,6 +6,9 @@ import {
   TouchableOpacity,
   View,
   KeyboardAvoidingView,
+  ScrollView,
+  Platform,
+  SafeAreaView,
 } from 'react-native';
 import StandardTextInput from '../Components/StandardTextInput';
 import Button from '../Components/Button';
@@ -19,19 +22,13 @@ export default function Login({ navigation }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
+  const togglePasswordVisibility = () => setShowPassword(prev => !prev);
 
-  const isValidEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const validateForm = () => {
     let valid = true;
-
-    if (email.trim() === '') {
+    if (!email.trim()) {
       setEmailError('Email is required');
       valid = false;
     } else if (!isValidEmail(email)) {
@@ -41,7 +38,7 @@ export default function Login({ navigation }) {
       setEmailError('');
     }
 
-    if (password.trim() === '') {
+    if (!password.trim()) {
       setPasswordError('Password is required');
       valid = false;
     } else {
@@ -51,23 +48,18 @@ export default function Login({ navigation }) {
     return valid;
   };
 
-  const signin = async (email, password) => {
+  const signin = async () => {
     try {
       setLoading(true);
       const response = await fetch('https://agrihub-backend-4z99.onrender.com/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
 
-      if (!response.ok) {
-        const message = data?.message || 'Login failed';
-        throw new Error(message);
-      }
+      if (!response.ok) throw new Error(data?.message || 'Login failed');
 
       showMessage({
         message: 'Login Successful',
@@ -75,10 +67,7 @@ export default function Login({ navigation }) {
         icon: 'success',
       });
 
-      // Navigate based on user type if returned (optional)
-      // Example: if (data.userType === 'farmer') navigation.navigate('farmer');
-
-      navigation.navigate('farmer'); // Or navigate to appropriate screen
+      navigation.navigate('farmer');
     } catch (error) {
       showMessage({
         message: 'Login Error',
@@ -93,17 +82,19 @@ export default function Login({ navigation }) {
   };
 
   const handleSubmit = () => {
-    if (validateForm()) {
-      signin(email, password);
-    }
+    if (validateForm()) signin();
   };
 
   return (
-    <View style={{ height: '100%' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <FlashMessage position="top" />
-      <View style={styles.container}>
-        <KeyboardAvoidingView>
-          <Image style={{ width: '95%', height: 280 }} source={require('../assets/logo.jpg')} />
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : null}
+          style={styles.container}
+        >
+          <Image source={require('../assets/logo.jpg')} style={styles.logo} resizeMode="contain" />
+
           <Text style={styles.title}>Log In</Text>
           <Text style={styles.subtitle}>Please sign in to continue</Text>
 
@@ -111,80 +102,85 @@ export default function Login({ navigation }) {
             <StandardTextInput
               label="Email"
               icon2="email"
-              onChangeText={setEmail}
               value={email}
+              onChangeText={setEmail}
               error={emailError}
             />
-            {emailError && <Text style={styles.errorText}>{emailError}</Text>}
+            {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
             <StandardTextInput
               label="Password"
               icon2="lock"
               icon1={showPassword ? 'eye-off-outline' : 'eye-outline'}
-              onChangeText={setPassword}
               value={password}
-              error={passwordError}
+              onChangeText={setPassword}
               onPress={togglePasswordVisibility}
               secureTextEntry={!showPassword}
+              error={passwordError}
             />
-            {passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
+            {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
 
-            <Text
-              onPress={() => navigation.navigate('forgot')}
-              style={styles.forgotText}
-            >
-              Forgot password
-            </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('forgot')}>
+              <Text style={styles.forgotText}>Forgot password?</Text>
+            </TouchableOpacity>
           </View>
 
-          <TouchableOpacity>
-            <Button title="Sign In" onPress={handleSubmit} loading={loading} />
-          </TouchableOpacity>
+          <Button title="Sign In" onPress={handleSubmit} loading={loading} />
 
           <View style={styles.bottomText}>
             <Text>Don't have an Account?</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-              <Text style={styles.signupText}>Sign up</Text>
+              <Text style={styles.signupText}> Sign up</Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
-      </View>
-    </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#ffffff',
-    paddingVertical: 30,
     paddingHorizontal: 30,
-    height: '100%',
+    paddingTop: 20,
+    flex: 1,
+    justifyContent: 'center',
+    backgroundColor: '#ffffff',
+  },
+  logo: {
+    width: '100%',
+    height: 200,
+    marginBottom: 10,
+    alignSelf: 'center',
   },
   title: {
-    fontSize: 30,
+    fontSize: 28,
     fontFamily: 'Poppins_600SemiBold',
     textAlign: 'center',
+    marginTop: 10,
   },
   subtitle: {
     color: '#B0ABAB',
     textAlign: 'center',
+    fontSize: 14,
   },
   errorText: {
     color: 'red',
-    paddingVertical: 4,
     fontSize: 12,
+    marginTop: 4,
+    marginBottom: 8,
   },
   forgotText: {
-    fontSize: 16,
-    fontFamily: 'Poppins_600SemiBold',
+    fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
     color: '#4BA26A',
     alignSelf: 'flex-end',
-    marginTop: 15,
+    marginTop: 10,
   },
   bottomText: {
     flexDirection: 'row',
     justifyContent: 'center',
-    paddingVertical: 15,
+    marginTop: 25,
   },
   signupText: {
     color: '#4BA26A',

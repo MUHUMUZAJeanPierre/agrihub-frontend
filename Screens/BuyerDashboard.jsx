@@ -22,18 +22,13 @@ import { Ionicons } from '@expo/vector-icons';
 const { width, height } = Dimensions.get('window');
 const BASE_URL = 'https://agrihub-backend-4z99.onrender.com/product';
 
-// Enhanced color palette inspired by agriculture and nature
 const Colors = {
-  // Primary greens - representing growth and nature
-  primary: '#2D5016', // Deep forest green
-  primaryLight: '#4A7C59', // Sage green
-  primaryDark: '#1B3209', // Dark forest
+  primary: '#2D5016', 
+  primaryLight: '#4A7C59',
+  primaryDark: '#1B3209',
   
-  // Secondary earth tones
-  secondary: '#8B4513', // Rich earth brown
-  secondaryLight: '#CD853F', // Sandy brown
-  
-  // Accent colors
+  secondary: '#8B4513', 
+  secondaryLight: '#CD853F', 
   accent: '#FF8C42', // Harvest orange
   accentLight: '#FFB347', // Peach
   
