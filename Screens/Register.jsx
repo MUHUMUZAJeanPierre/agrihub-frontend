@@ -12,25 +12,19 @@ import Button from "../Components/Button";
 import { showMessage } from "react-native-flash-message";
 import Dropdown from "../Components/Dropdown";
 
-// 🔁 Register function to send data to backend
-const Regist = async (email, password, username, userType) => {
+// 🔁 Registration API function
+const registerUser = async (name, email, password, role) => {
   const response = await fetch("https://agrihub-backend-4z99.onrender.com/register", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      email,
-      password,
-      username,
-      userType,
-    }),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, email, password, role }),
   });
 
   const data = await response.json();
+  // console.log("✅ Registration Response:", data);
 
   if (!response.ok) {
-    const message = data?.message || "Registration failed. Please try again.";
+    const message = data?.message || data?.error || "Registration failed. Please try again.";
     throw new Error(message);
   }
 
@@ -38,17 +32,17 @@ const Regist = async (email, password, username, userType) => {
 };
 
 export default function Register({ navigation }) {
+  const [name, setName] = useState("");         // ✅ name (was username)
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [username, setUsername] = useState("");
-  const [userType, setUserType] = useState("");
+  const [role, setRole] = useState("");         // ✅ renamed from userType
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
-  const userTypes = ["farmer", "buyer", "plant pathologist"];
+  const roles = ["farmer", "buyer", "plant pathologist"];
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -62,28 +56,46 @@ export default function Register({ navigation }) {
   const handleValidation = () => {
     let valid = true;
 
-    if (email.trim() === "") {
-      setEmailError("Email is required");
-      valid = false;
-    } else if (!isValidEmail(email)) {
-      setEmailError("Email is not valid");
-      valid = false;
+    if (!name.trim()) {
       showMessage({
-        message: "Invalid Email",
-        description: "Please enter a valid email address.",
+        message: "Name Required",
+        description: "Please enter your full name.",
         type: "warning",
         icon: "warning",
         position: "top",
       });
+      valid = false;
+    }
+
+    if (!email.trim()) {
+      setEmailError("Email is required");
+      valid = false;
+    } else if (!isValidEmail(email)) {
+      setEmailError("Invalid email format");
+      valid = false;
     } else {
       setEmailError("");
     }
 
-    if (password.trim() === "") {
+    if (!password.trim()) {
       setPasswordError("Password is required");
+      valid = false;
+    } else if (password.length < 6) {
+      setPasswordError("Password must be at least 6 characters");
       valid = false;
     } else {
       setPasswordError("");
+    }
+
+    if (!role) {
+      showMessage({
+        message: "Role Required",
+        description: "Please select a role (farmer, buyer, or plant pathologist).",
+        type: "warning",
+        icon: "warning",
+        position: "top",
+      });
+      valid = false;
     }
 
     return valid;
@@ -94,15 +106,17 @@ export default function Register({ navigation }) {
 
     try {
       setLoading(true);
-      await Regist(email, password, username, userType);
+      await registerUser(name, email, password, role);
+
       showMessage({
         message: "Registration Successful",
         type: "success",
         icon: "success",
       });
+
       navigation.navigate("login");
     } catch (error) {
-      console.error("Registration error:", error);
+      console.error("❌ Registration error:", error);
       showMessage({
         message: "Registration Error",
         description: error.message || "Something went wrong",
@@ -112,10 +126,10 @@ export default function Register({ navigation }) {
       });
     } finally {
       setLoading(false);
+      setName("");
       setEmail("");
       setPassword("");
-      setUsername("");
-      setUserType("");
+      setRole("");
     }
   };
 
@@ -138,10 +152,10 @@ export default function Register({ navigation }) {
             </View>
 
             <StandardTextInput
-              label="Full Names"
+              label="Full Name"
               icon2="account-circle"
-              value={username}
-              onChangeText={setUsername}
+              value={name}
+              onChangeText={setName}
             />
 
             <StandardTextInput
@@ -164,20 +178,17 @@ export default function Register({ navigation }) {
             />
             {passwordError ? <Text style={{ color: "red" }}>{passwordError}</Text> : null}
 
-            <Text style={{ fontSize: 15, padding: 10 }}>User Type</Text>
+            <Text style={{ fontSize: 15, padding: 10 }}>Select Role</Text>
             <Dropdown
-              options={userTypes}
-              selectedOption={userType}
-              onSelect={setUserType}
+              options={roles}
+              selectedOption={role}
+              onSelect={setRole}
+              placeholder="Select your role"
             />
           </ScrollView>
 
           <TouchableOpacity style={{ paddingVertical: 10 }}>
-            <Button
-              title="Sign Up"
-              onPress={handleRegister}
-              loading={loading}
-            />
+            <Button title="Sign Up" onPress={handleRegister} loading={loading} />
           </TouchableOpacity>
 
           <View style={{ flexDirection: "row", justifyContent: "center", paddingBottom: 9 }}>

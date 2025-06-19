@@ -14,13 +14,26 @@ import {
   RefreshControl,
   ActivityIndicator,
   SafeAreaView,
-  LinearGradient,
 } from 'react-native';
 import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Add this dependency
 
 const { width, height } = Dimensions.get('window');
-const BASE_URL = 'https://agrihub-backend-4z99.onrender.com/product';
+
+// API Configuration
+const API_CONFIG = {
+  PRODUCT_BASE_URL: 'https://agrihub-backend-4z99.onrender.com/product',
+  CART_BASE_URL: 'https://agrihub-backend-4z99.onrender.com/cart',
+  TIMEOUT: 10000,
+};
+
+// Auth Storage Keys
+const AUTH_KEYS = {
+  TOKEN: '@auth_token',
+  USER_ID: '@user_id',
+  USER_DATA: '@user_data',
+};
 
 const Colors = {
   primary: '#2D5016', 
@@ -29,19 +42,16 @@ const Colors = {
   
   secondary: '#8B4513', 
   secondaryLight: '#CD853F', 
-  accent: '#FF8C42', // Harvest orange
-  accentLight: '#FFB347', // Peach
+  accent: '#FF8C42', 
+  accentLight: '#FFB347', 
   
-  // Fresh greens
-  fresh: '#32CD32', // Lime green
-  mint: '#98FB98', // Mint green
+  fresh: '#32CD32', 
+  mint: '#98FB98', 
   
-  // Background and surfaces
-  background: '#F8FBF6', // Very light green-white
+  background: '#F8FBF6', 
   surface: '#FFFFFF',
   surfaceElevated: '#FEFFFE',
   
-  // Text colors
   textPrimary: '#1B3209',
   textSecondary: '#4A5568',
   textTertiary: '#718096',
@@ -73,7 +83,7 @@ const CATEGORIES = [
 ];
 
 const BuyerDashboard = ({ navigation }) => {
-  // State Management (keeping all existing state)
+  // State Management
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState(CATEGORIES);
   const [cartItems, setCartItems] = useState([]);
@@ -86,17 +96,107 @@ const BuyerDashboard = ({ navigation }) => {
   const [addingToCart, setAddingToCart] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [error, setError] = useState(null);
+  const [authToken, setAuthToken] = useState(null);
+  const [userId, setUserId] = useState(null);
 
-  // API Configuration (keeping existing logic)
-  const apiClient = useMemo(() => axios.create({
-    baseURL: BASE_URL,
-    timeout: 10000,
-    headers: {
-      'Content-Type': 'application/json',
+  const getAuthToken = useCallback(async () => {
+    try {
+      const token = await AsyncStorage.getItem(AUTH_KEYS.TOKEN);
+      const storedUserId = await AsyncStorage.getItem(AUTH_KEYS.USER_ID);
+      
+      console.log('🔑 Retrieved token:', token ? 'Token exists' : 'No token');
+      console.log('👤 Retrieved userId:', storedUserId);
+      
+      setAuthToken(token);
+      setUserId(storedUserId);
+      return token;
+    } catch (error) {
+      console.error('❌ Error getting auth token:', error);
+      return null;
     }
-  }), []);
+  }, []);
 
-  // Memoized filtered products (keeping existing logic)
+  const handleAuthError = useCallback(() => {
+    Alert.alert(
+      'Session Expired',
+      'Your session has expired. Please log in again.',
+      [
+        {
+          text: 'OK',
+          onPress: () => {
+            // Clear stored auth data
+            AsyncStorage.multiRemove([AUTH_KEYS.TOKEN, AUTH_KEYS.USER_ID, AUTH_KEYS.USER_DATA]);
+            // Navigate to login screen
+            navigation.navigate('Login'); // Adjust route name as needed
+          }
+        }
+      ]
+    );
+  }, [navigation]);
+
+  // Create API clients with authentication
+  const createAuthenticatedClient = useCallback((baseURL) => {
+    return axios.create({
+      baseURL,
+      timeout: API_CONFIG.TIMEOUT,
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+  }, []);
+
+  const productApiClient = useMemo(() => createAuthenticatedClient(API_CONFIG.PRODUCT_BASE_URL), [createAuthenticatedClient]);
+  const cartApiClient = useMemo(() => createAuthenticatedClient(API_CONFIG.CART_BASE_URL), [createAuthenticatedClient]);
+
+  // Add request interceptor to include auth token
+  useEffect(() => {
+    const addAuthInterceptor = (client) => {
+      client.interceptors.request.use(
+        async (config) => {
+          const token = authToken || await getAuthToken();
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+            // Alternative formats that might be expected:
+            // config.headers.Authorization = `Token ${token}`;
+            // config.headers['x-auth-token'] = token;
+          }
+          
+          // Add userId if required by your backend
+          if (userId) {
+            config.headers['x-user-id'] = userId;
+          }
+          
+          console.log('🔄 Request URL:', config.url);
+          console.log('🔑 Auth header:', config.headers.Authorization ? 'Present' : 'Missing');
+          
+          return config;
+        },
+        (error) => {
+          console.error('❌ Request interceptor error:', error);
+          return Promise.reject(error);
+        }
+      );
+
+      // Add response interceptor to handle auth errors
+      client.interceptors.response.use(
+        (response) => response,
+        (error) => {
+          if (error.response?.status === 401) {
+            console.error('❌ 401 Unauthorized - clearing auth data');
+            handleAuthError();
+          }
+          return Promise.reject(error);
+        }
+      );
+    };
+
+    if (authToken) {
+      addAuthInterceptor(productApiClient);
+      addAuthInterceptor(cartApiClient);
+    }
+  }, [authToken, userId, productApiClient, cartApiClient, getAuthToken, handleAuthError]);
+
+  // Memoized filtered products
   const filteredProducts = useMemo(() => {
     if (!searchQuery.trim()) return products;
     
@@ -108,11 +208,10 @@ const BuyerDashboard = ({ navigation }) => {
     );
   }, [products, searchQuery]);
 
-  // Cart calculations (keeping existing logic)
+  // Cart calculations
   const cartTotal = useMemo(() => {
     return cartItems.reduce((total, item) => {
-      const priceMatch = item.price?.match(/RWF\s*([\d,]+)/);
-      const price = priceMatch ? parseFloat(priceMatch[1].replace(/,/g, '')) : 0;
+      const price = parseFloat(item.price?.replace(/[^\d.]/g, '')) || 0;
       return total + (price * item.quantity);
     }, 0);
   }, [cartItems]);
@@ -121,14 +220,14 @@ const BuyerDashboard = ({ navigation }) => {
     return cartItems.reduce((total, item) => total + item.quantity, 0);
   }, [cartItems]);
 
-  // All existing API functions remain the same
+  // Product API Functions
   const fetchProducts = useCallback(async (category = 'all') => {
     try {
       setLoading(true);
       setError(null);
       
       const url = category === 'all' ? '' : `/category/${category}`;
-      const response = await apiClient.get(url);
+      const response = await productApiClient.get(url);
       
       if (response.data) {
         setProducts(response.data);
@@ -147,40 +246,265 @@ const BuyerDashboard = ({ navigation }) => {
             { text: 'Retry', onPress: () => fetchProducts(category) }
           ]
         );
+      } else if (err.response?.status === 401) {
+        handleAuthError();
       } else {
         Alert.alert('Error', 'Failed to load products. Please try again.');
       }
     } finally {
       setLoading(false);
     }
-  }, [apiClient]);
+  }, [productApiClient, handleAuthError]);
 
+  // Enhanced Cart API Functions with better error handling
   const fetchCart = useCallback(async () => {
     try {
       setCartLoading(true);
-      const response = await apiClient.get('/cart');
-      const items = response.data?.items || [];
+      console.log('🛒 Fetching cart with auth...');
       
-      setCartItems(items.map(item => ({
-        ...item.product,
-        quantity: item.quantity,
-        id: item.product._id,
-      })));
+      // Ensure we have a token before making the request
+      const token = authToken || await getAuthToken();
+      if (!token) {
+        console.log('❌ No auth token available for cart fetch');
+        setCartItems([]);
+        return;
+      }
+      
+      const response = await cartApiClient.get('/');
+      console.log('📦 Cart response status:', response.status);
+      console.log('📦 Cart response data:', response.data);
+      
+      if (response.data && response.data.success) {
+        const cartData = response.data.data || response.data.cart || [];
+        
+        // Transform cart data to match your component structure
+        const transformedCartItems = cartData.map(item => ({
+          id: item.productId || item._id,
+          _id: item.productId || item._id,
+          title: item.product?.title || item.title || 'Unknown Product',
+          price: item.product?.price || item.price || 'RWF 0',
+          img: item.product?.img || item.img || null,
+          region: item.product?.region || item.region || '',
+          farmer: item.product?.farmer || item.farmer || '',
+          quantity: item.quantity || 1,
+          category: item.product?.category || item.category || '',
+        }));
+        
+        console.log('✅ Transformed cart items:', transformedCartItems.length);
+        setCartItems(transformedCartItems);
+      } else {
+        console.log('📦 Empty cart response');
+        setCartItems([]);
+      }
     } catch (err) {
       console.error('❌ Cart fetch error:', err);
+      console.error('❌ Error details:', {
+        status: err.response?.status,
+        message: err.response?.data?.message,
+        url: err.config?.url
+      });
+      
+      if (err.response?.status === 401) {
+        console.log('❌ 401 error - handling auth error');
+        handleAuthError();
+      } else {
+        // Don't show error for cart fetch as it might be empty initially
+        setCartItems([]);
+      }
     } finally {
       setCartLoading(false);
     }
-  }, [apiClient]);
+  }, [cartApiClient, authToken, getAuthToken, handleAuthError]);
 
+  
+  const addToCart = useCallback(async (product) => {
+  try {
+    setAddingToCart(product._id); // Indicating that the item is being added to the cart
+
+    console.log('➕ Adding to cart:', product._id);
+
+    // Ensure we have an authentication token
+    const token = authToken || await getAuthToken();
+    if (!token) {
+      Alert.alert('Authentication Required', 'Please log in to add items to the cart.');
+      return;
+    }
+
+    const requestData = {
+      productId: product._id,
+      quantity: 1, 
+    };
+
+    if (userId) {
+      requestData.userId = userId;
+    }
+
+    console.log('📤 Add to cart request:', requestData);
+
+    const response = await cartApiClient.post('/add', requestData);
+
+    console.log('📥 Add to cart response:', response.data);
+
+    if (response.data && response.data.success) {
+      Alert.alert(
+        '✅ Added to Cart', 
+        `${product.title} has been added to your cart.`,
+        [
+          { text: 'Continue Shopping', style: 'cancel' },
+          { 
+            text: 'View Cart', 
+            onPress: () => setIsCartVisible(true) 
+          }
+        ]
+      );
+
+      await fetchCart();
+    } else {
+      throw new Error(response.data?.message || 'Failed to add to cart');
+    }
+  } catch (err) {
+    console.error('❌ Add to cart error:', err);
+
+    if (err.response?.status === 401) {
+      handleAuthError();
+    } else {
+      Alert.alert(
+        'Error', 
+        err.response?.data?.message || 'Failed to add to cart. Please try again.'
+      );
+    }
+  } finally {
+    setAddingToCart(null); 
+  }
+}, [authToken, userId, cartApiClient, getAuthToken, fetchCart, handleAuthError]);
+
+
+
+
+  const updateCartQuantity = useCallback(async (productId, quantity) => {
+    try {
+      console.log('🔄 Updating cart quantity:', productId, quantity);
+      
+      // Ensure we have a token
+      const token = authToken || await getAuthToken();
+      if (!token) {
+        Alert.alert('Authentication Required', 'Please log in to update cart.');
+        return;
+      }
+      
+      // Optimistic update
+      setCartItems(prev => prev.map(item => 
+        item.id === productId ? { ...item, quantity } : item
+      ));
+      
+      const requestData = { 
+        productId, 
+        quantity 
+      };
+      
+      // Add userId if your backend requires it
+      if (userId) {
+        requestData.userId = userId;
+      }
+      
+      const response = await cartApiClient.put('/update', requestData);
+      
+      console.log('📝 Update cart response:', response.data);
+      
+      if (!response.data || !response.data.success) {
+        throw new Error(response.data?.message || 'Failed to update quantity');
+      }
+    } catch (err) {
+      console.error('❌ Update cart error:', err);
+      
+      if (err.response?.status === 401) {
+        handleAuthError();
+      } else {
+        Alert.alert('Error', 'Failed to update quantity. Please try again.');
+      }
+      
+      // Revert optimistic update
+      await fetchCart();
+    }
+  }, [cartApiClient, authToken, userId, getAuthToken, handleAuthError, fetchCart]);
+
+  const removeFromCart = useCallback(async (productId) => {
+    try {
+      console.log('🗑️ Removing from cart:', productId);
+      
+      // Ensure we have a token
+      const token = authToken || await getAuthToken();
+      if (!token) {
+        Alert.alert('Authentication Required', 'Please log in to remove items.');
+        return;
+      }
+      
+      // Optimistic update
+      setCartItems(prev => prev.filter(item => item.id !== productId));
+      
+      const response = await cartApiClient.delete(`/remove/${productId}`);
+      console.log('🗑️ Remove from cart response:', response.data);
+      
+      if (!response.data || !response.data.success) {
+        throw new Error(response.data?.message || 'Failed to remove item');
+      }
+    } catch (err) {
+      console.error('❌ Remove from cart error:', err);
+      
+      if (err.response?.status === 401) {
+        handleAuthError();
+      } else {
+        Alert.alert('Error', 'Failed to remove item. Please try again.');
+      }
+      
+      // Revert optimistic update
+      await fetchCart();
+    }
+  }, [cartApiClient, authToken, getAuthToken, handleAuthError, fetchCart]);
+
+  const clearCart = useCallback(async () => {
+    try {
+      console.log('🧹 Clearing cart...');
+      
+      // Ensure we have a token
+      const token = authToken || await getAuthToken();
+      if (!token) {
+        Alert.alert('Authentication Required', 'Please log in to clear cart.');
+        return;
+      }
+      
+      const response = await cartApiClient.delete('/clear');
+      console.log('🧹 Clear cart response:', response.data);
+      
+      if (response.data && response.data.success) {
+        setCartItems([]);
+        Alert.alert('Success', 'Cart cleared successfully');
+      } else {
+        throw new Error(response.data?.message || 'Failed to clear cart');
+      }
+    } catch (err) {
+      console.error('❌ Clear cart error:', err);
+      
+      if (err.response?.status === 401) {
+        handleAuthError();
+      } else {
+        Alert.alert('Error', 'Failed to clear cart. Please try again.');
+      }
+    }
+  }, [cartApiClient, authToken, getAuthToken, handleAuthError]);
+
+  // Other utility functions remain the same
   const fetchFavorites = useCallback(async () => {
     try {
-      const response = await apiClient.get('/favorites');
+      const response = await productApiClient.get('/favorites');
       setFavorites(response.data?.map(item => item._id) || []);
     } catch (err) {
       console.error('❌ Favorites fetch error:', err);
+      if (err.response?.status === 401) {
+        handleAuthError();
+      }
     }
-  }, [apiClient]);
+  }, [productApiClient, handleAuthError]);
 
   const updateCategoriesFromProducts = useCallback((productsData) => {
     const uniqueCategories = [...new Set(
@@ -246,78 +570,28 @@ const BuyerDashboard = ({ navigation }) => {
     await fetchProducts(categoryId);
   }, [selectedCategory, fetchProducts]);
 
-  const addToCart = useCallback(async (product) => {
-    try {
-      setAddingToCart(product._id);
-      
-      await apiClient.post('/cart/add', {
-        productId: product._id,
-        quantity: 1,
-      });
-      
-      Alert.alert(
-        '✅ Added to Cart', 
-        `${product.title} has been added to your cart.`,
-        [
-          { text: 'Continue Shopping', style: 'cancel' },
-          { 
-            text: 'View Cart', 
-            onPress: () => setIsCartVisible(true)
-          }
-        ]
-      );
-      
-      fetchCart();
-    } catch (err) {
-      console.error('❌ Add to cart error:', err);
-      Alert.alert('Error', 'Failed to add to cart. Please try again.');
-    } finally {
-      setAddingToCart(null);
-    }
-  }, [apiClient, fetchCart]);
-
-  const updateCartQuantity = useCallback(async (productId, quantity) => {
-    try {
-      setCartItems(prev => prev.map(item => 
-        item.id === productId ? { ...item, quantity } : item
-      ));
-      
-      await apiClient.put('/cart/update', { productId, quantity });
-    } catch (err) {
-      console.error('❌ Update cart error:', err);
-      Alert.alert('Error', 'Failed to update quantity. Please try again.');
-      fetchCart();
-    }
-  }, [apiClient, fetchCart]);
-
-  const removeFromCart = useCallback(async (productId) => {
-    try {
-      setCartItems(prev => prev.filter(item => item.id !== productId));
-      await apiClient.delete(`/cart/remove/${productId}`);
-    } catch (err) {
-      console.error('❌ Remove from cart error:', err);
-      Alert.alert('Error', 'Failed to remove item. Please try again.');
-      fetchCart();
-    }
-  }, [apiClient, fetchCart]);
-
   const toggleFavorite = useCallback(async (productId) => {
     try {
       const isFavorite = favorites.includes(productId);
       
       if (isFavorite) {
         setFavorites(prev => prev.filter(id => id !== productId));
-        await apiClient.delete(`/favorites/${productId}`);
+        await productApiClient.delete(`/favorites/${productId}`);
       } else {
         setFavorites(prev => [...prev, productId]);
-        await apiClient.post('/favorites', { productId });
+        await productApiClient.post('/favorites', { productId });
       }
     } catch (err) {
       console.error('❌ Toggle favorite error:', err);
-      Alert.alert('Error', 'Failed to update favorites. Please try again.');
-      fetchFavorites();
+      
+      if (err.response?.status === 401) {
+        handleAuthError();
+      } else {
+        Alert.alert('Error', 'Failed to update favorites. Please try again.');
+        fetchFavorites();
+      }
     }
-  }, [favorites, apiClient, fetchFavorites]);
+  }, [favorites, productApiClient, fetchFavorites, handleAuthError]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -336,13 +610,45 @@ const BuyerDashboard = ({ navigation }) => {
     setSearchQuery(query);
   }, []);
 
+  const handleCheckout = useCallback(() => {
+    if (cartItems.length === 0) {
+      Alert.alert('Empty Cart', 'Please add items to your cart before checkout.');
+      return;
+    }
+    
+    Alert.alert(
+      'Checkout',
+      `Total: RWF ${cartTotal.toLocaleString('en-US')}\nProceed to checkout?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Proceed', 
+          onPress: () => {
+            // Navigate to checkout screen or handle checkout
+            console.log('Proceeding to checkout...');
+          }
+        }
+      ]
+    );
+  }, [cartItems, cartTotal]);
+
+  // Initialize auth and fetch data
   useEffect(() => {
-    fetchProducts();
-    fetchCart();
-    fetchFavorites();
+    const initializeApp = async () => {
+      console.log('🚀 Initializing app...');
+      await getAuthToken();
+      
+      // Fetch data after getting auth token
+      await Promise.all([
+        fetchProducts(),
+        fetchCart(),
+        fetchFavorites()
+      ]);
+    };
+
+    initializeApp();
   }, []);
 
-  // Enhanced Product Card Component
   const ProductCard = React.memo(({ item }) => (
     <TouchableOpacity 
       style={[styles.productCard, item.isFlashDeal && styles.flashDealCard]}
@@ -520,7 +826,7 @@ const BuyerDashboard = ({ navigation }) => {
   ));
 
   // Loading screen
-  if (loading) {
+  if (loading && !authToken) {
     return (
       <View style={styles.loadingContainer}>
         <View style={styles.loadingContent}>
@@ -559,20 +865,16 @@ const BuyerDashboard = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Enhanced Header with Gradient */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View style={styles.headerTop}>
             <View>
-              <Text style={styles.headerGreeting}>Hello! 👋</Text>
               <Text style={styles.headerTitle}>Discover fresh products</Text>
             </View>
             <TouchableOpacity style={styles.profileButton}>
               <Ionicons name="person-circle-outline" size={32} color={Colors.primary} />
             </TouchableOpacity>
           </View>
-          
-          {/* Enhanced Search Section */}
           <View style={styles.searchContainer}>
             <View style={styles.searchInputContainer}>
               <Ionicons name="search-outline" size={20} color={Colors.textSecondary} />
@@ -596,7 +898,7 @@ const BuyerDashboard = ({ navigation }) => {
 
       {/* Enhanced Category Section */}
       <View style={styles.categorySection}>
-        <Text style={styles.categorySectionTitle}>Ubwoko bw'ibicuruzwa</Text>
+        <Text style={styles.categorySectionTitle}>Fresh Product</Text>
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false}
@@ -687,12 +989,31 @@ const BuyerDashboard = ({ navigation }) => {
               </View>
               <Text style={styles.modalTitle}>Igikoni cyawe</Text>
             </View>
-            <TouchableOpacity 
-              onPress={() => setIsCartVisible(false)}
-              style={styles.modalCloseButton}
-            >
-              <Ionicons name="close" size={24} color={Colors.textSecondary} />
-            </TouchableOpacity>
+            <View style={styles.modalHeaderRight}>
+              {cartItems.length > 0 && (
+                <TouchableOpacity 
+                  onPress={() => {
+                    Alert.alert(
+                      'Clear Cart',
+                      'Are you sure you want to clear all items from your cart?',
+                      [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Clear', style: 'destructive', onPress: clearCart }
+                      ]
+                    );
+                  }}
+                  style={styles.clearCartButton}
+                >
+                  <Ionicons name="trash-outline" size={20} color={Colors.error} />
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity 
+                onPress={() => setIsCartVisible(false)}
+                style={styles.modalCloseButton}
+              >
+                <Ionicons name="close" size={24} color={Colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {cartLoading ? (
@@ -748,7 +1069,7 @@ const BuyerDashboard = ({ navigation }) => {
                   <Text style={styles.grandTotalAmount}>RWF {cartTotal.toLocaleString('en-US')}</Text>
                 </View>
                 
-                <TouchableOpacity style={styles.checkoutBtn}>
+                <TouchableOpacity style={styles.checkoutBtn} onPress={handleCheckout}>
                   <Ionicons name="card-outline" size={20} color="#fff" />
                   <Text style={styles.checkoutBtnText}>Komeza urishyure</Text>
                 </TouchableOpacity>
@@ -760,247 +1081,226 @@ const BuyerDashboard = ({ navigation }) => {
     </SafeAreaView>
   );
 };
-
-export default BuyerDashboard;
-
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: Colors.background
-  },
-  
-  // Loading Screen Styles
-  loadingContainer: {
+  // Main Container
+  container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+
+  // Loading States
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: Colors.background,
   },
   loadingContent: {
     alignItems: 'center',
     paddingHorizontal: 40,
   },
   loadingIconContainer: {
+    marginBottom: 20,
     position: 'relative',
-    marginBottom: 24,
   },
   loadingSpinner: {
     position: 'absolute',
-    top: -10,
-    left: -10,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   loadingTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '600',
     color: Colors.textPrimary,
     marginBottom: 8,
     textAlign: 'center',
   },
   loadingSubtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: Colors.textSecondary,
     textAlign: 'center',
   },
-  
-  // Error Screen Styles
+
+  // Error States
   errorContainer: {
     flex: 1,
-    backgroundColor: Colors.background,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: Colors.background,
+    paddingHorizontal: 20,
   },
   errorContent: {
     alignItems: 'center',
-    paddingHorizontal: 40,
+    maxWidth: 300,
   },
   errorIconContainer: {
     marginBottom: 24,
   },
   errorTitle: {
-    fontSize: 22,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: '600',
     color: Colors.textPrimary,
-    marginBottom: 8,
+    marginBottom: 12,
     textAlign: 'center',
   },
   errorText: {
-    fontSize: 16,
+    fontSize: 14,
     color: Colors.textSecondary,
     textAlign: 'center',
-    marginBottom: 32,
-    lineHeight: 24,
+    marginBottom: 24,
+    lineHeight: 20,
   },
   retryButton: {
     backgroundColor: Colors.primary,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 16,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    elevation: 4,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
   },
   retryButtonText: {
     color: '#fff',
-    fontWeight: '600',
     fontSize: 16,
+    fontWeight: '600',
   },
-  
-  // Header Styles
+
+  // Header
   header: {
     backgroundColor: Colors.surface,
-    paddingBottom: 20,
-    elevation: 4,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    paddingTop: 8,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
   },
   headerContent: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingHorizontal: 16,
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   headerGreeting: {
-    fontSize: 16,
+    fontSize: 14,
     color: Colors.textSecondary,
-    fontWeight: '500',
+    marginBottom: 4,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '600',
     color: Colors.textPrimary,
-    marginTop: 4,
   },
   profileButton: {
     padding: 4,
   },
-  
-  // Search Styles
+
+  // Search
   searchContainer: {
-    marginBottom: 8,
+    marginBottom: 4,
   },
   searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: 16,
+    backgroundColor: Colors.background,
+    borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 4,
+    paddingVertical: 12,
     gap: 12,
-    elevation: 2,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: Colors.border,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
     color: Colors.textPrimary,
-    paddingVertical: 12,
-    fontWeight: '500',
+    padding: 0,
   },
-  
-  // Category Styles
+
+  // Categories
   categorySection: {
     backgroundColor: Colors.surface,
-    paddingTop: 20,
-    paddingBottom: 24,
+    paddingTop: 16,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
   },
   categorySectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '600',
     color: Colors.textPrimary,
-    paddingHorizontal: 20,
-    marginBottom: 16,
+    marginBottom: 12,
+    paddingHorizontal: 16,
   },
   categoryContainer: {
-    paddingHorizontal: 20,
-    gap: 12,
+    paddingHorizontal: 12,
+    gap: 8,
   },
   categoryPill: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: Colors.background,
     borderRadius: 20,
-    paddingVertical: 2,
-    elevation: 2,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: Colors.border,
+    marginHorizontal: 4,
   },
   activeCategoryPill: {
-    elevation: 4,
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
     borderColor: 'transparent',
   },
   categoryPillContent: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 8,
+    paddingVertical: 8,
+    gap: 6,
   },
   categoryText: {
     fontSize: 14,
     color: Colors.textSecondary,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   activeCategoryText: {
     color: '#fff',
-    fontWeight: '700',
+    fontWeight: '600',
   },
-  
-  // Products Grid
+
+  // Products List
   productsList: {
-    paddingHorizontal: 12,
-    paddingTop: 8,
-    paddingBottom: 120,
+    padding: 16,
   },
   emptyList: {
-    flexGrow: 1,
+    flex: 1,
   },
   productRow: {
     justifyContent: 'space-between',
-    paddingHorizontal: 4,
+    gap: 12,
   },
+
+  // Product Card
   productCard: {
     backgroundColor: Colors.surface,
-    borderRadius: 20,
-    marginVertical: 8,
-    marginHorizontal: 4,
-    elevation: 4,
+    borderRadius: 12,
+    marginBottom: 16,
+    flex: 1,
+    maxWidth: (width - 44) / 2,
     shadowColor: Colors.shadow,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    width: (width - 40) / 2,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   flashDealCard: {
     borderWidth: 2,
     borderColor: Colors.accent,
-    elevation: 6,
   },
   imageContainer: {
     position: 'relative',
-    height: 160,
+    height: 140,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    overflow: 'hidden',
   },
   productImage: {
     width: '100%',
@@ -1010,7 +1310,7 @@ const styles = StyleSheet.create({
   placeholderImage: {
     width: '100%',
     height: '100%',
-    backgroundColor: Colors.borderLight,
+    backgroundColor: Colors.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1018,148 +1318,164 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textLight,
     marginTop: 4,
-    fontWeight: '500',
-  },
-  addButton: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    backgroundColor: Colors.primary,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 4,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
   },
   flashDealBadge: {
     position: 'absolute',
-    top: 12,
-    left: 12,
+    top: 8,
+    left: 8,
     backgroundColor: Colors.accent,
+    borderRadius: 12,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    elevation: 2,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
   },
   flashDealText: {
     color: '#fff',
     fontSize: 10,
     fontWeight: '700',
-    letterSpacing: 0.5,
+  },
+  addButton: {
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+    backgroundColor: Colors.primary,
+    borderRadius: 20,
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   flashDealAddButton: {
     backgroundColor: Colors.accent,
   },
   favoriteButton: {
     position: 'absolute',
-    bottom: 12,
-    right: 12,
+    top: 8,
+    right: 8,
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 16,
     width: 32,
     height: 32,
-    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 2,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
   },
-  
   productInfo: {
-    padding: 16,
-    gap: 6,
+    padding: 12,
   },
   productTitle: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: '600',
     color: Colors.textPrimary,
-    lineHeight: 20,
+    marginBottom: 4,
+    lineHeight: 18,
   },
   productPrice: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '700',
     color: Colors.primary,
-    letterSpacing: 0.3,
+    marginBottom: 8,
   },
   locationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginTop: 2,
+    marginBottom: 4,
   },
   locationText: {
     fontSize: 12,
     color: Colors.textSecondary,
-    fontWeight: '500',
     flex: 1,
   },
   farmerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginTop: 2,
   },
   farmerText: {
     fontSize: 12,
     color: Colors.primaryLight,
-    fontWeight: '600',
+    fontWeight: '500',
     flex: 1,
   },
-  
+
+  // Empty State
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  emptyStateIcon: {
+    marginBottom: 24,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptyStateSubtitle: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  clearSearchBtn: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  clearSearchText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
   // Cart Icon
   cartIcon: {
     position: 'absolute',
-    bottom: 30,
+    bottom: 20,
     right: 20,
-    elevation: 8,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
+    zIndex: 1000,
   },
   cartIconGradient: {
     backgroundColor: Colors.primary,
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    borderRadius: 28,
+    width: 56,
+    height: 56,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   cartBadge: {
     position: 'absolute',
-    top: -8,
-    right: -8,
+    top: -4,
+    right: -4,
     backgroundColor: Colors.error,
-    borderRadius: 14,
-    minWidth: 28,
-    height: 28,
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    borderWidth: 3,
-    borderColor: Colors.surface,
+    borderWidth: 2,
+    borderColor: '#fff',
   },
   cartBadgeText: {
     color: '#fff',
     fontSize: 12,
     fontWeight: '700',
   },
-  
-  // Modal Styles
+
+  // Modal
   modalContainer: {
     flex: 1,
     backgroundColor: Colors.background,
@@ -1168,16 +1484,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    padding: 16,
     backgroundColor: Colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
-    elevation: 2,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
   modalHeaderLeft: {
     flexDirection: 'row',
@@ -1185,27 +1495,31 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   cartIconSmall: {
-    backgroundColor: Colors.borderLight,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    backgroundColor: Colors.background,
+    borderRadius: 20,
+    width: 32,
+    height: 32,
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '600',
     color: Colors.textPrimary,
   },
-  modalCloseButton: {
-    backgroundColor: Colors.borderLight,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
+  modalHeaderRight: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
   },
-  
+  clearCartButton: {
+    padding: 8,
+  },
+  modalCloseButton: {
+    padding: 4,
+  },
+
+  // Cart Loading
   cartLoadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -1215,9 +1529,9 @@ const styles = StyleSheet.create({
   cartLoadingText: {
     fontSize: 16,
     color: Colors.textSecondary,
-    fontWeight: '500',
   },
-  
+
+  // Empty Cart
   emptyCart: {
     flex: 1,
     justifyContent: 'center',
@@ -1228,193 +1542,170 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   emptyCartTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '600',
     color: Colors.textPrimary,
     marginBottom: 8,
     textAlign: 'center',
   },
   emptyCartSubtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: Colors.textSecondary,
     textAlign: 'center',
-    marginBottom: 32,
-    lineHeight: 24,
+    marginBottom: 24,
   },
   shopNowBtn: {
     backgroundColor: Colors.primary,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 16,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    elevation: 4,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
   },
   shopNowBtnText: {
     color: '#fff',
-    fontWeight: '700',
     fontSize: 16,
+    fontWeight: '600',
   },
-  
+
+  // Cart Items
   cartScrollView: {
     flex: 1,
   },
   cartListContent: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
+    padding: 16,
   },
   cartItem: {
-    flexDirection: 'row',
     backgroundColor: Colors.surface,
-    borderRadius: 16,
+    borderRadius: 12,
     padding: 16,
-    marginVertical: 6,
-    elevation: 2,
+    marginBottom: 12,
+    flexDirection: 'row',
+    gap: 12,
     shadowColor: Colors.shadow,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
+    shadowRadius: 3,
+    elevation: 2,
   },
   cartItemImage: {
     width: 80,
     height: 80,
-    borderRadius: 12,
-    marginRight: 16,
+    borderRadius: 8,
+    resizeMode: 'cover',
   },
   cartItemPlaceholder: {
     width: 80,
     height: 80,
-    borderRadius: 12,
-    marginRight: 16,
-    backgroundColor: Colors.borderLight,
+    borderRadius: 8,
+    backgroundColor: Colors.background,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
   },
   cartItemInfo: {
     flex: 1,
-    gap: 6,
   },
   cartItemHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    marginBottom: 4,
   },
   cartItemTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '600',
     color: Colors.textPrimary,
     flex: 1,
-    marginRight: 12,
-    lineHeight: 22,
+    marginRight: 8,
   },
   cartItemViewButton: {
-    backgroundColor: Colors.borderLight,
-    padding: 8,
-    borderRadius: 12,
+    padding: 4,
   },
   cartItemPrice: {
     fontSize: 16,
+    fontWeight: '700',
     color: Colors.primary,
-    fontWeight: '800',
-    letterSpacing: 0.3,
+    marginBottom: 4,
   },
   cartItemLocationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    marginBottom: 12,
   },
   cartItemRegion: {
-    fontSize: 13,
+    fontSize: 12,
     color: Colors.textSecondary,
-    fontWeight: '500',
   },
   quantityContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
+    justifyContent: 'space-between',
   },
   quantityLabel: {
     fontSize: 14,
     color: Colors.textSecondary,
-    fontWeight: '600',
-    marginRight: 12,
+    fontWeight: '500',
   },
   cartActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.borderLight,
-    borderRadius: 12,
+    backgroundColor: Colors.background,
+    borderRadius: 8,
     overflow: 'hidden',
   },
   quantityButton: {
-    padding: 12,
-    backgroundColor: Colors.surface,
+    padding: 8,
     justifyContent: 'center',
     alignItems: 'center',
+    minWidth: 36,
   },
   quantityButtonLeft: {
-    borderTopLeftRadius: 12,
-    borderBottomLeftRadius: 12,
+    borderTopLeftRadius: 8,
+    borderBottomLeftRadius: 8,
   },
   quantityButtonRight: {
-    borderTopRightRadius: 12,
-    borderBottomRightRadius: 12,
+    borderTopRightRadius: 8,
+    borderBottomRightRadius: 8,
   },
   quantityText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '600',
     color: Colors.textPrimary,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: Colors.borderLight,
-    minWidth: 60,
+    paddingHorizontal: 16,
     textAlign: 'center',
+    minWidth: 40,
   },
-  
+
+  // Cart Summary
   cartSummary: {
     backgroundColor: Colors.surface,
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 32,
+    padding: 20,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
-    elevation: 8,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
   },
   cartSummaryHeader: {
     marginBottom: 16,
   },
   cartSummaryTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '600',
     color: Colors.textPrimary,
   },
   totalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   totalLabel: {
-    fontSize: 15,
+    fontSize: 14,
     color: Colors.textSecondary,
-    fontWeight: '500',
   },
   totalAmount: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: '600',
     color: Colors.textPrimary,
   },
   deliveryRow: {
@@ -1424,13 +1715,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   deliveryLabel: {
-    fontSize: 15,
+    fontSize: 14,
     color: Colors.textSecondary,
-    fontWeight: '500',
   },
   deliveryAmount: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: '600',
     color: Colors.success,
   },
   divider: {
@@ -1442,78 +1732,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   grandTotalLabel: {
-    fontSize: 18,
+    fontSize: 16,
+    fontWeight: '600',
     color: Colors.textPrimary,
-    fontWeight: '700',
   },
   grandTotalAmount: {
-    fontSize: 22,
-    fontWeight: '800',
+    fontSize: 18,
+    fontWeight: '700',
     color: Colors.primary,
-    letterSpacing: 0.5,
   },
   checkoutBtn: {
     backgroundColor: Colors.primary,
-    paddingVertical: 16,
-    borderRadius: 16,
-    alignItems: 'center',
+    borderRadius: 12,
+    padding: 16,
     flexDirection: 'row',
     justifyContent: 'center',
+    alignItems: 'center',
     gap: 8,
-    elevation: 4,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
   },
   checkoutBtnText: {
     color: '#fff',
-    fontWeight: '700',
-    fontSize: 18,
-    letterSpacing: 0.5,
-  },
-  
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  emptyStateIcon: {
-    marginBottom: 24,
-  },
-  emptyStateTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  emptyStateSubtitle: {
     fontSize: 16,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: 32,
-    lineHeight: 24,
-  },
-  clearSearchBtn: {
-    backgroundColor: Colors.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    elevation: 4,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-  },
-  clearSearchText: {
-    color: '#fff',
     fontWeight: '700',
-    fontSize: 16,
   },
 });
 
+export default BuyerDashboard;

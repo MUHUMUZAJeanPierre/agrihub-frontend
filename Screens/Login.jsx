@@ -1,18 +1,25 @@
 import React, { useState } from 'react';
 import {
+  View,
+  Text,
+  ScrollView,
   Image,
   StyleSheet,
-  Text,
   TouchableOpacity,
-  View,
-  KeyboardAvoidingView,
-  ScrollView,
-  Platform,
   SafeAreaView,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import StandardTextInput from '../Components/StandardTextInput';
 import Button from '../Components/Button';
 import FlashMessage, { showMessage } from 'react-native-flash-message';
+
+const AUTH_KEYS = {
+  TOKEN: '@auth_token',
+  USER_ID: '@user_id',
+  USER_DATA: '@user_data',
+};
 
 export default function Login({ navigation }) {
   const [email, setEmail] = useState('');
@@ -24,58 +31,109 @@ export default function Login({ navigation }) {
 
   const togglePasswordVisibility = () => setShowPassword(prev => !prev);
 
-  const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isValidEmail = (email) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const validateForm = () => {
     let valid = true;
+    setEmailError('');
+    setPasswordError('');
+
     if (!email.trim()) {
       setEmailError('Email is required');
       valid = false;
     } else if (!isValidEmail(email)) {
       setEmailError('Invalid email format');
       valid = false;
-    } else {
-      setEmailError('');
     }
 
     if (!password.trim()) {
       setPasswordError('Password is required');
       valid = false;
-    } else {
-      setPasswordError('');
+    } else if (password.length < 6) {
+      setPasswordError('Password must be at least 6 characters');
+      valid = false;
     }
 
     return valid;
   };
 
+  const storeAuthData = async (data) => {
+    const { token, user } = data;
+    if (!token || !user?._id) throw new Error('Invalid user data');
+
+    await AsyncStorage.setItem(AUTH_KEYS.TOKEN, token);
+    await AsyncStorage.setItem(AUTH_KEYS.USER_ID, user._id);
+    await AsyncStorage.setItem(AUTH_KEYS.USER_DATA, JSON.stringify(user));
+  };
+
+  const navigateToRoleDashboard = (role) => {
+    switch (role) {
+      case 'farmer':
+        navigation.reset({ index: 0, routes: [{ name: 'farmer' }] });
+        break;
+      case 'buyer':
+        navigation.reset({ index: 0, routes: [{ name: 'buyer' }] });
+        break;
+      case 'plant pathologist':
+        navigation.reset({ index: 0, routes: [{ name: 'agrono' }] });
+        break;
+      default:
+        showMessage({
+          message: 'Unknown Role',
+          description: `No screen configured for role: ${role}`,
+          type: 'danger',
+          icon: 'danger',
+        });
+    }
+  };
+
   const signin = async () => {
     try {
       setLoading(true);
+
       const response = await fetch('https://agrihub-backend-4z99.onrender.com/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          password,
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) throw new Error(data?.message || 'Login failed');
 
+      await storeAuthData(data);
+
       showMessage({
         message: 'Login Successful',
+        description: `Welcome, ${data.user.name}`,
         type: 'success',
         icon: 'success',
       });
 
-      navigation.navigate('farmer');
+      navigateToRoleDashboard(data.user.role);
     } catch (error) {
+      console.error('❌ Login error:', error);
+
       showMessage({
         message: 'Login Error',
-        description: error.message,
+        description:
+          error.message.includes('Network')
+            ? 'Please check your internet connection.'
+            : error.message,
         type: 'danger',
         icon: 'danger',
         duration: 5000,
       });
+
+      await AsyncStorage.multiRemove([
+        AUTH_KEYS.TOKEN,
+        AUTH_KEYS.USER_ID,
+        AUTH_KEYS.USER_DATA,
+      ]);
     } finally {
       setLoading(false);
     }
@@ -88,48 +146,71 @@ export default function Login({ navigation }) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <FlashMessage position="top" />
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+      >
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : null}
           style={styles.container}
         >
-          <Image source={require('../assets/logo.jpg')} style={styles.logo} resizeMode="contain" />
-
+          <Image
+            source={require('../assets/logo.jpg')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
           <Text style={styles.title}>Log In</Text>
           <Text style={styles.subtitle}>Please sign in to continue</Text>
 
-          <View style={{ paddingVertical: 25 }}>
+          <View style={styles.formContainer}>
             <StandardTextInput
               label="Email"
               icon2="email"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (emailError) setEmailError('');
+              }}
               error={emailError}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              placeholder="Enter your email"
             />
-            {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
             <StandardTextInput
               label="Password"
               icon2="lock"
               icon1={showPassword ? 'eye-off-outline' : 'eye-outline'}
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (passwordError) setPasswordError('');
+              }}
               onPress={togglePasswordVisibility}
               secureTextEntry={!showPassword}
               error={passwordError}
+              autoCapitalize="none"
+              placeholder="Enter your password"
             />
-            {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
 
-            <TouchableOpacity onPress={() => navigation.navigate('forgot')}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('forgot')}
+              style={styles.forgotPasswordContainer}
+            >
               <Text style={styles.forgotText}>Forgot password?</Text>
             </TouchableOpacity>
           </View>
 
-          <Button title="Sign In" onPress={handleSubmit} loading={loading} />
+          <Button
+            title="Sign In"
+            onPress={handleSubmit}
+            loading={loading}
+            disabled={loading}
+          />
 
           <View style={styles.bottomText}>
-            <Text>Don't have an Account?</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+            <Text style={styles.signupPrompt}>Don't have an account?</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('register')}>
               <Text style={styles.signupText}> Sign up</Text>
             </TouchableOpacity>
           </View>
@@ -155,36 +236,39 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     textAlign: 'center',
-    marginTop: 10,
+    color: '#2D5016',
   },
   subtitle: {
     color: '#B0ABAB',
     textAlign: 'center',
     fontSize: 14,
+    marginBottom: 10,
   },
-  errorText: {
-    color: 'red',
-    fontSize: 12,
-    marginTop: 4,
-    marginBottom: 8,
+  formContainer: {
+    paddingVertical: 25,
+  },
+  forgotPasswordContainer: {
+    alignSelf: 'flex-end',
+    marginTop: 10,
   },
   forgotText: {
     fontSize: 14,
-    fontFamily: 'Poppins_500Medium',
     color: '#4BA26A',
-    alignSelf: 'flex-end',
-    marginTop: 10,
   },
   bottomText: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 25,
   },
+  signupPrompt: {
+    color: '#666',
+    fontSize: 14,
+  },
   signupText: {
     color: '#4BA26A',
-    fontFamily: 'Poppins_600SemiBold',
-    marginLeft: 4,
+    fontWeight: '600',
+    fontSize: 14,
   },
 });

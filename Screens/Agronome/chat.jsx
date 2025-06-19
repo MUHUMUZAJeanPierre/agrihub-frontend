@@ -10,7 +10,7 @@ import {
   Platform,
 } from "react-native";
 
-export default function Chat() {
+export default function SimpleChat() {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -9,15 +9,66 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from '@react-navigation/native';
+
+const AUTH_KEYS = {
+  TOKEN: '@auth_token',
+  USER_ID: '@user_id',
+  USER_DATA: '@user_data',
+};
 
 const ProfileScreen = () => {
-  const [user] = useState({
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    phone: '+1 (555) 123-4567',
-    avatar: 'https://via.placeholder.com/150',
-  });
+  const navigation = useNavigation();
+  const [user, setUser] = useState(null);
+
+  const loadUserData = async () => {
+    try {
+      const userData = await AsyncStorage.getItem(AUTH_KEYS.USER_DATA);
+      if (userData) {
+        const parsedUser = JSON.parse(userData);
+        setUser({
+          name: parsedUser.name,
+          email: parsedUser.email,
+          avatar: parsedUser.avatar || 'https://via.placeholder.com/150',
+          phone: parsedUser.phone || 'N/A',
+        });
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  };
+
+  const handleLogout = async () => {
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await AsyncStorage.multiRemove([
+              AUTH_KEYS.TOKEN,
+              AUTH_KEYS.USER_ID,
+              AUTH_KEYS.USER_DATA,
+            ]);
+            // navigation.reset({
+            //   index: 0,
+            //   routes: [{ name: 'login' }],
+            // });
+            navigation.navigate('AuthStack', { screen: 'onboarding' });
+          } catch (err) {
+            console.error('Logout error:', err);
+          }
+        },
+      },
+    ]);
+  };
+
+  useEffect(() => {
+    loadUserData();
+  }, []);
 
   const menuItems = [
     {
@@ -70,21 +121,6 @@ const ProfileScreen = () => {
     },
   ];
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: () => Alert.alert('Logged out', 'You have been logged out successfully'),
-        },
-      ]
-    );
-  };
-
   const renderMenuItem = (item) => (
     <TouchableOpacity key={item.id} style={styles.menuItem} onPress={item.onPress}>
       <View style={styles.menuItemLeft}>
@@ -94,6 +130,14 @@ const ProfileScreen = () => {
       <Ionicons name="chevron-forward" size={20} color="#666" />
     </TouchableOpacity>
   );
+
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text style={{ textAlign: 'center', marginTop: 100 }}>Loading profile...</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -109,7 +153,7 @@ const ProfileScreen = () => {
               <Ionicons name="camera" size={16} color="#fff" />
             </TouchableOpacity>
           </View>
-          
+
           <View style={styles.userInfo}>
             <Text style={styles.userName}>{user.name}</Text>
             <Text style={styles.userEmail}>{user.email}</Text>
@@ -134,9 +178,7 @@ const ProfileScreen = () => {
           </View>
         </View>
 
-        <View style={styles.menuSection}>
-          {menuItems.map(renderMenuItem)}
-        </View>
+        <View style={styles.menuSection}>{menuItems.map(renderMenuItem)}</View>
 
         <View style={styles.logoutSection}>
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
@@ -154,30 +196,20 @@ const ProfileScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
+  container: { flex: 1, backgroundColor: '#fff' },
   header: {
     paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-  },
+  title: { fontSize: 24, fontWeight: 'bold', color: '#333' },
   profileSection: {
     alignItems: 'center',
     paddingVertical: 30,
     paddingHorizontal: 20,
   },
-  avatarContainer: {
-    position: 'relative',
-    marginBottom: 15,
-  },
+  avatarContainer: { position: 'relative', marginBottom: 15 },
   avatar: {
     width: 100,
     height: 100,
@@ -197,24 +229,10 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: '#fff',
   },
-  userInfo: {
-    alignItems: 'center',
-  },
-  userName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
-  },
-  userEmail: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 2,
-  },
-  userPhone: {
-    fontSize: 14,
-    color: '#666',
-  },
+  userInfo: { alignItems: 'center' },
+  userName: { fontSize: 24, fontWeight: 'bold', color: '#333', marginBottom: 5 },
+  userEmail: { fontSize: 16, color: '#666', marginBottom: 2 },
+  userPhone: { fontSize: 14, color: '#666' },
   statsSection: {
     flexDirection: 'row',
     backgroundColor: '#f8f8f8',
@@ -223,29 +241,11 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     marginBottom: 20,
   },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statNumber: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#4CAF50',
-    marginBottom: 5,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#666',
-    textTransform: 'uppercase',
-  },
-  statDivider: {
-    width: 1,
-    backgroundColor: '#ddd',
-    marginVertical: 10,
-  },
-  menuSection: {
-    paddingHorizontal: 20,
-  },
+  statItem: { flex: 1, alignItems: 'center' },
+  statNumber: { fontSize: 24, fontWeight: 'bold', color: '#4CAF50', marginBottom: 5 },
+  statLabel: { fontSize: 12, color: '#666', textTransform: 'uppercase' },
+  statDivider: { width: 1, backgroundColor: '#ddd', marginVertical: 10 },
+  menuSection: { paddingHorizontal: 20 },
   menuItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -254,19 +254,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  menuItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  menuItemText: {
-    fontSize: 16,
-    color: '#333',
-    marginLeft: 15,
-  },
-  logoutSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-  },
+  menuItemLeft: { flexDirection: 'row', alignItems: 'center' },
+  menuItemText: { fontSize: 16, color: '#333', marginLeft: 15 },
+  logoutSection: { paddingHorizontal: 20, paddingVertical: 20 },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -281,14 +271,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 10,
   },
-  versionSection: {
-    alignItems: 'center',
-    paddingVertical: 20,
-  },
-  versionText: {
-    fontSize: 12,
-    color: '#999',
-  },
+  versionSection: { alignItems: 'center', paddingVertical: 20 },
+  versionText: { fontSize: 12, color: '#999' },
 });
 
 export default ProfileScreen;
