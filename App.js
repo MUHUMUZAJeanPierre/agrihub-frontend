@@ -22,14 +22,18 @@ import React from 'react';
 import { StatusBar, View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import StackNavigation from './Navigation/stackNavigation';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { CartProvider } from './contexts/CartContext';
 
-// ✅ App entry point
+
 export default function App() {
   return (
-    <View style={styles.container}>
-        <StackNavigation />
-      <StatusBar backgroundColor="#4ba26a" barStyle="light-content" />
-    </View>
+    <CartProvider>
+      <GestureHandlerRootView style={styles.container}>
+          <StackNavigation />
+        <StatusBar backgroundColor="#4ba26a" barStyle="light-content" />
+      </GestureHandlerRootView>
+    </CartProvider>
   );
 }
 

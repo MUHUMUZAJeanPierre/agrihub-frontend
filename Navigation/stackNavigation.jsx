@@ -8,6 +8,8 @@ import Register from '../Screens/Register';
 import Forgot from '../Screens/forgot';
 import Onboarding from '../Components/onboarding';
 import BottomNav from './Bottomnav';
+import Detail from '../Screens/Farmer/description';
+import ProductDetailScreen from '../Screens/ProductDetailScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -37,7 +39,7 @@ export default function StackNavigation() {
   }, []);
 
   if (isLoading) {
-    return <Onboarding />; 
+    return <Onboarding />;
   }
 
   return (
@@ -46,13 +48,21 @@ export default function StackNavigation() {
         {userRole ? (
           <>
             {userRole === 'farmer' && (
-              <Stack.Screen name="farmer" component={BottomNav} />
+              <>
+                <Stack.Screen name="farmer" component={BottomNav} />
+                <Stack.Screen name="farmerblog" component={Detail} />
+              </>
             )}
             {userRole === 'buyer' && (
+              <>
               <Stack.Screen name="buyer" component={BottomNav} />
+              <Stack.Screen name="ProductDetailScreen" component={ProductDetailScreen} />
+              </>
             )}
             {userRole === 'plant pathologist' && (
+              <>
               <Stack.Screen name="agrono" component={BottomNav} />
+              </>
             )}
           </>
         ) : (

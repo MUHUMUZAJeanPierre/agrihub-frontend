@@ -53,11 +53,11 @@ const ProfileScreen = () => {
               AUTH_KEYS.USER_ID,
               AUTH_KEYS.USER_DATA,
             ]);
-            // navigation.reset({
-            //   index: 0,
-            //   routes: [{ name: 'login' }],
-            // });
-            navigation.navigate('AuthStack', { screen: 'onboarding' });
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'login' }],
+            });
+            // navigation.navigate('AuthStack', { screen: 'onboarding' });
           } catch (err) {
             console.error('Logout error:', err);
           }
