@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -19,11 +19,13 @@ import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCart } from '../contexts/CartContext';
+import { Button } from 'react-native-paper';
 
 // API Configuration
 const API_CONFIG = {
   PRODUCT_BASE_URL: 'https://agrihub-backend-4z99.onrender.com/product',
   CART_BASE_URL: 'https://agrihub-backend-4z99.onrender.com/cart',
+  ORDER_URL: 'https://agrihub-backend-4z99.onrender.com/orders/place-order',
   TIMEOUT: 10000,
 };
 
@@ -39,28 +41,28 @@ const Colors = {
   primaryDark: '#2D5AA0',
   secondary: '#FF6B35',
   accent: '#FFA726',
-  
+
   background: '#FFFFFF',
   surface: '#F8F9FA',
   surfaceLight: '#F0F0F0',
-  
+
   textPrimary: '#000000',
   textSecondary: '#666666',
   textTertiary: '#999999',
-  
+
   success: '#4CAF50',
   warning: '#FF9800',
   error: '#F44336',
-  
+
   cardBackground: '#FFFFFF',
   inputBackground: '#F5F5F5',
   borderColor: '#E0E0E0',
-  
+
   gradient: ['#4A90E2', '#357ABD'],
   orangeGradient: ['#FF6B35', '#FF8A50'],
 };
 
-// Categories matching the design
+
 const CATEGORIES = [
   { id: 'all', name: 'All', icon: 'grid-outline', color: Colors.primary },
   { id: 'fruits', name: 'Fruits', icon: 'nutrition-outline', color: Colors.accent },
@@ -71,7 +73,6 @@ const CATEGORIES = [
 ];
 
 const BuyerDashboard = ({ navigation }) => {
-  // State Management
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState(CATEGORIES);
   const [favorites, setFavorites] = useState([]);
@@ -86,19 +87,75 @@ const BuyerDashboard = ({ navigation }) => {
   const [authToken, setAuthToken] = useState(null);
   const [userId, setUserId] = useState(null);
   const { width, height } = Dimensions.get('window');
-  
-  // Use CartContext instead of local state
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const promoScrollRef = useRef(null);
+
+
+  const promotions = [
+    {
+      discount: '35% OFF',
+      text: 'On your first order from the app and get discount',
+      image: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=200',
+    },
+    {
+      discount: '20% OFF',
+      text: 'Fresh veggies this week only! above RWF 10,000',
+      image: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=200',
+    },
+    {
+      discount: 'Free Delivery',
+      text: 'Enjoy free delivery on orders above RWF 10,000',
+      image: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=200',
+    },
+  ];
+
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const nextIndex = (currentSlide + 1) % promotions.length;
+      setCurrentSlide(nextIndex);
+      promoScrollRef.current?.scrollTo({ x: nextIndex * width, animated: true });
+    }, 4000); // 4 seconds
+
+    return () => clearInterval(interval);
+  }, [currentSlide]);
+
+  const handlePlaceOrder = async () => {
+    try {
+      if (!authToken) {
+        Alert.alert('Authentication Required', 'Please log in to place your order.');
+        return;
+      }
+
+      const response = await axios.post(API_CONFIG.ORDER_URL, {}, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      Alert.alert('✅ Order Placed', 'Your order has been successfully submitted.');
+      clearCart();
+      setIsCartVisible(false);
+
+      console.log('🧾 Order response:', response.data);
+    } catch (error) {
+      console.error('❌ Failed to place order:', error);
+      Alert.alert('Order Failed', 'Could not place order. Please try again.');
+    }
+  };
+
+
   const { cartItems, addToCart, removeFromCart, updateQuantity, clearCart } = useCart();
 
-  
+
   const getAuthToken = useCallback(async () => {
     try {
       const token = await AsyncStorage.getItem(AUTH_KEYS.TOKEN);
       const storedUserId = await AsyncStorage.getItem(AUTH_KEYS.USER_ID);
-      
+
       console.log('🔑 Retrieved token:', token ? 'Token exists' : 'No token');
       console.log('👤 Retrieved userId:', storedUserId);
-      
+
       setAuthToken(token);
       setUserId(storedUserId);
       return token;
@@ -137,7 +194,6 @@ const BuyerDashboard = ({ navigation }) => {
   const productApiClient = useMemo(() => createAuthenticatedClient(API_CONFIG.PRODUCT_BASE_URL), [createAuthenticatedClient]);
   const cartApiClient = useMemo(() => createAuthenticatedClient(API_CONFIG.CART_BASE_URL), [createAuthenticatedClient]);
 
-  // Add request interceptor to include auth token
   useEffect(() => {
     const addAuthInterceptor = (client) => {
       client.interceptors.request.use(
@@ -146,14 +202,14 @@ const BuyerDashboard = ({ navigation }) => {
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
           }
-          
+
           if (userId) {
             config.headers['x-user-id'] = userId;
           }
-          
+
           console.log('🔄 Request URL:', config.url);
           console.log('🔑 Auth header:', config.headers.Authorization ? 'Present' : 'Missing');
-          
+
           return config;
         },
         (error) => {
@@ -185,28 +241,26 @@ const BuyerDashboard = ({ navigation }) => {
     try {
       setLoading(true);
       setError(null);
-      
+
       console.log('🔄 Fetching products from API...');
       const response = await axios.get(API_CONFIG.PRODUCT_BASE_URL, {
         timeout: API_CONFIG.TIMEOUT,
       });
-      
+
       console.log('✅ Products fetched successfully:', response.data?.length || 0);
-      
-      // Transform API data to match component structure
+
       const transformedProducts = response.data.map(product => ({
         ...product,
         price: product.current_price,
-        pricePerKg: 'kg', // Default unit
-        isPopular: product.category === 'fruits', // Mark fruits as popular for demo
+        pricePerKg: 'kg', 
+        isPopular: product.category === 'fruits', 
       }));
-      
+
       setProducts(transformedProducts);
     } catch (err) {
       console.error('❌ Error fetching products:', err);
       setError(err.message || 'Failed to load products');
-      
-      // Show user-friendly error
+
       Alert.alert(
         'Error Loading Products',
         'Unable to load products. Please check your connection and try again.',
@@ -220,18 +274,15 @@ const BuyerDashboard = ({ navigation }) => {
     }
   }, []);
 
-  // Memoized filtered products by category and search
   const filteredProducts = useMemo(() => {
     let filtered = products;
-    
-    // Filter by category
+
     if (selectedCategory && selectedCategory !== 'all') {
-      filtered = filtered.filter(product => 
+      filtered = filtered.filter(product =>
         product.category?.toLowerCase() === selectedCategory.toLowerCase()
       );
     }
-    
-    // Filter by search query
+
     if (searchQuery.trim()) {
       filtered = filtered.filter(product =>
         product.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -240,26 +291,23 @@ const BuyerDashboard = ({ navigation }) => {
         product.description?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-    
+
     return filtered;
   }, [products, selectedCategory, searchQuery]);
 
-  // Get popular fruits (first 6 fruits from API)
   const popularFruits = useMemo(() => {
     return products
       .filter(product => product.category === 'fruits')
       .slice(0, 6);
   }, [products]);
 
-  // Get products by category for display
   const getProductsByCategory = useCallback((category) => {
     if (category === 'all') return products;
-    return products.filter(product => 
+    return products.filter(product =>
       product.category?.toLowerCase() === category.toLowerCase()
     );
   }, [products]);
 
-  // Cart calculations using CartContext
   const cartTotal = useMemo(() => {
     return cartItems.reduce((total, item) => {
       const price = parseFloat(item.current_price?.replace(/[^\d.]/g, '') || item.price?.replace(/[^\d.]/g, '') || '0');
@@ -286,18 +334,18 @@ const BuyerDashboard = ({ navigation }) => {
   const handleAddToCart = useCallback(async (product) => {
     try {
       setAddingToCart(product._id);
-      
+
       // Use CartContext addToCart
       addToCart(product);
-      
+
       Alert.alert(
-        '✅ Added to Cart', 
+        '✅ Added to Cart',
         `${product.title} has been added to your cart.`,
         [
           { text: 'Continue Shopping', style: 'cancel' },
-          { 
-            text: 'View Cart', 
-            onPress: () => setIsCartVisible(true) 
+          {
+            text: 'View Cart',
+            onPress: () => setIsCartVisible(true)
           }
         ]
       );
@@ -316,8 +364,8 @@ const BuyerDashboard = ({ navigation }) => {
       'Are you sure you want to remove this item from your cart?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Remove', 
+        {
+          text: 'Remove',
           style: 'destructive',
           onPress: () => removeFromCart(productId)
         }
@@ -337,7 +385,7 @@ const BuyerDashboard = ({ navigation }) => {
   const toggleFavorite = useCallback(async (productId) => {
     try {
       const isFavorite = favorites.includes(productId);
-      
+
       if (isFavorite) {
         setFavorites(prev => prev.filter(id => id !== productId));
       } else {
@@ -369,7 +417,7 @@ const BuyerDashboard = ({ navigation }) => {
 
   // Enhanced Product Card Component
   const ProductCard = React.memo(({ item }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={styles.productCard}
       activeOpacity={0.8}
       onPress={() =>
@@ -381,8 +429,8 @@ const BuyerDashboard = ({ navigation }) => {
     >
       <View style={styles.imageContainer}>
         {item.img ? (
-          <Image 
-            source={{ uri: item.img }} 
+          <Image
+            source={{ uri: item.img }}
             style={styles.productImage}
             onError={() => console.log('Image load error for:', item.title)}
           />
@@ -391,22 +439,22 @@ const BuyerDashboard = ({ navigation }) => {
             <Ionicons name="image-outline" size={48} color={Colors.textTertiary} />
           </View>
         )}
-        
+
         {/* Price Discount Badge */}
         {item.past_price && item.current_price && (
           <View style={styles.discountBadge}>
             <Text style={styles.discountText}>
-              {Math.round(((parseFloat(item.past_price.replace(/[^\d.]/g, '')) - 
-                           parseFloat(item.current_price.replace(/[^\d.]/g, ''))) / 
-                          parseFloat(item.past_price.replace(/[^\d.]/g, ''))) * 100)}% OFF
+              {Math.round(((parseFloat(item.past_price.replace(/[^\d.]/g, '')) -
+                parseFloat(item.current_price.replace(/[^\d.]/g, ''))) /
+                parseFloat(item.past_price.replace(/[^\d.]/g, ''))) * 100)}% OFF
             </Text>
           </View>
         )}
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={styles.addButton}
           onPress={(e) => {
-            e.stopPropagation(); 
+            e.stopPropagation();
             handleAddToCart(item);
           }}
           disabled={addingToCart === item._id}
@@ -415,11 +463,11 @@ const BuyerDashboard = ({ navigation }) => {
           {addingToCart === item._id ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Ionicons name="add" size={18} color="#fff" />
+            <Ionicons name="add" size={14} color="#10b981" />
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.favoriteButton}
           onPress={(e) => {
             e.stopPropagation();
@@ -427,14 +475,14 @@ const BuyerDashboard = ({ navigation }) => {
           }}
           activeOpacity={0.8}
         >
-          <Ionicons 
-            name={favorites.includes(item._id) ? "heart" : "heart-outline"} 
-            size={16} 
-            color={favorites.includes(item._id) ? Colors.error : Colors.textSecondary} 
+          <Ionicons
+            name={favorites.includes(item._id) ? "heart" : "heart-outline"}
+            size={16}
+            color={favorites.includes(item._id) ? Colors.error : Colors.textSecondary}
           />
         </TouchableOpacity>
       </View>
-      
+
       <View style={styles.productInfo}>
         <Text style={styles.productTitle} numberOfLines={1}>{item.title}</Text>
         <View style={styles.priceContainer}>
@@ -457,7 +505,7 @@ const BuyerDashboard = ({ navigation }) => {
 
   // Category Card Component
   const CategoryCard = React.memo(({ item }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={[
         styles.categoryCard,
         selectedCategory === item.id && styles.selectedCategoryCard
@@ -466,14 +514,14 @@ const BuyerDashboard = ({ navigation }) => {
       activeOpacity={0.8}
     >
       <View style={[
-        styles.categoryIcon, 
+        styles.categoryIcon,
         { backgroundColor: item.color + '20' },
         selectedCategory === item.id && { backgroundColor: item.color }
       ]}>
-        <Ionicons 
-          name={item.icon} 
-          size={24} 
-          color={selectedCategory === item.id ? '#fff' : item.color} 
+        <Ionicons
+          name={item.icon}
+          size={24}
+          color={selectedCategory === item.id ? '#fff' : item.color}
         />
       </View>
       <Text style={[
@@ -493,14 +541,14 @@ const BuyerDashboard = ({ navigation }) => {
         <Text style={styles.cartItemTitle}>{item.title}</Text>
         <Text style={styles.cartItemPrice}>{item.current_price || item.price}</Text>
         <View style={styles.quantityContainer}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.quantityButton}
             onPress={() => handleUpdateQuantity(item._id, item.quantity - 1)}
           >
             <Ionicons name="remove" size={16} color={Colors.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.quantityText}>{item.quantity}</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.quantityButton}
             onPress={() => handleUpdateQuantity(item._id, item.quantity + 1)}
           >
@@ -508,7 +556,7 @@ const BuyerDashboard = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </View>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.removeButton}
         onPress={() => handleRemoveFromCart(item._id)}
       >
@@ -521,7 +569,7 @@ const BuyerDashboard = ({ navigation }) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+        <ActivityIndicator size="large" color={"#2E7D31"} />
         <Text style={styles.loadingText}>Loading products...</Text>
       </View>
     );
@@ -543,23 +591,21 @@ const BuyerDashboard = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
+          <RefreshControl
+            refreshing={refreshing}
             onRefresh={onRefresh}
             colors={[Colors.primary]}
             tintColor={Colors.primary}
           />
         }
       >
-        {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <View>
-              <Text style={styles.headerGreeting}>Welcome!</Text>
               <Text style={styles.headerName}>Aminur tahmid</Text>
             </View>
             <TouchableOpacity style={styles.profileButton}>
@@ -568,8 +614,7 @@ const BuyerDashboard = ({ navigation }) => {
               </View>
             </TouchableOpacity>
           </View>
-          
-          {/* Search Bar */}
+
           <View style={styles.searchContainer}>
             <View style={styles.searchInputContainer}>
               <Ionicons name="search-outline" size={20} color={Colors.textSecondary} />
@@ -589,29 +634,79 @@ const BuyerDashboard = ({ navigation }) => {
         </View>
 
         {/* Promotion Banner */}
-        <View style={styles.promotionBanner}>
-          <View style={styles.promotionContent}>
-            <Text style={styles.promotionDiscount}>35% OFF</Text>
-            <Text style={styles.promotionText}>
-              On your first order from the app and get discount
-            </Text>
-            <TouchableOpacity style={styles.orderNowButton}>
-              <Text style={styles.orderNowText}>Order Now</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.promotionImageContainer}>
-            <Image 
-              source={{ uri: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=200' }}
-              style={styles.promotionImage}
-              resizeMode="contain"
-            />
+        <View style={styles.promotionSection}>
+          <ScrollView
+            ref={promoScrollRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={(e) => {
+              const index = Math.round(e.nativeEvent.contentOffset.x / width);
+              setCurrentSlide(index);
+            }}
+            scrollEventThrottle={16}
+            style={styles.promotionScrollView}
+          >
+            {promotions.map((promo, index) => (
+              <View key={index} style={[styles.promotionBanner, { width }]}>
+                <View style={styles.promotionCard}>
+                  <View style={styles.promotionContent}>
+                    <View style={styles.promotionBadge}>
+                      <Text style={styles.promotionDiscount}>{promo.discount}</Text>
+                    </View>
+                    <Text style={styles.promotionText}>{promo.text}</Text>
+                    <TouchableOpacity
+                      style={styles.orderNowButton}
+                      onPress={() => {
+                        handlePlaceOrder();
+                        console.log(`Clicked promo: ${promo.discount}`);
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={styles.orderNowText}>Order Now</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.promotionImageContainer}>
+                    <View style={styles.imageWrapper}>
+                      <Image
+                        source={{ uri: promo.image }}
+                        style={styles.promotionImage}
+                        resizeMode="cover"
+                      />
+                    </View>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+
+          {/* Enhanced Dot Indicators */}
+          <View style={styles.indicatorContainer}>
+            {promotions.map((_, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.indicator,
+                  {
+                    backgroundColor: index === currentSlide ? '#2E7D31' : 'rgba(255, 255, 255, 0.4)',
+                    width: index === currentSlide ? 24 : 8,
+                  }
+                ]}
+                onPress={() => {
+                  setCurrentSlide(index);
+                  promoScrollRef.current?.scrollTo({ x: index * width, animated: true });
+                }}
+                activeOpacity={0.7}
+              />
+            ))}
           </View>
         </View>
 
+
         {/* Categories */}
         <View style={styles.section}>
-          <ScrollView 
-            horizontal 
+          <ScrollView
+            horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.categoriesContainer}
           >
@@ -630,8 +725,8 @@ const BuyerDashboard = ({ navigation }) => {
                 <Text style={styles.seeAllText}>See All</Text>
               </TouchableOpacity>
             </View>
-            <ScrollView 
-              horizontal 
+            <ScrollView
+              horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.productsContainer}
             >
@@ -644,15 +739,15 @@ const BuyerDashboard = ({ navigation }) => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>
-                {searchQuery ? `Search Results (${filteredProducts.length})` : 
-                 selectedCategory === 'all' ? 'All Products' : 
-                 categories.find(c => c.id === selectedCategory)?.name || 'Products'}
+                {searchQuery ? `Search Results (${filteredProducts.length})` :
+                  selectedCategory === 'all' ? 'All Products' :
+                    categories.find(c => c.id === selectedCategory)?.name || 'Products'}
               </Text>
             </View>
-            
+
             {filteredProducts.length > 0 ? (
-              <ScrollView 
-                horizontal 
+              <ScrollView
+                horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.productsContainer}
               >
@@ -665,8 +760,8 @@ const BuyerDashboard = ({ navigation }) => {
                 <Ionicons name="search-outline" size={60} color={Colors.textSecondary} />
                 <Text style={styles.emptyResultsTitle}>No products found</Text>
                 <Text style={styles.emptyResultsText}>
-                  {searchQuery ? 
-                    `No results for "${searchQuery}"` : 
+                  {searchQuery ?
+                    `No results for "${searchQuery}"` :
                     `No products in ${categories.find(c => c.id === selectedCategory)?.name || 'this category'}`
                   }
                 </Text>
@@ -681,8 +776,8 @@ const BuyerDashboard = ({ navigation }) => {
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>All Products</Text>
             </View>
-            <ScrollView 
-              horizontal 
+            <ScrollView
+              horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.productsContainer}
             >
@@ -695,8 +790,8 @@ const BuyerDashboard = ({ navigation }) => {
       </ScrollView>
 
       {/* Floating Cart Icon */}
-      <TouchableOpacity 
-        style={styles.cartIcon} 
+      <TouchableOpacity
+        style={styles.cartIcon}
         onPress={() => setIsCartVisible(true)}
         activeOpacity={0.8}
       >
@@ -717,21 +812,21 @@ const BuyerDashboard = ({ navigation }) => {
         <SafeAreaView style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Shopping Cart ({cartItemCount})</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => setIsCartVisible(false)}
               style={styles.modalCloseButton}
             >
               <Ionicons name="close" size={24} color={Colors.textPrimary} />
             </TouchableOpacity>
           </View>
-          
+
           {cartItems.length === 0 ? (
             <View style={styles.emptyCart}>
               <Ionicons name="bag-outline" size={80} color={Colors.textSecondary} />
               <Text style={styles.emptyCartTitle}>Your cart is empty</Text>
               <Text style={styles.emptyCartSubtitle}>Add items to get started</Text>
-              <TouchableOpacity 
-                style={styles.shopNowBtn} 
+              <TouchableOpacity
+                style={styles.shopNowBtn}
                 onPress={() => setIsCartVisible(false)}
               >
                 <Text style={styles.shopNowBtnText}>Continue Shopping</Text>
@@ -744,14 +839,14 @@ const BuyerDashboard = ({ navigation }) => {
                   <CartItemCard key={item._id} item={item} />
                 ))}
               </ScrollView>
-              
+
               <View style={styles.cartFooter}>
                 <View style={styles.cartSummary}>
                   <View style={styles.cartTotal}>
                     <Text style={styles.cartTotalLabel}>Total ({cartItemCount} items):</Text>
                     <Text style={styles.cartTotalAmount}>RWF {cartTotal.toLocaleString()}</Text>
                   </View>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.clearCartButton}
                     onPress={() => {
                       Alert.alert(
@@ -759,8 +854,8 @@ const BuyerDashboard = ({ navigation }) => {
                         'Are you sure you want to remove all items from your cart?',
                         [
                           { text: 'Cancel', style: 'cancel' },
-                          { 
-                            text: 'Clear', 
+                          {
+                            text: 'Clear',
                             style: 'destructive',
                             onPress: clearCart
                           }
@@ -772,7 +867,7 @@ const BuyerDashboard = ({ navigation }) => {
                   </TouchableOpacity>
                 </View>
                 <TouchableOpacity style={styles.checkoutBtn}>
-                  <Text style={styles.checkoutBtnText}>Proceed to Checkout</Text>
+                  <Text style={styles.checkoutBtnText}>Order Now</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -823,7 +918,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   retryButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: '#2E7D31',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
@@ -834,7 +929,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  
+
   // Header
   header: {
     paddingHorizontal: 20,
@@ -855,7 +950,7 @@ const styles = StyleSheet.create({
   // headerName: {
   //   fontSize: 18,
   //   fontWeight: '600',
-    headerName: {
+  headerName: {
     fontSize: 18,
     fontWeight: '600',
     color: Colors.textPrimary,
@@ -871,7 +966,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  
+
   // Search
   searchContainer: {
     flexDirection: 'row',
@@ -1012,24 +1107,20 @@ const styles = StyleSheet.create({
     paddingRight: 40,
   },
   productCard: {
-    width: 160,
-    backgroundColor: Colors.cardBackground,
-    borderRadius: 16,
-    marginRight: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+  width: 160,
+  backgroundColor: Colors.cardBackground,
+  borderRadius: 5,
+  marginRight: 16,
+  borderWidth: 1,
+  borderColor: '#F0F0F0',
+  
+
   },
   imageContainer: {
     position: 'relative',
-    height: 120,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    height: 100,
+    borderTopLeftRadius: 5,
+    borderTopRightRadius: 5,
     overflow: 'hidden',
   },
   productImage: {
@@ -1064,7 +1155,7 @@ const styles = StyleSheet.create({
     right: 8,
     width: 28,
     height: 28,
-    backgroundColor: Colors.primary,
+    backgroundColor: '#dcfce7',
     borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1095,21 +1186,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: Colors.textPrimary,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   priceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: 4,
+    gap: 12,
+    marginBottom: 2,
   },
   productPrice: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '700',
-    color: Colors.primary,
+    color: '#2E7D31',
   },
   priceUnit: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '400',
     color: Colors.textSecondary,
   },
@@ -1123,7 +1214,6 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
 
-  // Empty Results
   emptyResults: {
     alignItems: 'center',
     paddingVertical: 40,
@@ -1151,9 +1241,9 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   cartIconContainer: {
-    width: 56,
-    height: 56,
-    backgroundColor: Colors.primary,
+    width: 50,
+    height: 50,
+    backgroundColor: '#2E7D31',
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1168,7 +1258,7 @@ const styles = StyleSheet.create({
   },
   cartBadge: {
     position: 'absolute',
-    top: -4,
+    top: -5,
     right: -4,
     backgroundColor: Colors.error,
     minWidth: 20,
@@ -1226,7 +1316,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   shopNowBtn: {
-    backgroundColor: Colors.primary,
+    backgroundColor: '#2E7D31',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
@@ -1280,7 +1370,7 @@ const styles = StyleSheet.create({
   cartItemPrice: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.primary,
+    color: '#2E7D31',
     marginBottom: 8,
   },
   quantityContainer: {
@@ -1346,7 +1436,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   checkoutBtn: {
-    backgroundColor: Colors.primary,
+    backgroundColor: '#2E7D31',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -1355,6 +1445,118 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
+  },
+
+  promotionSection: {
+    marginBottom: 5,
+  },
+
+  promotionScrollView: {
+    marginBottom: 10,
+  },
+
+  promotionBanner: {
+    paddingHorizontal: 20,
+  },
+
+  promotionCard: {
+    backgroundColor: '#F1F8E9',
+    borderRadius: 20,
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',   
+    overflow: 'hidden',
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: '#E8F5E8'
+  },
+
+  promotionContent: {
+    flex: 1,
+    zIndex: 2,
+  },
+
+  promotionBadge: {
+    backgroundColor: '#2E7D31',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+
+  promotionDiscount: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: '#fff',
+    letterSpacing: 0.5,
+  },
+
+  promotionText: {
+    fontSize: 15,
+    color: '#2E7D31',
+    opacity: 0.95,
+    marginBottom: 20,
+    lineHeight: 22,
+    fontWeight: '500',
+  },
+
+  orderNowButton: {
+    backgroundColor: '#2E7D31',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 25,
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    
+  },
+
+  orderNowText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#fff',
+  },
+
+  promotionImageContainer: {
+    width: 100,
+    height: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+
+  imageWrapper: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    overflow: 'hidden',
+    borderWidth: 3,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+ 
+  },
+
+  promotionImage: {
+    width: '100%',
+    height: '100%',
+  },
+
+  indicatorContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    gap: 8,
+  },
+
+  indicator: {
+    height: 8,
+    borderRadius: 4,
+    transition: 'all 0.3s ease',
   },
 });
 

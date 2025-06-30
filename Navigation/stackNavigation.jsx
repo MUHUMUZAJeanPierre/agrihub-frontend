@@ -9,6 +9,7 @@ import Forgot from '../Screens/forgot';
 import Onboarding from '../Components/onboarding';
 import BottomNav from './Bottomnav';
 import Detail from '../Screens/Farmer/description';
+import Chat from '../Screens/Farmer/Chat';
 import ProductDetailScreen from '../Screens/ProductDetailScreen';
 
 const Stack = createNativeStackNavigator();
@@ -51,6 +52,7 @@ export default function StackNavigation() {
               <>
                 <Stack.Screen name="farmer" component={BottomNav} />
                 <Stack.Screen name="farmerblog" component={Detail} />
+                <Stack.Screen name="chat" component={Chat} />
               </>
             )}
             {userRole === 'buyer' && (
