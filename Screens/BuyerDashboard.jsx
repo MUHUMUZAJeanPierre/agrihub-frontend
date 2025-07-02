@@ -14,6 +14,7 @@ import {
   RefreshControl,
   ActivityIndicator,
   SafeAreaView,
+  StatusBar
 } from 'react-native';
 import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,15 +22,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCart } from '../contexts/CartContext';
 import { Button } from 'react-native-paper';
 
-// API Configuration
 const API_CONFIG = {
   PRODUCT_BASE_URL: 'https://agrihub-backend-4z99.onrender.com/product',
   CART_BASE_URL: 'https://agrihub-backend-4z99.onrender.com/cart',
-  ORDER_URL: 'https://agrihub-backend-4z99.onrender.com/orders/place-order',
+  ORDER_URL: 'https://agrihub-backend-4z99.onrender.com/api/orders/place-order',
   TIMEOUT: 10000,
 };
 
-// Auth Storage Keys
 const AUTH_KEYS = {
   TOKEN: '@auth_token',
   USER_ID: '@user_id',
@@ -432,7 +431,6 @@ const BuyerDashboard = ({ navigation }) => {
           <Image
             source={{ uri: item.img }}
             style={styles.productImage}
-            onError={() => console.log('Image load error for:', item.title)}
           />
         ) : (
           <View style={styles.placeholderImage}>
@@ -591,6 +589,7 @@ const BuyerDashboard = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#4CAF50" />
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
@@ -679,8 +678,6 @@ const BuyerDashboard = ({ navigation }) => {
               </View>
             ))}
           </ScrollView>
-
-          {/* Enhanced Dot Indicators */}
           <View style={styles.indicatorContainer}>
             {promotions.map((_, index) => (
               <TouchableOpacity
@@ -770,7 +767,6 @@ const BuyerDashboard = ({ navigation }) => {
           </View>
         )}
 
-        {/* All Products Section (when no category selected) */}
         {selectedCategory === 'all' && !searchQuery && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -789,7 +785,6 @@ const BuyerDashboard = ({ navigation }) => {
         )}
       </ScrollView>
 
-      {/* Floating Cart Icon */}
       <TouchableOpacity
         style={styles.cartIcon}
         onPress={() => setIsCartVisible(true)}
@@ -807,7 +802,6 @@ const BuyerDashboard = ({ navigation }) => {
         </View>
       </TouchableOpacity>
 
-      {/* Enhanced Cart Modal */}
       <Modal visible={isCartVisible} animationType="slide" presentationStyle="pageSheet">
         <SafeAreaView style={styles.modalContainer}>
           <View style={styles.modalHeader}>

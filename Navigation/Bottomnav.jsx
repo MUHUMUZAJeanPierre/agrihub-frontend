@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
         borderColor: '#FFFFFF',
     },
     ordersBadge: {
-        backgroundColor: '#FF8C42', // Different color for orders badge
+        backgroundColor: '#FF8C42', 
     },
     badgeText: {
         color: '#FFFFFF',
@@ -298,7 +298,11 @@ const styles = StyleSheet.create({
 });
 
 
+
+
+
 // import React, { useEffect, useState } from 'react';
+// import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
 // import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 // import AsyncStorage from '@react-native-async-storage/async-storage';
 // import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -315,208 +319,52 @@ const styles = StyleSheet.create({
 // import AgroChat from '../Screens/Agronome/chat';
 // import OrdersScreen from '../Screens/OrdersScreen';
 // import SearchScreen from '../Screens/SearchScreen';
-// import Animated from 'react-native-reanimated';
-// import Icon from 'react-native-vector-icons/Ionicons';
-
-// const AnimatedIcon = Animated.createAnimatedComponent(Icon);
+// import { useCart } from '../contexts/CartContext'; // Import the cart context
 
 // const Tab = createBottomTabNavigator();
 
-// const tabBarStyle = {
-//     height: 60,
-//     paddingBottom: 8,
-//     paddingTop: 4,
-// };
-
-// const tabBarActiveTintColor = '#4BA26A';
-// const tabBarInactiveTintColor = '#aaa';
-
-// export default function BottomNav() {
-//     const [userRole, setUserRole] = useState(null);
-
-//     useEffect(() => {
-//         const fetchUserRole = async () => {
-//             try {
-//                 const userData = await AsyncStorage.getItem('@user_data');
-//                 const parsed = JSON.parse(userData);
-//                 setUserRole(parsed?.role || null);
-//             } catch (err) {
-//                 console.error('Error loading user role:', err);
-//             }
-//         };
-//         fetchUserRole();
-//     }, []);
-
-//     if (!userRole) return null;
+// // Custom Cart Icon with Badge Component
+// const CartIconWithBadge = ({ focused, color, size = 20 }) => {
+//     const { cartItems } = useCart();
+//     const itemCount = cartItems.length;
 
 //     return (
-//         <Tab.Navigator
-//             screenOptions={{
-//                 tabBarStyle,
-//                 tabBarLabelStyle: { fontSize: 12 },
-//                 tabBarActiveTintColor,
-//                 tabBarInactiveTintColor,
-//                 headerShown: false,
-//             }}
-//         >
-//             {userRole === 'farmer' && (
-//                 <>
-//                     <Tab.Screen
-//                         name="Home"
-//                         component={Farmerdash}
-//                         options={{
-//                             tabBarIcon: ({ focused }) => (
-//                                 <Ionicons name="home-outline" size={20} color={focused ? tabBarActiveTintColor : tabBarInactiveTintColor} />
-//                             ),
-//                         }}
-//                     />
-//                     <Tab.Screen
-//                         name="Chat"
-//                         component={Chat}
-//                         options={{
-//                             tabBarIcon: ({ focused }) => (
-//                                 <Ionicons name="chatbox-outline" size={20} color={focused ? tabBarActiveTintColor : tabBarInactiveTintColor} />
-//                             ),
-//                         }}
-//                     />
-//                     <Tab.Screen
-//                         name="Add Product"
-//                         component={Addproduct}
-//                         options={{
-//                             tabBarIcon: ({ focused }) => (
-//                                 <MaterialIcons name="add-to-photos" size={20} color={focused ? tabBarActiveTintColor : tabBarInactiveTintColor} />
-//                             ),
-//                         }}
-//                     />
-//                     <Tab.Screen
-//                         name="Profile"
-//                         component={ProfileScreen}
-//                         options={{
-//                             tabBarIcon: ({ focused }) => (
-//                                 <MaterialIcons name="person-outline" size={20} color={focused ? tabBarActiveTintColor : tabBarInactiveTintColor} />
-//                             ),
-//                         }}
-//                     />
-//                 </>
+//         <View style={styles.iconContainer}>
+//             <Ionicons 
+//                 name="cart" 
+//                 size={size} 
+//                 color={color} 
+//             />
+//             {itemCount > 0 && (
+//                 <View style={styles.badge}>
+//                     <Text style={styles.badgeText}>
+//                         {itemCount > 99 ? '99+' : itemCount.toString()}
+//                     </Text>
+//                 </View>
 //             )}
-
-//             {userRole === 'plant pathologist' && (
-//                 <>
-//                     <Tab.Screen
-//                         name="AgroHome"
-//                         component={Agronomistdash}
-//                         options={{
-//                             tabBarIcon: ({ focused }) => (
-//                                 <Ionicons name="home-outline" size={20} color={focused ? tabBarActiveTintColor : tabBarInactiveTintColor} />
-//                             ),
-//                         }}
-//                     />
-//                     <Tab.Screen
-//                         name="Chat"
-//                         component={AgroChat}
-//                         options={{
-//                             tabBarIcon: ({ focused }) => (
-//                                 <Ionicons name="chatbox-outline" size={20} color={focused ? tabBarActiveTintColor : tabBarInactiveTintColor} />
-//                             ),
-//                         }}
-//                     />
-//                     <Tab.Screen
-//                         name="Add Blog"
-//                         component={AddBlog}
-//                         options={{
-//                             tabBarIcon: ({ focused }) => (
-//                                 <MaterialIcons name="add-to-photos" size={20} color={focused ? tabBarActiveTintColor : tabBarInactiveTintColor} />
-//                             ),
-//                         }}
-//                     />
-//                     <Tab.Screen
-//                         name="Profile"
-//                         component={ProfileScreen}
-//                         options={{
-//                             tabBarIcon: ({ focused }) => (
-//                                 <MaterialIcons name="person-outline" size={20} color={focused ? tabBarActiveTintColor : tabBarInactiveTintColor} />
-//                             ),
-//                         }}
-//                     />
-//                 </>
-//             )}
-
-//             {userRole === 'buyer' && (
-//                 <>
-//                     <Tab.Screen
-//                         name="Home"
-//                         component={BuyerDashboard}
-//                         options={{
-//                             tabBarIcon: ({ focused }) => (
-//                                 <Ionicons name="home-outline" size={23} color={focused ? tabBarActiveTintColor : tabBarInactiveTintColor} />
-//                             ),
-//                         }}
-//                     />
-//                     <Tab.Screen
-//                         name="Search"
-//                         component={SearchScreen}
-//                         options={{
-//                             tabBarIcon: ({ focused, color }) => (
-//                                 <AnimatedIcon name="search-outline" size={23}  color={focused ? tabBarActiveTintColor : tabBarInactiveTintColor} />
-//                             ),
-//                         }}
-//                     />
-//                     <Tab.Screen
-//                         name="Orders"
-//                         component={OrdersScreen}
-//                         options={{
-//                             tabBarIcon: ({ focused, color }) => (
-//                                 <AnimatedIcon name="receipt-outline" size={23}  color={focused ? tabBarActiveTintColor : tabBarInactiveTintColor} />
-//                             ),
-//                         }}
-//                     />
-//                     <Tab.Screen
-//                         name="Cart"
-//                         component={Cart}
-//                         options={{
-//                             tabBarIcon: ({ focused }) => (
-//                                 <Ionicons name="cart-outline" size={23} color={focused ? tabBarActiveTintColor : tabBarInactiveTintColor} />
-//                             ),
-//                         }}
-//                     />
-//                     <Tab.Screen
-//                         name="Profile"
-//                         component={ProfileScreen}
-//                         options={{
-//                             tabBarIcon: ({ focused }) => (
-//                                 <MaterialIcons name="person-outline" size={23} color={focused ? tabBarActiveTintColor : tabBarInactiveTintColor} />
-//                             ),
-//                         }}
-//                     />
-//                 </>
-//             )}
-//         </Tab.Navigator>
+//         </View>
 //     );
-// }
+// };
 
-
-
-
-// import React, { useEffect, useState } from 'react';
-// import { View, TouchableOpacity, StyleSheet } from 'react-native';
-// import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-// import AsyncStorage from '@react-native-async-storage/async-storage';
-// import Ionicons from 'react-native-vector-icons/Ionicons';
-// import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-
-// import BuyerDashboard from '../Screens/BuyerDashboard';
-// import Cart from '../Screens/Cart';
-// import ProfileScreen from '../Screens/Profile';
-// import Addproduct from '../Screens/Farmer/Addproduct';
-// import Farmerdash from '../Screens/Farmer/Farmerdash';
-// import Agronomistdash from '../Screens/Agronome/Agronomistdash';
-// import Chat from '../Screens/Farmer/Chat';
-// import AddBlog from '../Screens/Agronome/AddBlog';
-// import AgroChat from '../Screens/Agronome/chat';
-// import OrdersScreen from '../Screens/OrdersScreen';
-// import SearchScreen from '../Screens/SearchScreen';
-
-// const Tab = createBottomTabNavigator();
+// // Custom Orders Icon with Badge Component
+// const OrdersIconWithBadge = ({ focused, color, size = 24, pendingOrdersCount = 0 }) => {
+//     return (
+//         <View style={styles.iconContainer}>
+//             <Ionicons 
+//                 name="heart" 
+//                 size={size} 
+//                 color={color} 
+//             />
+//             {pendingOrdersCount > 0 && (
+//                 <View style={[styles.badge, styles.ordersBadge]}>
+//                     <Text style={styles.badgeText}>
+//                         {pendingOrdersCount > 99 ? '99+' : pendingOrdersCount.toString()}
+//                     </Text>
+//                 </View>
+//             )}
+//         </View>
+//     );
+// };
 
 // // Custom Tab Bar Component
 // function CustomTabBar({ state, descriptors, navigation }) {
@@ -567,6 +415,7 @@ const styles = StyleSheet.create({
 
 // export default function BottomNav() {
 //     const [userRole, setUserRole] = useState(null);
+//     const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
 
 //     useEffect(() => {
 //         const fetchUserRole = async () => {
@@ -580,6 +429,27 @@ const styles = StyleSheet.create({
 //         };
 //         fetchUserRole();
 //     }, []);
+
+//     // Optional: Fetch pending orders count for orders tab
+//     useEffect(() => {
+//         const fetchPendingOrders = async () => {
+//             try {
+//                 // Replace with your actual API call to get pending orders
+//                 // const response = await fetch('your-api-endpoint/pending-orders');
+//                 // const data = await response.json();
+//                 // setPendingOrdersCount(data.count || 0);
+                
+//                 // For now, using mock data - remove this when implementing real API
+//                 setPendingOrdersCount(0);
+//             } catch (error) {
+//                 console.error('Error fetching pending orders:', error);
+//             }
+//         };
+
+//         if (userRole === 'buyer') {
+//             fetchPendingOrders();
+//         }
+//     }, [userRole]);
 
 //     if (!userRole) return null;
 
@@ -615,7 +485,7 @@ const styles = StyleSheet.create({
 //                         component={Addproduct}
 //                         options={{
 //                             tabBarIcon: ({ focused, color }) => (
-//                                 <Ionicons name="heart" size={24} color="#fff" />
+//                                 <MaterialIcons name="add-to-photos" size={24} color="#fff" />
 //                             ),
 //                         }}
 //                     />
@@ -665,7 +535,7 @@ const styles = StyleSheet.create({
 //                         component={AddBlog}
 //                         options={{
 //                             tabBarIcon: ({ focused, color }) => (
-//                                 <Ionicons name="heart" size={24} color="#fff" />
+//                                 <MaterialIcons name="add-to-photos" size={24} color="#fff" />
 //                             ),
 //                         }}
 //                     />
@@ -674,7 +544,11 @@ const styles = StyleSheet.create({
 //                         component={OrdersScreen}
 //                         options={{
 //                             tabBarIcon: ({ focused, color }) => (
-//                                 <Ionicons name="receipt" size={20} color={color} />
+//                                 <OrdersIconWithBadge 
+//                                     focused={focused} 
+//                                     color={color}
+//                                     pendingOrdersCount={pendingOrdersCount}
+//                                 />
 //                             ),
 //                         }}
 //                     />
@@ -706,7 +580,7 @@ const styles = StyleSheet.create({
 //                         component={SearchScreen}
 //                         options={{
 //                             tabBarIcon: ({ focused, color }) => (
-//                                 <Ionicons name="lock-closed" size={20} color={color} />
+//                                 <Ionicons name="search" size={20} color={color} />
 //                             ),
 //                         }}
 //                     />
@@ -715,7 +589,11 @@ const styles = StyleSheet.create({
 //                         component={OrdersScreen}
 //                         options={{
 //                             tabBarIcon: ({ focused, color }) => (
-//                                 <Ionicons name="heart" size={24} color="#fff" />
+//                                 <OrdersIconWithBadge 
+//                                     focused={focused} 
+//                                     color={color}
+//                                     pendingOrdersCount={pendingOrdersCount}
+//                                 />
 //                             ),
 //                         }}
 //                     />
@@ -724,7 +602,10 @@ const styles = StyleSheet.create({
 //                         component={Cart}
 //                         options={{
 //                             tabBarIcon: ({ focused, color }) => (
-//                                 <Ionicons name="chatbox" size={20} color={color} />
+//                                 <CartIconWithBadge 
+//                                     focused={focused} 
+//                                     color={color}
+//                                 />
 //                             ),
 //                         }}
 //                     />
@@ -777,25 +658,55 @@ const styles = StyleSheet.create({
 //         minWidth: 40,
 //         minHeight: 40,
 //     },
-//     // centerButton: {
-//     //     backgroundColor: '#fff',
-//     //     borderRadius: 25,
-//     //     width: 50,
-//     //     height: 50,
-//     //     marginHorizontal: 5,
-//     //     shadowColor: '#000',
-//     //     shadowOffset: {
-//     //         width: 0,
-//     //         height: 2,
-//     //     },
-//     //     shadowOpacity: 0.2,
-//     //     shadowRadius: 4,
-//     //     elevation: 4,
-//     // },
+//     centerButton: {
+//         backgroundColor: '#fff',
+//         borderRadius: 25,
+//         width: 50,
+//         height: 50,
+//         marginHorizontal: 5,
+//         shadowColor: '#000',
+//         shadowOffset: {
+//             width: 0,
+//             height: 2,
+//         },
+//         shadowOpacity: 0.2,
+//         shadowRadius: 4,
+//         elevation: 4,
+//     },
 //     activeButton: {
 //         backgroundColor: 'rgba(255, 255, 255, 0.1)',
 //         borderRadius: 25,
 //         width: 50,
 //         height: 50,
+//     },
+//     iconContainer: {
+//         position: 'relative',
+//         alignItems: 'center',
+//         justifyContent: 'center',
+//     },
+//     badge: {
+//         position: 'absolute',
+//         top: -8,
+//         right: -8,
+//         backgroundColor: '#FF4444',
+//         borderRadius: 10,
+//         minWidth: 20,
+//         height: 20,
+//         justifyContent: 'center',
+//         alignItems: 'center',
+//         paddingHorizontal: 4,
+//         borderWidth: 2,
+//         borderColor: '#FFFFFF',
+//     },
+//     ordersBadge: {
+//         backgroundColor: '#FF8C42',
+//     },
+//     badgeText: {
+//         color: '#FFFFFF',
+//         fontSize: 11,
+//         fontWeight: '700',
+//         textAlign: 'center',
+//         includeFontPadding: false,
+//         textAlignVertical: 'center',
 //     },
 // });

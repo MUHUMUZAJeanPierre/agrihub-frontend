@@ -19,7 +19,7 @@ import * as SecureStore from 'expo-secure-store';
 const { width } = Dimensions.get('window');
 
 const API_CONFIG = {
-  ORDER_URL: 'https://agrihub-backend-4z99.onrender.com/orders/place-order',
+  ORDER_URL: 'https://agrihub-backend-4z99.onrender.com/api/orders/place-order',
 };
 
 const AUTH_KEYS = {
@@ -32,8 +32,9 @@ const CartScreen = ({ navigation }) => {
   const [authToken, setAuthToken] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  const { cartItems, removeFromCart, updateQuantity, clearCart } = useCart();
+  const { cartItems, removeFromCart, updateQuantity, clearCart, refreshCart } = useCart();
 
   useEffect(() => {
     loadAuthToken();
@@ -41,87 +42,117 @@ const CartScreen = ({ navigation }) => {
 
   const loadAuthToken = async () => {
     try {
-      const token = await SecureStore.getItemAsync('auth_token');
+      const token = await SecureStore.getItemAsync(AUTH_KEYS.TOKEN);
       setAuthToken(token);
     } catch (error) {
       console.log('Token load error:', error);
     }
   };
 
-  const handlePlaceOrder = async () => {
-    if (isPlacingOrder) return; // Prevent double submission
-
+  // Handle cart refresh/update
+  const handleRefreshCart = async () => {
+    if (isUpdating) return;
+    
+    setIsUpdating(true);
     try {
-      setIsPlacingOrder(true);
-      
-      const token = await SecureStore.getItemAsync('auth_token');
-
-      if (!token) {
-        Alert.alert('Authentication Required', 'Please log in to place an order.');
-        navigation.navigate('Login'); // Navigate to login if not authenticated
-        return;
+      // If your cart context has a refresh method, call it
+      if (refreshCart) {
+        await refreshCart();
       }
-
-      if (cartItems.length === 0) {
-        Alert.alert('Cart is Empty', 'Add items to cart before placing order.');
-        return;
-      }
-
-      // Prepare order data
-      const orderData = {
-        items: cartItems.map(item => ({
-          productId: item._id,
-          name: item.title || item.name,
-          price: extractPrice(item.current_price || item.price),
-          quantity: item.quantity,
-          total: extractPrice(item.current_price || item.price) * item.quantity
-        })),
-        totalAmount: total,
-        timestamp: new Date().toISOString()
-      };
-
-      const response = await fetch(API_CONFIG.ORDER_URL, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(orderData),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        Alert.alert(
-          '✅ Order Placed Successfully', 
-          'Your order has been submitted and will be processed soon.',
-          [
-            {
-              text: 'Continue Shopping',
-              onPress: () => {
-                clearCart();
-                navigation.navigate('Home');
-              }
-            }
-          ]
-        );
-      } else {
-        console.error('❌ Order failed:', data);
-        Alert.alert(
-          '❌ Order Failed', 
-          data?.message || data?.error || 'Unable to place order. Please try again.'
-        );
-      }
+      // You could also re-fetch cart data from your API here
+      // await fetchLatestCartData();
     } catch (error) {
-      console.error('❌ Network/order error:', error);
-      Alert.alert(
-        'Network Error', 
-        'Unable to place your order. Please check your connection and try again.'
-      );
+      console.error('Error refreshing cart:', error);
+      Alert.alert('Update Failed', 'Unable to refresh cart. Please try again.');
     } finally {
-      setIsPlacingOrder(false);
+      setIsUpdating(false);
     }
   };
+
+  const handlePlaceOrder = async () => {
+  if (isPlacingOrder) return; 
+
+  try {
+    setIsPlacingOrder(true);
+
+    const token = await SecureStore.getItemAsync(AUTH_KEYS.TOKEN);
+    if (!token) {
+      Alert.alert('Authentication Required', 'Please log in to place an order.');
+      navigation.navigate('Login');
+      return;
+    }
+
+    if (cartItems.length === 0) {
+      Alert.alert('Cart is Empty', 'Add items to cart before placing an order.');
+      return;
+    }
+
+    console.log('Cart Items:', cartItems);  // Debug log to check cart items
+
+    // Calculate total amount
+    const totalAmount = cartItems.reduce((sum, item) => {
+      const price = extractPrice(item.current_price || item.price);
+      return sum + price * item.quantity;
+    }, 0);
+
+    if (totalAmount <= 0) {
+      Alert.alert('Error', 'Total amount calculation failed.');
+      return;
+    }
+
+    const orderData = {
+      items: cartItems.map(item => ({
+        product: item._id,  
+        quantity: item.quantity,
+      })),
+      totalAmount: totalAmount,  
+    };
+
+    console.log("Sending order data:", JSON.stringify(orderData));
+
+    const response = await fetch(API_CONFIG.ORDER_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(orderData),
+    });
+
+    const data = await response.json();
+    console.log('Response data:', data);
+
+    if (response.ok) {
+      Alert.alert(
+        '✅ Order Placed Successfully',
+        'Your order has been submitted and will be processed soon.',
+        [
+          {
+            text: 'Continue Shopping',
+            onPress: () => {
+              clearCart();
+              navigation.navigate('Home');
+            }
+          }
+        ]
+      );
+    } else {
+      console.error('❌ Order failed:', data);
+      Alert.alert(
+        '❌ Order Failed',
+        data?.message || data?.error || 'Unable to place order. Please try again.'
+      );
+    }
+  } catch (error) {
+    console.error('❌ Network/order error:', error);
+    Alert.alert(
+      'Network Error',
+      'Unable to place your order. Please check your connection and try again.'
+    );
+  } finally {
+    setIsPlacingOrder(false);
+  }
+};
 
   const extractPrice = (price) => {
     if (!price) return 0;
@@ -240,26 +271,16 @@ const CartScreen = ({ navigation }) => {
           <View style={styles.quantitySection}>
             <View style={styles.quantityControls}>
               <TouchableOpacity
-                style={[
-                  styles.quantityButton, 
-                  styles.decreaseButton,
-                  item.quantity <= 1 && styles.disabledButton
-                ]}
+                style={[styles.quantityButton, styles.decreaseButton, item.quantity <= 1 && styles.disabledButton]}
                 onPress={() => handleQuantityUpdate(item._id, item.quantity - 1)}
                 disabled={item.quantity <= 1}
                 accessibilityLabel="Decrease quantity"
               >
-                <Ionicons
-                  name="remove"
-                  size={16}
-                  color={item.quantity <= 1 ? '#CCC' : '#666'}
-                />
+                <Ionicons name="remove" size={16} color={item.quantity <= 1 ? '#CCC' : '#666'} />
               </TouchableOpacity>
 
               <View style={styles.quantityDisplay}>
-                <Text style={styles.quantityText}>
-                  {item.quantity % 1 === 0 ? item.quantity.toString() : item.quantity.toFixed(1)}
-                </Text>
+                <Text style={styles.quantityText}>{item.quantity}</Text>
               </View>
 
               <TouchableOpacity
@@ -309,8 +330,6 @@ const CartScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -330,6 +349,23 @@ const CartScreen = ({ navigation }) => {
           )}
         </View>
 
+        {/* Update/Refresh Button */}
+        {cartItems.length > 0 && (
+          <TouchableOpacity
+            style={styles.updateButton}
+            onPress={handleRefreshCart}
+            disabled={isUpdating}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityLabel="Refresh cart"
+          >
+            {isUpdating ? (
+              <ActivityIndicator size="small" color="#2E7D31" />
+            ) : (
+              <Ionicons name="refresh-outline" size={20} color="#2E7D31" />
+            )}
+          </TouchableOpacity>
+        )}
+
         {cartItems.length > 0 && (
           <TouchableOpacity
             style={styles.clearButton}
@@ -342,7 +378,6 @@ const CartScreen = ({ navigation }) => {
         )}
       </View>
 
-      {/* Cart Content */}
       {cartItems.length === 0 ? (
         <EmptyCart />
       ) : (
@@ -360,7 +395,6 @@ const CartScreen = ({ navigation }) => {
             windowSize={10}
           />
 
-          {/* Cart Summary */}
           <View style={styles.summaryContainer}>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>
@@ -382,10 +416,7 @@ const CartScreen = ({ navigation }) => {
             </View>
 
             <TouchableOpacity
-              style={[
-                styles.checkoutButton,
-                (isPlacingOrder || total === 0) && styles.disabledCheckoutButton
-              ]}
+              style={[styles.checkoutButton, (isPlacingOrder || total === 0) && styles.disabledCheckoutButton]}
               onPress={handlePlaceOrder}
               activeOpacity={0.8}
               disabled={isPlacingOrder || total === 0}
@@ -397,9 +428,7 @@ const CartScreen = ({ navigation }) => {
                 </>
               ) : (
                 <>
-                  <Text style={styles.checkoutButtonText}>
-                    Place Order • ${total.toFixed(2)}
-                  </Text>
+                  <Text style={styles.checkoutButtonText}>Place Order • ${total.toFixed(2)}</Text>
                   <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
                 </>
               )}
@@ -407,8 +436,6 @@ const CartScreen = ({ navigation }) => {
           </View>
         </>
       )}
-
-      {/* Loading Overlay */}
       {isPlacingOrder && <LoadingOverlay />}
     </SafeAreaView>
   );
@@ -456,6 +483,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6C757D',
     fontWeight: '500',
+  },
+  updateButton: {
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 18,
+    backgroundColor: '#F8F9FA',
+    marginRight: 8,
   },
   clearButton: {
     paddingVertical: 8,

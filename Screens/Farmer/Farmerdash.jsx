@@ -10,6 +10,7 @@ import {
   Dimensions,
   StatusBar,
   Platform,
+  Alert,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import { moderateScale } from "react-native-size-matters";
@@ -19,15 +20,18 @@ import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+import { useTheme } from "../../contexts/ThemeContext";
 
-const AUTH_KEYS = {
-  TOKEN: '@auth_token',
-  USER_ID: '@user_id',
-  USER_DATA: '@user_data',
+// API Configuration
+const API_BASE_URL = 'https://agrihub-backend-4z99.onrender.com';
+const API_ENDPOINTS = {
+  FARMERS: `${API_BASE_URL}/api/farmers`,
+  ORDERS: `${API_BASE_URL}/api/orders/get-order-without-id`,
+  PRODUCTS: `${API_BASE_URL}/product`,
 };
 
-const SearchTextInput = ({ value, onChangeText, placeholder }) => (
-  <View style={styles.searchContainer}>
+const SearchTextInput = ({ value, onChangeText, placeholder, isDark }) => (
+  <View style={[styles.searchContainer, isDark && styles.searchContainerDark]}>
     <View style={styles.searchIconContainer}>
       <Feather name="search" size={20} color="#10B981" />
     </View>
@@ -35,25 +39,26 @@ const SearchTextInput = ({ value, onChangeText, placeholder }) => (
       value={value}
       onChangeText={onChangeText}
       placeholder={placeholder || "Search crop diseases..."}
-      placeholderTextColor="#9CA3AF"
-      style={styles.searchInput}
+      placeholderTextColor={isDark ? "#9CA3AF" : "#9CA3AF"}
+      style={[styles.searchInput, isDark && styles.searchInputDark]}
     />
     <TouchableOpacity style={styles.filterButton}>
-      <Ionicons name="filter" size={18} color="#6B7280" />
+      <Ionicons name="filter" size={18} color={isDark ? "#9CA3AF" : "#6B7280"} />
     </TouchableOpacity>
   </View>
 );
 
-const QuickActionButton = ({ icon, label, onPress, color = "#10B981" }) => (
-  <TouchableOpacity onPress={onPress} style={styles.quickActionButton}>
-    <View style={[styles.quickActionIcon, { backgroundColor: `${color}15` }]}>
-      {icon}
-    </View>
-    <Text style={styles.quickActionLabel}>{label}</Text>
+const QuickActionButton = ({ icon, label, onPress, color = "#10B981", isDark }) => (
+  <TouchableOpacity onPress={onPress} style={[styles.quickActionButton, isDark && styles.quickActionButtonDark]}>
+    <View style={[styles.quickActionIcon, { backgroundColor: `${color}15` }]}>{icon}</View>
+    <Text style={[styles.quickActionLabel, isDark && styles.quickActionLabelDark]}>{label}</Text>
   </TouchableOpacity>
 );
 
 export default function Farmerdash({ navigation }) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   const [originalblogs, setOriginalBlogs] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
@@ -61,13 +66,16 @@ export default function Farmerdash({ navigation }) {
   const [imageLoading, setImageLoading] = useState({});
   const [blogs, setBlogs] = useState([]);
   const [products, setProducts] = useState([]);
-  const [user, setUser] = useState(null); 
+  const [user, setUser] = useState(null);
   const [userLoading, setUserLoading] = useState(true);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [blogsLoading, setBlogsLoading] = useState(false);
+  const [productsLoading, setProductsLoading] = useState(false);
 
   const loadUserData = async () => {
     try {
       setUserLoading(true);
-      const userData = await AsyncStorage.getItem(AUTH_KEYS.USER_DATA);
+      const userData = await AsyncStorage.getItem('@user_data');
       if (userData) {
         const parsedUser = JSON.parse(userData);
         setUser({
@@ -97,65 +105,97 @@ export default function Farmerdash({ navigation }) {
     }
   };
 
-
-  const mockBlogs = [
-    {
-      id: 1,
-      blogTitle: "Early Detection of Wheat Rust Disease",
-      blogurl: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop",
-      date: "15 Jun 2025",
-      description: "Learn to identify wheat rust symptoms early and prevent massive crop losses with proven detection methods.",
-      category: "Disease Prevention",
-      readTime: "5 min read",
-      severity: "High"
-    },
-    {
-      id: 2,
-      blogTitle: "Combat Tomato Blight with Smart Farming",
-      blogurl: "https://images.unsplash.com/photo-1592841200221-a6898f307baa?w=400&h=300&fit=crop",
-      date: "12 Jun 2025",
-      description: "Revolutionary techniques to prevent and treat tomato blight using IoT sensors and predictive analytics.",
-      category: "Smart Farming",
-      readTime: "7 min read",
-      severity: "Medium"
-    },
-    {
-      id: 3,
-      blogTitle: "Rice Blast: AI-Powered Management",
-      blogurl: "https://images.unsplash.com/photo-1586771107445-d3ca888129ff?w=400&h=300&fit=crop",
-      date: "10 Jun 2025",
-      description: "Use artificial intelligence to predict and manage rice blast disease before it affects your harvest.",
-      category: "AI Technology",
-      readTime: "6 min read",
-      severity: "High"
-    },
-    {
-      id: 4,
-      blogTitle: "Sustainable Corn Rust Prevention",
-      blogurl: "https://images.unsplash.com/photo-1551782450-17144efb9c50?w=400&h=300&fit=crop",
-      date: "8 Jun 2025",
-      description: "Eco-friendly strategies to prevent corn rust while maintaining soil health and biodiversity.",
-      category: "Sustainability",
-      readTime: "4 min read",
-      severity: "Low"
-    }
-  ];
-
-  const mockProducts = Array.from({ length: 24 }, (_, i) => ({ id: i + 1, name: `Product ${i + 1}` }));
-  const mockOrders = Array.from({ length: 12 }, (_, i) => ({ id: i + 1, name: `Order ${i + 1}` }));
-
-  const ReadOrders = async () => {
+  const fetchBlogsFromAPI = async () => {
     try {
-      setLoading(true);
-      setTimeout(() => {
-        setOrders(mockOrders);
-        setLoading(false);
-      }, 1000);
+      const response = await fetch(API_ENDPOINTS.FARMERS, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const result = await response.json();
+      if (result.status === 'success' && result.data) {
+        setBlogs(result.data);
+      } else {
+        setBlogs([]);
+      }
     } catch (error) {
-      console.log(error);
-      setLoading(false);
+      console.error('Error fetching blogs from API:', error);
+      Alert.alert(
+        'Network Error',
+        'Failed to load disease alerts. Please check your internet connection and try again.',
+        [{ text: 'OK' }]
+      );
+      setBlogs([]);
     }
   };
+
+  const fetchOrdersFromAPI = async () => {
+    try {
+      setOrdersLoading(true);
+      const response = await fetch(API_ENDPOINTS.ORDERS, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const result = await response.json();
+
+      if (Array.isArray(result)) {
+        setOrders(result);
+      }
+      else if (result.status === 'success' && Array.isArray(result.data)) {
+        setOrders(result.data);
+      }
+      else {
+        console.warn('Unexpected structure from orders API:', result);
+        setOrders([]);
+      }
+    } catch (error) {
+      console.error('Error fetching orders from API:', error);
+      Alert.alert(
+        'Network Error',
+        'Failed to load orders. Please check your internet connection and try again.',
+        [{ text: 'OK' }]
+      );
+      setOrders([]);
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
+
+  const fetchProductsFromAPI = async () => {
+    try {
+      setProductsLoading(true);
+      const response = await fetch(API_ENDPOINTS.PRODUCTS, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const result = await response.json();
+
+      if (Array.isArray(result)) {
+        setProducts(result);
+      } else if (result.status === 'success' && result.data) {
+        setProducts(result.data);
+      } else {
+        setProducts([]);
+      }
+    } catch (error) {
+      console.error('Error fetching products from API:', error);
+      Alert.alert(
+        'Network Error',
+        'Failed to load products. Please check your internet connection and try again.',
+        [{ text: 'OK' }]
+      );
+      setProducts([]);
+    } finally {
+      setProductsLoading(false);
+    }
+  };
+
+  const mockProducts = Array.from({ length: 24 }, (_, i) => ({ id: i + 1, name: `Product ${i + 1}` }));
 
   const ReadProduct = async () => {
     try {
@@ -167,29 +207,17 @@ export default function Farmerdash({ navigation }) {
     }
   };
 
-  const ReadBlog = async () => {
-    try {
-      setLoading(true);
-      setTimeout(() => {
-        setBlogs(mockBlogs);
-        setOriginalBlogs(mockBlogs);
-        setLoading(false);
-      }, 800);
-    } catch (error) {
-      console.log(error);
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     const fetchDatas = async () => {
-      await ReadProduct();
-      await loadUserData(); // Load user data on component mount
+      await loadUserData();
+      await fetchOrdersFromAPI();
+      await fetchBlogsFromAPI();
+      await fetchProductsFromAPI();
     };
     fetchDatas();
-    ReadOrders();
   }, []);
 
+  const totalOrders = orders.length;
   const totalProducts = products.length;
 
   const searchFilter = (text) => {
@@ -207,13 +235,6 @@ export default function Farmerdash({ navigation }) {
       setBlogs(originalblogs);
     }
   };
-
-  useEffect(() => {
-    const fetchDatas = async () => {
-      await ReadBlog();
-    };
-    fetchDatas();
-  }, []);
 
   const handleNavigation = (screen, params = null) => {
     if (navigation && navigation.navigate) {
@@ -236,18 +257,28 @@ export default function Farmerdash({ navigation }) {
     }
   };
 
-  const StatCard = ({ title, value, icon, onPress, gradient, trend, trendValue }) => (
-    <TouchableOpacity onPress={onPress} style={[styles.statCard, gradient && styles.gradientCard]}>
+  const StatCard = ({ title, value, icon, onPress, gradient, trend, trendValue, isLoading }) => (
+    <TouchableOpacity onPress={onPress} style={[
+      styles.statCard, 
+      gradient && styles.gradientCard,
+      isDark && !gradient && styles.statCardDark
+    ]}>
       <View style={styles.statCardHeader}>
-        <View style={[styles.iconContainer, { backgroundColor: gradient ? 'rgba(255,255,255,0.2)' : '#E8FDF5' }]}>
+        <View style={[
+          styles.iconContainer, 
+          { backgroundColor: gradient ? 'rgba(255,255,255,0.2)' : (isDark ? '#1F2937' : '#E8FDF5') }
+        ]}>
           {icon}
         </View>
-        {trend && (
-          <View style={[styles.trendContainer, { backgroundColor: trend === 'up' ? '#DCFCE7' : '#FEF2F2' }]}>
-            <Feather 
-              name={trend === 'up' ? 'trending-up' : 'trending-down'} 
-              size={12} 
-              color={trend === 'up' ? '#16A34A' : '#DC2626'} 
+        {trend && !isLoading && (
+          <View style={[
+            styles.trendContainer, 
+            { backgroundColor: trend === 'up' ? (isDark ? '#1F2937' : '#DCFCE7') : (isDark ? '#2D1B1B' : '#FEF2F2') }
+          ]}>
+            <Feather
+              name={trend === 'up' ? 'trending-up' : 'trending-down'}
+              size={12}
+              color={trend === 'up' ? '#16A34A' : '#DC2626'}
             />
             <Text style={[styles.trendText, { color: trend === 'up' ? '#16A34A' : '#DC2626' }]}>
               {trendValue}
@@ -255,16 +286,28 @@ export default function Farmerdash({ navigation }) {
           </View>
         )}
       </View>
-      <Text style={[styles.statTitle, gradient && styles.statTitleWhite]}>{title}</Text>
-      <Text style={[styles.statValue, gradient && styles.statValueWhite]}>{value}</Text>
+      <Text style={[
+        styles.statTitle, 
+        gradient && styles.statTitleWhite,
+        isDark && !gradient && styles.statTitleDark
+      ]}>{title}</Text>
+      {isLoading ? (
+        <ActivityIndicator size="small" color={gradient ? "white" : "#10B981"} />
+      ) : (
+        <Text style={[
+          styles.statValue, 
+          gradient && styles.statValueWhite,
+          isDark && !gradient && styles.statValueDark
+        ]}>{value}</Text>
+      )}
     </TouchableOpacity>
   );
 
   const BlogCard = ({ item, onPress }) => (
-    <TouchableOpacity onPress={onPress} style={styles.blogCard}>
+    <TouchableOpacity onPress={onPress} style={[styles.blogCard, isDark && styles.blogCardDark]}>
       <View style={styles.blogImageContainer}>
         {imageLoading[item.id] !== false && (
-          <View style={styles.imageLoader}>
+          <View style={[styles.imageLoader, isDark && styles.imageLoaderDark]}>
             <ActivityIndicator size="small" color="#10B981" />
           </View>
         )}
@@ -275,45 +318,45 @@ export default function Farmerdash({ navigation }) {
           onError={() => handleImageLoad(item.id)}
         />
         <View style={styles.blogImageOverlay} />
-        
+
         {/* Severity Badge */}
         <View style={[styles.severityBadge, { backgroundColor: getSeverityColor(item.severity) }]}>
           <Text style={styles.severityText}>{item.severity}</Text>
         </View>
-        
+
         {/* Category Badge */}
-        <View style={styles.categoryBadge}>
-          <Text style={styles.categoryText}>{item.category}</Text>
+        <View style={[styles.categoryBadge, isDark && styles.categoryBadgeDark]}>
+          <Text style={[styles.categoryText, isDark && styles.categoryTextDark]}>{item.category}</Text>
         </View>
       </View>
-      
+
       <View style={styles.blogContent}>
         <View style={styles.blogMetaContainer}>
-          <Text style={styles.blogDate}>{item.date}</Text>
+          <Text style={[styles.blogDate, isDark && styles.blogDateDark]}>{item.date}</Text>
           <View style={styles.readTimeContainer}>
-            <Feather name="clock" size={12} color="#9CA3AF" />
-            <Text style={styles.readTime}>{item.readTime}</Text>
+            <Feather name="clock" size={12} color={isDark ? "#9CA3AF" : "#9CA3AF"} />
+            <Text style={[styles.readTime, isDark && styles.readTimeDark]}>{item.readTime}</Text>
           </View>
         </View>
-        
-        <Text style={styles.blogTitle} numberOfLines={2}>{item.blogTitle}</Text>
-        
+
+        <Text style={[styles.blogTitle, isDark && styles.blogTitleDark]} numberOfLines={2}>{item.blogTitle}</Text>
+
         {item.description && (
-          <Text style={styles.blogDescription} numberOfLines={2}>{item.description}</Text>
+          <Text style={[styles.blogDescription, isDark && styles.blogDescriptionDark]} numberOfLines={2}>{item.description}</Text>
         )}
-        
+
         <View style={styles.blogFooter}>
           <View style={styles.readMoreContainer}>
             <Text style={styles.readMoreText}>Read Article</Text>
             <Feather name="arrow-right" size={14} color="#10B981" />
           </View>
-          
+
           <View style={styles.actionButtons}>
             <TouchableOpacity style={styles.actionButton}>
-              <Feather name="bookmark" size={16} color="#6B7280" />
+              <Feather name="bookmark" size={16} color={isDark ? "#9CA3AF" : "#6B7280"} />
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionButton}>
-              <Feather name="share-2" size={16} color="#6B7280" />
+              <Feather name="share-2" size={16} color={isDark ? "#9CA3AF" : "#6B7280"} />
             </TouchableOpacity>
           </View>
         </View>
@@ -321,38 +364,40 @@ export default function Farmerdash({ navigation }) {
     </TouchableOpacity>
   );
 
-  // Function to get display name with fallback
   const getDisplayName = () => {
     if (userLoading) return "Loading...";
     if (!user || !user.name) return "Farmer 👨‍🌾";
-    
+
     // Add farmer emoji if the name doesn't already contain an emoji
     const hasEmoji = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u.test(user.name);
     return hasEmoji ? user.name : `${user.name} 👨‍🌾`;
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      
-      <View style={styles.header}>
+    <View style={[styles.container, isDark && styles.containerDark]}>
+      <StatusBar 
+        barStyle={isDark ? "light-content" : "dark-content"} 
+        backgroundColor={isDark ? "#1F2937" : "#FFFFFF"} 
+      />
+
+      <View style={[styles.header, isDark && styles.headerDark]}>
         <View style={styles.headerTop}>
           <View style={styles.headerLeft}>
-            <Text style={styles.headerTitle}>{getDisplayName()}</Text>
+            <Text style={[styles.headerTitle, isDark && styles.headerTitleDark]}>{getDisplayName()}</Text>
           </View>
-          
+
           <View style={styles.headerRight}>
             <TouchableOpacity style={styles.notificationButton}>
-              <Ionicons name="notifications-outline" size={24} color="#6B7280" />
+              <Ionicons name="notifications-outline" size={24} color={isDark ? "#D1D5DB" : "#6B7280"} />
               <View style={styles.notificationBadge} />
             </TouchableOpacity>
-            
+
             <TouchableOpacity onPress={() => handleNavigation("Add")} style={styles.addButton}>
               <AntDesign name="plus" size={24} color="white" />
             </TouchableOpacity>
           </View>
         </View>
-        
+
         <View style={styles.searchWrapper}>
           <SearchTextInput
             value={search}
@@ -361,6 +406,7 @@ export default function Farmerdash({ navigation }) {
               searchFilter(text);
             }}
             placeholder="Search crop diseases & solutions..."
+            isDark={isDark}
           />
         </View>
       </View>
@@ -381,21 +427,21 @@ export default function Farmerdash({ navigation }) {
           />
           <StatCard
             title="Orders Received"
-            value={orders.length.toString()}
+            value={totalOrders.toString()}
             icon={<MaterialIcons name="shopping-cart" size={24} color="white" />}
             onPress={() => handleNavigation("farmerblog")}
             gradient={true}
             trend="up"
             trendValue="+23%"
+            isLoading={ordersLoading}
           />
         </View>
 
-       
         <View style={styles.contentSection}>
           <View style={styles.sectionHeader}>
             <View>
-              <Text style={styles.sectionTitle}>Disease Alerts & Prevention</Text>
-              <Text style={styles.sectionSubtitle}>Stay ahead of crop diseases</Text>
+              <Text style={[styles.sectionTitle, isDark && styles.sectionTitleDark]}>Disease Alerts & Prevention</Text>
+              <Text style={[styles.sectionSubtitle, isDark && styles.sectionSubtitleDark]}>Stay ahead of crop diseases</Text>
             </View>
             <TouchableOpacity style={styles.seeAllButton}>
               <Text style={styles.seeAllText}>See all</Text>
@@ -403,13 +449,18 @@ export default function Farmerdash({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          {loading ? (
+          {blogsLoading ? (
             <View style={styles.loadingContainer}>
               <View style={styles.loadingAnimation}>
                 <ActivityIndicator size="large" color="#10B981" />
               </View>
-              <Text style={styles.loadingText}>Loading latest disease alerts...</Text>
-              <Text style={styles.loadingSubtext}>Analyzing crop conditions</Text>
+              <Text style={[styles.loadingText, isDark && styles.loadingTextDark]}>Loading latest disease alerts...</Text>
+              <Text style={[styles.loadingSubtext, isDark && styles.loadingSubtextDark]}>Analyzing crop conditions</Text>
+            </View>
+          ) : blogs.length === 0 ? (
+            <View style={styles.loadingContainer}>
+              <Text style={[styles.loadingText, isDark && styles.loadingTextDark]}>No disease alerts available</Text>
+              <Text style={[styles.loadingSubtext, isDark && styles.loadingSubtextDark]}>Check back later for updates</Text>
             </View>
           ) : (
             <View style={styles.blogList}>
@@ -417,9 +468,7 @@ export default function Farmerdash({ navigation }) {
                 <BlogCard
                   key={item.id}
                   item={item}
-                  onPress={
-                    () => handleNavigation("farmerblog", item)
-                    }
+                  onPress={() => handleNavigation("farmerblog", item)}
                 />
               ))}
             </View>
@@ -430,11 +479,13 @@ export default function Farmerdash({ navigation }) {
   );
 }
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F8FAFC",
+  },
+  containerDark: {
+    backgroundColor: "#111827",
   },
   header: {
     backgroundColor: "white",
@@ -448,6 +499,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 8,
+  },
+  headerDark: {
+    backgroundColor: "#1F2937",
+    shadowColor: "#000",
+    shadowOpacity: 0.3,
   },
   headerTop: {
     flexDirection: "row",
@@ -474,6 +530,9 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#1F2937",
     fontFamily: "Poppins_700Bold",
+  },
+  headerTitleDark: {
+    color: "#F9FAFB",
   },
   notificationButton: {
     position: "relative",
@@ -514,6 +573,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E5E7EB",
   },
+  searchContainerDark: {
+    backgroundColor: "#374151",
+    borderColor: "#4B5563",
+  },
   searchIconContainer: {
     marginRight: 12,
   },
@@ -522,6 +585,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#1F2937",
     fontFamily: "Poppins_400Regular",
+  },
+  searchInputDark: {
+    color: "#F9FAFB",
   },
   filterButton: {
     padding: 8,
@@ -549,6 +615,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 12,
     elevation: 6,
+  },
+  statCardDark: {
+    backgroundColor: "#1F2937",
+    shadowOpacity: 0.3,
   },
   gradientCard: {
     backgroundColor: "#10B981",
@@ -584,6 +654,9 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins_500Medium",
     marginBottom: 8,
   },
+  statTitleDark: {
+    color: "#9CA3AF",
+  },
   statTitleWhite: {
     color: "rgba(255,255,255,0.8)",
   },
@@ -592,6 +665,9 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#10B981",
     fontFamily: "Poppins_700Bold",
+  },
+  statValueDark: {
+    color: "#10B981",
   },
   statValueWhite: {
     color: "white",
@@ -625,6 +701,9 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
+  quickActionButtonDark: {
+    backgroundColor: "#1F2937",
+  },
   quickActionIcon: {
     width: 44,
     height: 44,
@@ -638,6 +717,9 @@ const styles = StyleSheet.create({
     color: "#4B5563",
     fontWeight: "500",
     textAlign: "center",
+  },
+  quickActionLabelDark: {
+    color: "#D1D5DB",
   },
   contentSection: {
     paddingTop: 30,
@@ -656,10 +738,16 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins_700Bold",
     marginBottom: 2,
   },
+  sectionTitleDark: {
+    color: "#F9FAFB",
+  },
   sectionSubtitle: {
     fontSize: 14,
     color: "#6B7280",
     fontFamily: "Poppins_400Regular",
+  },
+  sectionSubtitleDark: {
+    color: "#9CA3AF",
   },
   seeAllButton: {
     flexDirection: "row",
@@ -686,10 +774,16 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins_500Medium",
     marginBottom: 8,
   },
+  loadingTextDark: {
+    color: "#D1D5DB",
+  },
   loadingSubtext: {
     fontSize: 14,
     color: "#9CA3AF",
     fontFamily: "Poppins_400Regular",
+  },
+  loadingSubtextDark: {
+    color: "#9CA3AF",
   },
   blogList: {
     paddingHorizontal: 20,
@@ -704,6 +798,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 16,
     elevation: 8,
+  },
+  blogCardDark: {
+    backgroundColor: "#1F2937",
+    shadowOpacity: 0.3,
   },
   blogImageContainer: {
     position: "relative",
@@ -735,6 +833,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
   },
+  
   categoryBadge: {
     position: "absolute",
     top: 16,
@@ -744,10 +843,18 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 12,
   },
+
+  categoryBadgeDark: {
+    backgroundColor: "rgba(31,41,55,0.9)",
+  },
+
   categoryText: {
     color: "#1F2937",
     fontSize: 12,
     fontWeight: "500",
+  },
+  categoryTextDark: {
+    color: "#F9FAFB",
   },
   imageLoader: {
     position: "absolute",
@@ -760,6 +867,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F9FAFB",
     zIndex: 1,
   },
+
   blogContent: {
     padding: 24,
   },
