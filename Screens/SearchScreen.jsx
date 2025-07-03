@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,161 +8,658 @@ import {
   TouchableOpacity,
   Image,
   SafeAreaView,
+  StatusBar,
+  Animated,
+  Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useTheme } from '../contexts/ThemeContext';
+
+const { width } = Dimensions.get('window');
+
+const Colors = {
+  primary: '#4A90E2',
+  primaryDark: '#2D5AA0',
+  secondary: '#FF6B35',
+  accent: '#FFA726',
+
+  background: '#FFFFFF',
+  surface: '#F8F9FA',
+  surfaceLight: '#F0F0F0',
+
+  textPrimary: '#000000',
+  textSecondary: '#666666',
+  textTertiary: '#999999',
+
+  success: '#4CAF50',
+  warning: '#FF9800',
+  error: '#F44336',
+
+  cardBackground: '#FFFFFF',
+  inputBackground: '#F5F5F5',
+  borderColor: '#E0E0E0',
+
+  gradient: ['#4A90E2', '#357ABD'],
+  orangeGradient: ['#FF6B35', '#FF8A50'],
+};
+
+const CATEGORIES = [
+  { id: 'all', name: 'All', icon: 'grid-outline', color: Colors.primary },
+  { id: 'fruits', name: 'Fruits', icon: 'nutrition-outline', color: Colors.accent },
+  { id: 'dairy', name: 'Dairy', icon: 'water-outline', color: Colors.primary },
+  { id: 'vegetables', name: 'Veggies', icon: 'leaf-outline', color: Colors.success },
+  { id: 'meat', name: 'Meat', icon: 'restaurant-outline', color: Colors.error },
+  { id: 'tubers', name: 'Tubers', icon: 'flower-outline', color: Colors.warning },
+];
 
 const SearchScreen = () => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const styles = createStyles(isDark);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Animation values
+  const fadeAnim = new Animated.Value(0);
+  const slideAnim = new Animated.Value(50);
+  const spinValue = new Animated.Value(0);
 
-  // Sample data - replace with your actual data
-  const sampleProducts = [
-    { id: '1', name: 'Wireless Headphones', price: '$99.99', image: 'https://via.placeholder.com/150' },
-    { id: '2', name: 'Smartphone Case', price: '$19.99', image: 'https://via.placeholder.com/150' },
-    { id: '3', name: 'Bluetooth Speaker', price: '$59.99', image: 'https://via.placeholder.com/150' },
-  ];
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
-  const handleSearch = (query) => {
-    setSearchQuery(query);
-    if (query.length > 0) {
-      const filtered = sampleProducts.filter(product =>
-        product.name.toLowerCase().includes(query.toLowerCase())
+  useEffect(() => {
+    if (searchResults.length > 0) {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [searchResults]);
+
+  // Spinner animation
+  useEffect(() => {
+    if (isSearching || isLoading) {
+      const spinAnimation = Animated.loop(
+        Animated.timing(spinValue, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        })
       );
-      setSearchResults(filtered);
-    } else {
-      setSearchResults([]);
+      spinAnimation.start();
+      return () => spinAnimation.stop();
+    }
+  }, [isSearching, isLoading]);
+
+  const spin = spinValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  const fetchProducts = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('https://agrihub-backend-4z99.onrender.com/product');
+      const data = await response.json();
+
+      const mappedProducts = data.map((product) => ({
+        id: product._id,
+        name: product.title,
+        price: product.current_price.startsWith('RWF') ? product.current_price : `RWF ${product.current_price}`,
+        image: product.img,
+        category: product.category,
+        rating: Math.floor(Math.random() * 2) + 3 + Math.random().toFixed(1),
+        originalPrice: product.past_price,
+        discount: calculateDiscount(product.past_price, product.current_price),
+      }));
+
+      setAllProducts(mappedProducts);
+      
+      // If "All" category is selected, show all products
+      if (selectedCategory === 'all') {
+        setSearchResults(mappedProducts);
+      }
+    } catch (error) {
+      console.error('Failed to fetch products:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    setIsSearching(true);
+
+    setTimeout(() => {
+      let filtered = [];
+      
+      if (query.length > 0) {
+        // Filter by search query
+        filtered = allProducts.filter(product =>
+          product.name.toLowerCase().includes(query.toLowerCase()) ||
+          product.category.toLowerCase().includes(query.toLowerCase())
+        );
+      } else {
+        // If no search query, show products based on selected category
+        if (selectedCategory === 'all') {
+          filtered = allProducts;
+        } else {
+          filtered = allProducts.filter(product =>
+            product.category.toLowerCase() === selectedCategory.toLowerCase()
+          );
+        }
+      }
+      
+      setSearchResults(filtered);
+      setIsSearching(false);
+    }, 300);
+  };
+
+  const handleCategoryPress = (category) => {
+    setSelectedCategory(category.id);
+    setSearchQuery(''); // Clear search when selecting category
+    setIsSearching(true);
+
+    setTimeout(() => {
+      let filtered = [];
+      
+      if (category.id === 'all') {
+        filtered = allProducts;
+      } else {
+        filtered = allProducts.filter(product =>
+          product.category.toLowerCase() === category.name.toLowerCase()
+        );
+      }
+      
+      setSearchResults(filtered);
+      setIsSearching(false);
+    }, 300);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    // Reset to selected category view
+    if (selectedCategory === 'all') {
+      setSearchResults(allProducts);
+    } else {
+      const filtered = allProducts.filter(product =>
+        product.category.toLowerCase() === selectedCategory.toLowerCase()
+      );
+      setSearchResults(filtered);
+    }
+    setIsSearching(false);
+  };
+
+  const calculateDiscount = (oldPrice, newPrice) => {
+    const getNumber = (str) => parseFloat(str.replace(/[^\d.]/g, ''));
+    const oldP = getNumber(oldPrice);
+    const newP = getNumber(newPrice);
+    if (!oldP || !newP || newP >= oldP) return null;
+    const percent = Math.round(((oldP - newP) / oldP) * 100);
+    return `${percent}% OFF`;
+  };
+
   const renderProduct = ({ item }) => (
-    <TouchableOpacity style={styles.productCard}>
-      <Image source={{ uri: item.image }} style={styles.productImage} />
-      <View style={styles.productInfo}>
-        <Text style={styles.productName}>{item.name}</Text>
-        <Text style={styles.productPrice}>{item.price}</Text>
-      </View>
-    </TouchableOpacity>
+    <Animated.View style={[styles.productCard, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+      <TouchableOpacity style={styles.productContent}>
+        <View style={styles.imageContainer}>
+          <Image source={{ uri: item.image }} style={styles.productImage} />
+          {item.discount && (
+            <View style={styles.discountBadge}>
+              <Text style={styles.discountText}>{item.discount}</Text>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.productInfo}>
+          <View style={styles.productHeader}>
+            <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
+            <TouchableOpacity style={styles.favoriteButton}>
+              <Ionicons name="heart-outline" size={18} color={isDark ? '#FF6B6B' : '#FF4757'} />
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.categoryText}>{item.category}</Text>
+
+          <View style={styles.priceContainer}>
+            <Text style={styles.productPrice}>{item.price}</Text>
+            {item.originalPrice && <Text style={styles.originalPrice}>{item.originalPrice}</Text>}
+          </View>
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
   );
+
+  const renderEmptyState = () => (
+    <View style={styles.emptyState}>
+      <Ionicons 
+        name={searchQuery.length === 0 ? "search-outline" : "sad-outline"} 
+        size={80} 
+        color={isDark ? '#4A5568' : '#CBD5E0'} 
+      />
+      <Text style={styles.emptyTitle}>
+        {searchQuery.length === 0 ? 'Start Your Search' : 'No Products Found'}
+      </Text>
+      <Text style={styles.emptySubtitle}>
+        {searchQuery.length === 0
+          ? 'Discover amazing products by typing in the search bar'
+          : `We couldn't find any products matching "${searchQuery}"`}
+      </Text>
+    </View>
+  );
+
+  const renderSearchSuggestions = () => (
+    <View style={styles.categoriesContainer}>
+      <Text style={styles.categoriesTitle}>Browse Categories</Text>
+      <FlatList
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        data={CATEGORIES}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{ paddingVertical: 10 }}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={[
+              styles.categoryCard,
+              selectedCategory === item.id && styles.selectedCategoryCard
+            ]}
+            onPress={() => handleCategoryPress(item)}
+          >
+            <View style={[styles.categoryIcon, { backgroundColor: item.color }]}>
+              <Ionicons name={item.icon} size={24} color="#fff" />
+            </View>
+            <Text style={[
+              styles.categoryName,
+              selectedCategory === item.id && styles.selectedCategoryName
+            ]}>
+              {item.name}
+            </Text>
+          </TouchableOpacity>
+        )}
+      />
+    </View>
+  );
+
+  const renderLoadingSpinner = () => (
+    <View style={styles.loadingContainer}>
+      <View style={styles.spinnerContainer}>
+        <Animated.View style={[styles.spinner, { transform: [{ rotate: spin }] }]}>
+          <View style={styles.spinnerOuter}>
+            <View style={styles.spinnerInner} />
+          </View>
+        </Animated.View>
+        <Text style={styles.loadingText}>
+          {isLoading ? 'Loading products...' : 'Searching...'}
+        </Text>
+      </View>
+    </View>
+  );
+
+  const getDisplayedProducts = () => {
+    if (searchQuery.length > 0) {
+      return searchResults;
+    } else if (selectedCategory === 'all') {
+      return allProducts;
+    } else {
+      return allProducts.filter(product =>
+        product.category.toLowerCase() === selectedCategory.toLowerCase()
+      );
+    }
+  };
+
+  const displayedProducts = getDisplayedProducts();
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={isDark ? '#1A202C' : '#FFFFFF'} />
       <View style={styles.header}>
-        <Text style={styles.title}>Search Products</Text>
-      </View>
-      
-      <View style={styles.searchContainer}>
-        <Ionicons name="search-outline" size={20} color="#666" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search for products..."
-          value={searchQuery}
-          onChangeText={handleSearch}
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => handleSearch('')}>
-            <Ionicons name="close-circle" size={20} color="#666" />
-          </TouchableOpacity>
-        )}
+        <View style={styles.headerContent}>
+          <Text style={styles.title}>Search Products</Text>
+          <Text style={styles.subtitle}>Find exactly what you need</Text>
+        </View>
       </View>
 
-      <View style={styles.content}>
-        {searchQuery.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="search-outline" size={60} color="#ccc" />
-            <Text style={styles.emptyText}>Start typing to search products</Text>
-          </View>
-        ) : searchResults.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="sad-outline" size={60} color="#ccc" />
-            <Text style={styles.emptyText}>No products found</Text>
-          </View>
-        ) : (
-          <FlatList
-            data={searchResults}
-            renderItem={renderProduct}
-            keyExtractor={(item) => item.id}
-            showsVerticalScrollIndicator={false}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchInputContainer}>
+          <Ionicons name="search-outline" size={20} color={isDark ? '#A0AEC0' : '#718096'} style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search for products..."
+            placeholderTextColor={isDark ? '#A0AEC0' : '#718096'}
+            value={searchQuery}
+            onChangeText={handleSearch}
           />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
+              <Ionicons name="close-circle" size={20} color={isDark ? '#A0AEC0' : '#718096'} />
+            </TouchableOpacity>
+          )}
+        </View>
+        <TouchableOpacity style={styles.filterButton}>
+          <Ionicons name="options-outline" size={20} color="#FFFFFF" />
+        </TouchableOpacity>
+      </View>
+
+      {renderSearchSuggestions()}
+
+      <View style={styles.content}>
+        {(isSearching || isLoading) ? (
+          renderLoadingSpinner()
+        ) : (
+          <View style={styles.resultsContainer}>
+            <Text style={styles.resultsCount}>
+              {displayedProducts.length} result{displayedProducts.length !== 1 ? 's' : ''} found
+            </Text>
+            <FlatList
+              data={displayedProducts}
+              renderItem={renderProduct}
+              keyExtractor={(item) => item.id.toString()}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.listContainer}
+              ListEmptyComponent={renderEmptyState}
+            />
+          </View>
         )}
       </View>
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (isDark) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: isDark ? '#1A202C' : '#F7FAFC',
   },
   header: {
     paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingTop: 20,
+    paddingBottom: 15,
+    backgroundColor: isDark ? '#1A202C' : '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: isDark ? '#2D3748' : '#E2E8F0',
+  },
+  headerContent: {
+    marginBottom: 5,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 28,
+    fontWeight: '700',
+    color: isDark ? '#FFFFFF' : '#1A202C',
+    marginBottom: 5,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: isDark ? '#A0AEC0' : '#718096',
+    fontWeight: '400',
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    margin: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    backgroundColor: '#f8f8f8',
-    borderRadius: 10,
+    marginHorizontal: 20,
+    marginVertical: 20,
+    gap: 12,
+  },
+  searchInputContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: isDark ? '#2D3748' : '#FFFFFF',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: isDark ? '#4A5568' : '#E2E8F0',
   },
   searchIcon: {
-    marginRight: 10,
+    marginRight: 12,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#333',
+    color: isDark ? '#FFFFFF' : '#1A202C',
+    fontWeight: '400',
+  },
+  clearButton: {
+    padding: 4,
+  },
+  filterButton: {
+    backgroundColor: isDark ? '#4C51BF' : '#5A67D8',
+    borderRadius: 12,
+    padding: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   content: {
     flex: 1,
     paddingHorizontal: 20,
   },
-  emptyState: {
+  
+  // Categories
+  categoriesContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 10,
+  },
+  categoriesTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: isDark ? '#FFFFFF' : '#1A202C',
+    marginBottom: 12,
+  },
+  categoryCard: {
+    alignItems: 'center',
+    marginRight: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    borderRadius: 12,
+  },
+  selectedCategoryCard: {
+    backgroundColor: isDark ? '#2D3748' : '#EDF2F7',
+  },
+  categoryIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  categoryName: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: isDark ? '#A0AEC0' : '#4A5568',
+  },
+  selectedCategoryName: {
+    color: isDark ? '#FFFFFF' : '#1A202C',
+    fontWeight: '600',
+  },
+
+  // Loading States
+  loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  emptyText: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 10,
+  spinnerContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  productCard: {
-    flexDirection: 'row',
-    backgroundColor: '#f8f8f8',
+  spinner: {
+    width: 50,
+    height: 50,
+    marginBottom: 16,
+  },
+  spinnerOuter: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 3,
+    borderColor: isDark ? '#4A5568' : '#E2E8F0',
+    borderTopColor: isDark ? '#2E7D31' : '#2E7D31',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  spinnerInner: {
+    width: 20,
+    height: 20,
     borderRadius: 10,
-    marginBottom: 15,
-    padding: 15,
+    backgroundColor: isDark ? '#2E7D31' : '#2E7D31',
+    opacity: 0.6,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: isDark ? '#A0AEC0' : '#718096',
+    fontWeight: '500',
+  },
+  
+  // Empty State
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+    marginTop: 60,
+  },
+  emptyTitle: {
+    fontSize: 22,
+    fontWeight: '600',
+    color: isDark ? '#FFFFFF' : '#1A202C',
+    marginTop: 20,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontSize: 16,
+    color: isDark ? '#A0AEC0' : '#718096',
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  
+  // Results
+  resultsContainer: {
+    flex: 1,
+  },
+  resultsCount: {
+    fontSize: 14,
+    color: isDark ? '#A0AEC0' : '#718096',
+    marginBottom: 16,
+    fontWeight: '500',
+  },
+  listContainer: {
+    paddingBottom: 20,
+  },
+  
+  // Product Card
+  productCard: {
+    backgroundColor: isDark ? '#2D3748' : '#FFFFFF',
+    borderRadius: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: isDark ? '#4A5568' : '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  productContent: {
+    flexDirection: 'row',
+    padding: 16,
+  },
+  imageContainer: {
+    position: 'relative',
+    marginRight: 16,
   },
   productImage: {
-    width: 60,
-    height: 60,
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+    backgroundColor: isDark ? '#4A5568' : '#F7FAFC',
+  },
+  discountBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#FF4757',
     borderRadius: 8,
-    marginRight: 15,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  discountText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '600',
   },
   productInfo: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+  },
+  productHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 6,
   },
   productName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 5,
+    color: isDark ? '#FFFFFF' : '#1A202C',
+    flex: 1,
+    marginRight: 8,
+  },
+  favoriteButton: {
+    padding: 4,
+  },
+  categoryText: {
+    fontSize: 12,
+    color: isDark ? '#A0AEC0' : '#718096',
+    fontWeight: '500',
+    marginBottom: 8,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  starsContainer: {
+    flexDirection: 'row',
+    marginRight: 6,
+  },
+  ratingText: {
+    fontSize: 12,
+    color: isDark ? '#A0AEC0' : '#718096',
+  },
+  priceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   productPrice: {
+    fontSize: 18,
+    color: isDark ? '#2E7D31' : '#2E7D31',
+    fontWeight: '600',
+    marginRight: 8,
+  },
+  originalPrice: {
     fontSize: 14,
-    color: '#007AFF',
-    fontWeight: '500',
+    color: isDark ? '#A0AEC0' : '#718096',
+    textDecorationLine: 'line-through',
   },
 });
 

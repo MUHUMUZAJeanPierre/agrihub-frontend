@@ -16,6 +16,7 @@ import {
   SafeAreaView,
   StatusBar
 } from 'react-native';
+// import {styles, Colors} from '../styles/BuyerDashboardStyles'
 import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -1060,7 +1061,7 @@ const styles = StyleSheet.create({
   },
   seeAllText: {
     fontSize: 14,
-    color: Colors.primary,
+    color:'#2E7D31',
     fontWeight: '500',
   },
 
