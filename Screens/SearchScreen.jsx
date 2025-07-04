@@ -328,10 +328,10 @@ const SearchScreen = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={isDark ? '#1A202C' : '#FFFFFF'} />
       <View style={styles.header}>
-        <View style={styles.headerContent}>
+        {/* <View style={styles.headerContent}>
           <Text style={styles.title}>Search Products</Text>
           <Text style={styles.subtitle}>Find exactly what you need</Text>
-        </View>
+        </View> */}
       </View>
 
       <View style={styles.searchContainer}>
@@ -438,7 +438,7 @@ const createStyles = (isDark) => StyleSheet.create({
     padding: 4,
   },
   filterButton: {
-    backgroundColor: isDark ? '#4C51BF' : '#5A67D8',
+    backgroundColor: isDark ? '#2E7D31' : '#2E7D31',
     borderRadius: 12,
     padding: 12,
     shadowColor: '#000',

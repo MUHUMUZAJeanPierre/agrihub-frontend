@@ -644,9 +644,9 @@ const getStyles = (theme) => {
         tabBarStyle: {
             height: Platform.OS === 'ios' ? 85 : 65,
             paddingBottom: Platform.OS === 'ios' ? 20 : 8,
-            paddingTop: 8,
+            paddingTop: 3   ,
             backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
-            borderTopWidth: 1,
+            borderTopWidth: 0.1,
             borderTopColor: isDark ? '#2C2C2E' : '#E5E5E5',
             shadowColor: isDark ? '#000000' : '#000000',
             shadowOffset: {
@@ -670,7 +670,7 @@ const getStyles = (theme) => {
         tabBarLabelStyle: {
             fontSize: 12,
             fontWeight: '500',
-            marginTop: 2,
+            marginTop: 3,
             fontFamily: Platform.OS === 'ios' ? 'SF Pro Text' : 'Roboto',
         },
         iconContainer: {
@@ -717,6 +717,18 @@ const getStyles = (theme) => {
         inactiveColor: isDark ? '#8E8E93' : '#999999',
     });
 };
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

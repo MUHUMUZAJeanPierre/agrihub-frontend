@@ -878,8 +878,6 @@ const CartScreen = ({ navigation }) => {
       });
 
       const data = await response.json();
-      console.log('Response data:', data);
-
       if (response.ok) {
         Alert.alert(
           '✅ Order Placed Successfully',
