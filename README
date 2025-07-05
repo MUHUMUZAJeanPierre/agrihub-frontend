@@ -1,0 +1,681 @@
+
+//         {selectedCategory === 'all' && !searchQuery && (
+//           <View style={styles.section}>
+//             <View style={styles.sectionHeader}>
+//               <Text style={[styles.sectionTitle, { color: Colors.textPrimary }]}>All Products</Text>
+//             </View>
+//             <ScrollView
+//               horizontal
+//               showsHorizontalScrollIndicator={false}
+//               contentContainerStyle={styles.productsContainer}
+//             >
+//               {products.slice(0, 10).map((product) => (
+//                 <ProductCard key={product._id} item={product} />
+//               ))}
+//             </ScrollView>
+//           </View>
+//         )}
+//       </ScrollView>
+
+//       <TouchableOpacity
+//         style={styles.cartIcon}
+//         onPress={() => setIsCartVisible(true)}
+//         activeOpacity={0.8}
+//       >
+//       // Continuing from where the code was cut off...
+
+//         <View style={styles.cartIconContainer}>
+//           <Ionicons name="bag-outline" size={24} color="#fff" />
+//           {cartItemCount > 0 && (
+//             <View style={styles.cartBadge}>
+//               <Text style={styles.cartBadgeText}>{cartItemCount}</Text>
+//             </View>
+//           )}
+//         </View>
+//       </TouchableOpacity>
+
+//       {/* Cart Modal */}
+//       <Modal
+//         visible={isCartVisible}
+//         animationType="slide"
+//         transparent={true}
+//         onRequestClose={() => setIsCartVisible(false)}
+//       >
+//         <View style={styles.modalOverlay}>
+//           <View style={[styles.cartModal, { backgroundColor: Colors.cardBackground }]}>
+//             <View style={styles.cartHeader}>
+//               <Text style={[styles.cartTitle, { color: Colors.textPrimary }]}>
+//                 Your Cart ({cartItemCount} items)
+//               </Text>
+//               <TouchableOpacity
+//                 style={styles.closeButton}
+//                 onPress={() => setIsCartVisible(false)}
+//               >
+//                 <Ionicons name="close" size={24} color={Colors.textPrimary} />
+//               </TouchableOpacity>
+//             </View>
+
+//             {cartItems.length === 0 ? (
+//               <View style={styles.emptyCart}>
+//                 <Ionicons name="bag-outline" size={80} color={Colors.textSecondary} />
+//                 <Text style={[styles.emptyCartTitle, { color: Colors.textPrimary }]}>
+//                   Your cart is empty
+//                 </Text>
+//                 <Text style={[styles.emptyCartText, { color: Colors.textSecondary }]}>
+//                   Add some items to get started
+//                 </Text>
+//                 <TouchableOpacity
+//                   style={styles.continueShopping}
+//                   onPress={() => setIsCartVisible(false)}
+//                 >
+//                   <Text style={styles.continueShoppingText}>Continue Shopping</Text>
+//                 </TouchableOpacity>
+//               </View>
+//             ) : (
+//               <>
+//                 <FlatList
+//                   data={cartItems}
+//                   renderItem={({ item }) => <CartItemCard item={item} />}
+//                   keyExtractor={(item) => item._id}
+//                   style={styles.cartList}
+//                   showsVerticalScrollIndicator={false}
+//                 />
+
+//                 <View style={styles.cartFooter}>
+//                   <View style={styles.totalContainer}>
+//                     <Text style={[styles.totalLabel, { color: Colors.textSecondary }]}>
+//                       Total Amount:
+//                     </Text>
+//                     <Text style={[styles.totalAmount, { color: Colors.textPrimary }]}>
+//                       RWF {cartTotal.toFixed(2)}
+//                     </Text>
+//                   </View>
+
+//                   <View style={styles.cartActions}>
+//                     <TouchableOpacity
+//                       style={[styles.clearCartButton, { backgroundColor: Colors.error }]}
+//                       onPress={() => {
+//                         Alert.alert(
+//                           'Clear Cart',
+//                           'Are you sure you want to clear your cart?',
+//                           [
+//                             { text: 'Cancel', style: 'cancel' },
+//                             {
+//                               text: 'Clear',
+//                               style: 'destructive',
+//                               onPress: clearCart
+//                             }
+//                           ]
+//                         );
+//                       }}
+//                     >
+//                       <Text style={styles.clearCartButtonText}>Clear Cart</Text>
+//                     </TouchableOpacity>
+
+//                     <TouchableOpacity
+//                       style={styles.checkoutButton}
+//                       onPress={handlePlaceOrder}
+//                       disabled={cartLoading}
+//                     >
+//                       {cartLoading ? (
+//                         <ActivityIndicator size="small" color="#fff" />
+//                       ) : (
+//                         <Text style={styles.checkoutButtonText}>
+//                           Checkout (RWF {cartTotal.toFixed(2)})
+//                         </Text>
+//                       )}
+//                     </TouchableOpacity>
+//                   </View>
+//                 </View>
+//               </>
+//             )}
+//           </View>
+//         </View>
+//       </Modal>
+//     </SafeAreaView>
+//   );
+// };
+
+// // Styles
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//   },
+//   scrollView: {
+//     flex: 1,
+//   },
+//   loadingContainer: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   loadingText: {
+//     marginTop: 10,
+//     fontSize: 16,
+//   },
+//   errorContainer: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     paddingHorizontal: 20,
+//   },
+//   errorTitle: {
+//     fontSize: 24,
+//     fontWeight: 'bold',
+//     marginTop: 20,
+//     textAlign: 'center',
+//   },
+//   errorText: {
+//     fontSize: 16,
+//     textAlign: 'center',
+//     marginTop: 10,
+//     lineHeight: 24,
+//   },
+//   retryButton: {
+//     backgroundColor: '#2E7D31',
+//     paddingHorizontal: 30,
+//     paddingVertical: 15,
+//     borderRadius: 8,
+//     marginTop: 20,
+//   },
+//   retryButtonText: {
+//     color: '#fff',
+//     fontSize: 16,
+//     fontWeight: '600',
+//   },
+//   header: {
+//     paddingHorizontal: 20,
+//     paddingTop: 15,
+//     paddingBottom: 20,
+//   },
+//   headerTop: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     marginBottom: 20,
+//   },
+//   headerName: {
+//     fontSize: 24,
+//     fontWeight: 'bold',
+//   },
+//   profileButton: {
+//     padding: 5,
+//   },
+//   profileIcon: {
+//     width: 40,
+//     height: 40,
+//     borderRadius: 20,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//   },
+//   searchContainer: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     gap: 10,
+//   },
+//   searchInputContainer: {
+//     flex: 1,
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     paddingHorizontal: 15,
+//     paddingVertical: 12,
+//     borderRadius: 12,
+//     gap: 10,
+//   },
+//   searchInput: {
+//     flex: 1,
+//     fontSize: 16,
+//   },
+//   filterButton: {
+//     padding: 12,
+//     borderRadius: 12,
+//   },
+//   promotionSection: {
+//     paddingBottom: 20,
+//   },
+//   promotionScrollView: {
+//     paddingHorizontal: 20,
+//   },
+//   promotionBanner: {
+//     paddingHorizontal: 0,
+//   },
+//   promotionCard: {
+//     borderRadius: 16,
+//     padding: 20,
+//     marginHorizontal: 5,
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     borderWidth: 1,
+//     elevation: 2,
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: 0.1,
+//     shadowRadius: 4,
+//   },
+//   promotionContent: {
+//     flex: 1,
+//   },
+//   promotionBadge: {
+//     backgroundColor: '#2E7D31',
+//     paddingHorizontal: 12,
+//     paddingVertical: 6,
+//     borderRadius: 20,
+//     alignSelf: 'flex-start',
+//     marginBottom: 8,
+//   },
+//   promotionDiscount: {
+//     color: '#fff',
+//     fontSize: 14,
+//     fontWeight: 'bold',
+//   },
+//   promotionText: {
+//     fontSize: 16,
+//     fontWeight: '600',
+//     marginBottom: 12,
+//     lineHeight: 22,
+//   },
+//   orderNowButton: {
+//     backgroundColor: '#2E7D31',
+//     paddingHorizontal: 20,
+//     paddingVertical: 10,
+//     borderRadius: 20,
+//     alignSelf: 'flex-start',
+//   },
+//   orderNowText: {
+//     color: '#fff',
+//     fontSize: 14,
+//     fontWeight: '600',
+//   },
+//   promotionImageContainer: {
+//     marginLeft: 15,
+//   },
+//   imageWrapper: {
+//     width: 80,
+//     height: 80,
+//     borderRadius: 40,
+//     overflow: 'hidden',
+//   },
+//   promotionImage: {
+//     width: '100%',
+//     height: '100%',
+//   },
+//   indicatorContainer: {
+//     flexDirection: 'row',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     marginTop: 15,
+//     gap: 8,
+//   },
+//   indicator: {
+//     height: 8,
+//     borderRadius: 4,
+//     transition: 'all 0.3s',
+//   },
+//   section: {
+//     paddingHorizontal: 20,
+//     marginBottom: 25,
+//   },
+//   sectionHeader: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     marginBottom: 15,
+//   },
+//   sectionTitle: {
+//     fontSize: 20,
+//     fontWeight: 'bold',
+//   },
+//   seeAllText: {
+//     color: '#2E7D31',
+//     fontSize: 16,
+//     fontWeight: '600',
+//   },
+//   categoriesContainer: {
+//     paddingRight: 20,
+//   },
+//   categoryCard: {
+//     alignItems: 'center',
+//     marginRight: 20,
+//     paddingVertical: 10,
+//     paddingHorizontal: 5,
+//     borderRadius: 12,
+//     minWidth: 70,
+//   },
+//   selectedCategoryCard: {
+//     backgroundColor: 'rgba(46, 125, 49, 0.1)',
+//   },
+//   categoryIcon: {
+//     width: 50,
+//     height: 50,
+//     borderRadius: 25,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     marginBottom: 8,
+//   },
+//   categoryName: {
+//     fontSize: 12,
+//     fontWeight: '600',
+//     textAlign: 'center',
+//   },
+//   selectedCategoryName: {
+//     fontWeight: 'bold',
+//   },
+//   productsContainer: {
+//     paddingRight: 20,
+//   },
+//   productCard: {
+//     width: 160,
+//     marginRight: 15,
+//     borderRadius: 16,
+//     overflow: 'hidden',
+//     elevation: 3,
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: 0.1,
+//     shadowRadius: 4,
+//     borderWidth: 1,
+//   },
+//   imageContainer: {
+//     position: 'relative',
+//     height: 120,
+//   },
+//   productImage: {
+//     width: '100%',
+//     height: '100%',
+//     resizeMode: 'cover',
+//   },
+//   placeholderImage: {
+//     width: '100%',
+//     height: '100%',
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//   },
+//   discountBadge: {
+//     position: 'absolute',
+//     top: 8,
+//     left: 8,
+//     backgroundColor: '#FF6B35',
+//     paddingHorizontal: 6,
+//     paddingVertical: 4,
+//     borderRadius: 12,
+//   },
+//   discountText: {
+//     color: '#fff',
+//     fontSize: 10,
+//     fontWeight: 'bold',
+//   },
+//   addButton: {
+//     position: 'absolute',
+//     bottom: 8,
+//     right: 8,
+//     backgroundColor: '#fff',
+//     width: 28,
+//     height: 28,
+//     borderRadius: 14,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     elevation: 2,
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 1 },
+//     shadowOpacity: 0.2,
+//     shadowRadius: 2,
+//   },
+//   favoriteButton: {
+//     position: 'absolute',
+//     top: 8,
+//     right: 8,
+//     backgroundColor: '#fff',
+//     width: 28,
+//     height: 28,
+//     borderRadius: 14,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     elevation: 2,
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 1 },
+//     shadowOpacity: 0.2,
+//     shadowRadius: 2,
+//   },
+//   productInfo: {
+//     padding: 12,
+//   },
+//   productTitle: {
+//     fontSize: 14,
+//     fontWeight: '600',
+//     marginBottom: 4,
+//   },
+//   priceContainer: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginBottom: 4,
+//   },
+//   productPrice: {
+//     fontSize: 16,
+//     fontWeight: 'bold',
+//     color: '#2E7D31',
+//     marginRight: 8,
+//   },
+//   priceUnit: {
+//     fontSize: 12,
+//     fontWeight: 'normal',
+//   },
+//   oldPrice: {
+//     fontSize: 12,
+//     textDecorationLine: 'line-through',
+//   },
+//   productRegion: {
+//     fontSize: 12,
+//   },
+//   emptyResults: {
+//     alignItems: 'center',
+//     paddingVertical: 40,
+//   },
+//   emptyResultsTitle: {
+//     fontSize: 18,
+//     fontWeight: '600',
+//     marginTop: 15,
+//   },
+//   emptyResultsText: {
+//     fontSize: 14,
+//     textAlign: 'center',
+//     marginTop: 5,
+//   },
+//   cartIcon: {
+//     position: 'absolute',
+//     bottom: 30,
+//     right: 20,
+//     backgroundColor: '#2E7D31',
+//     width: 56,
+//     height: 56,
+//     borderRadius: 28,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     elevation: 8,
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 4 },
+//     shadowOpacity: 0.3,
+//     shadowRadius: 8,
+//   },
+//   cartIconContainer: {
+//     position: 'relative',
+//   },
+//   cartBadge: {
+//     position: 'absolute',
+//     top: -6,
+//     right: -6,
+//     backgroundColor: '#FF6B35',
+//     minWidth: 20,
+//     height: 20,
+//     borderRadius: 10,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     paddingHorizontal: 4,
+//   },
+//   cartBadgeText: {
+//     color: '#fff',
+//     fontSize: 12,
+//     fontWeight: 'bold',
+//   },
+//   modalOverlay: {
+//     flex: 1,
+//     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+//     justifyContent: 'flex-end',
+//   },
+//   cartModal: {
+//     borderTopLeftRadius: 24,
+//     borderTopRightRadius: 24,
+//     paddingTop: 20,
+//     maxHeight: '80%',
+//   },
+//   cartHeader: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     paddingHorizontal: 20,
+//     paddingBottom: 15,
+//     borderBottomWidth: 1,
+//     borderBottomColor: 'rgba(0, 0, 0, 0.1)',
+//   },
+//   cartTitle: {
+//     fontSize: 20,
+//     fontWeight: 'bold',
+//   },
+//   closeButton: {
+//     padding: 5,
+//   },
+//   emptyCart: {
+//     alignItems: 'center',
+//     paddingVertical: 60,
+//     paddingHorizontal: 20,
+//   },
+//   emptyCartTitle: {
+//     fontSize: 20,
+//     fontWeight: 'bold',
+//     marginTop: 20,
+//   },
+//   emptyCartText: {
+//     fontSize: 16,
+//     textAlign: 'center',
+//     marginTop: 8,
+//   },
+//   continueShopping: {
+//     backgroundColor: '#2E7D31',
+//     paddingHorizontal: 30,
+//     paddingVertical: 15,
+//     borderRadius: 8,
+//     marginTop: 20,
+//   },
+//   continueShoppingText: {
+//     color: '#fff',
+//     fontSize: 16,
+//     fontWeight: '600',
+//   },
+//   cartList: {
+//     paddingHorizontal: 20,
+//     paddingVertical: 10,
+//   },
+//   cartItem: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     padding: 15,
+//     borderRadius: 12,
+//     marginBottom: 10,
+//     elevation: 2,
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 1 },
+//     shadowOpacity: 0.1,
+//     shadowRadius: 2,
+//   },
+//   cartItemImage: {
+//     width: 60,
+//     height: 60,
+//     borderRadius: 8,
+//     marginRight: 15,
+//   },
+//   cartItemInfo: {
+//     flex: 1,
+//   },
+//   cartItemTitle: {
+//     fontSize: 16,
+//     fontWeight: '600',
+//     marginBottom: 4,
+//   },
+//   cartItemPrice: {
+//     fontSize: 14,
+//     color: '#2E7D31',
+//     fontWeight: '600',
+//     marginBottom: 8,
+//   },
+//   quantityContainer: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//   },
+//   quantityButton: {
+//     width: 30,
+//     height: 30,
+//     borderRadius: 15,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//   },
+//   quantityText: {
+//     fontSize: 16,
+//     fontWeight: '600',
+//     marginHorizontal: 15,
+//     minWidth: 20,
+//     textAlign: 'center',
+//   },
+//   removeButton: {
+//     padding: 8,
+//   },
+//   cartFooter: {
+//     paddingHorizontal: 20,
+//     paddingVertical: 20,
+//     borderTopWidth: 1,
+//     borderTopColor: 'rgba(0, 0, 0, 0.1)',
+//   },
+//   totalContainer: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     marginBottom: 20,
+//   },
+//   totalLabel: {
+//     fontSize: 16,
+//     fontWeight: '600',
+//   },
+//   totalAmount: {
+//     fontSize: 20,
+//     fontWeight: 'bold',
+//     color: '#2E7D31',
+//   },
+//   cartActions: {
+//     flexDirection: 'row',
+//     gap: 10,
+//   },
+//   clearCartButton: {
+//     flex: 1,
+//     paddingVertical: 15,
+//     borderRadius: 8,
+//     alignItems: 'center',
+//   },
+//   clearCartButtonText: {
+//     color: '#fff',
+//     fontSize: 16,
+//     fontWeight: '600',
+//   },
+//   checkoutButton: {
+//     flex: 2,
+//     backgroundColor: '#2E7D31',
+//     paddingVertical: 15,
+//     borderRadius: 8,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//   },
+//   checkoutButtonText: {
+//     color: '#fff',
+//     fontSize: 16,
+//     fontWeight: '600',
+//   },
+// });
+
+// export default BuyerDashboard;
