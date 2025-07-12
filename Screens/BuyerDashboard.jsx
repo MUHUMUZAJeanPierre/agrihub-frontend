@@ -55,7 +55,7 @@ const Colors = {
   warning: '#FF9800',
   error: '#F44336',
 
-  cardBackground: '#FFFFFF',
+  cardBackground: '#666666',
   inputBackground: '#F5F5F5',
   borderColor: '#E0E0E0',
 
@@ -108,7 +108,7 @@ const DarkColors = {
   warning: '#FF9800',
   error: '#F44336',
 
-  cardBackground: '#1E1E1E',
+  cardBackground: '#1A1A1A',
   inputBackground: '#2C2C2C',
   borderColor: '#3A3A3A',
 
@@ -475,7 +475,9 @@ const BuyerDashboard = ({ navigation }) => {
   const ProductCard = React.memo(({ item }) => (
     <TouchableOpacity
       // style={styles.productCard}
-      style={[styles.productCard, { backgroundColor: Colors.cardBackground, borderColor: Colors.borderColor }]}
+      // style={[styles.productCard, { backgroundColor: Colors.cardB ackground, borderColor: Colors.borderColor }]}
+      style={[styles.productCard, { backgroundColor: Colors.cardBackground, borderColor: theme === 'dark' ? '#333' : '#E0E0E0',
+}]}
       activeOpacity={0.8}
       onPress={() =>
         navigation.navigate('ProductDetailScreen', {
@@ -952,11 +954,14 @@ const BuyerDashboard = ({ navigation }) => {
 
       <Modal visible={isCartVisible} animationType="slide" presentationStyle="pageSheet">
         <SafeAreaView 
-        style={styles.modalContainer}
-        //  style={[styles.modalContainer, { backgroundColor: Colors.cardBackground }]}
+        // style={styles.modalContainer}
+        style={[styles.modalContainer, { backgroundColor: Colors.cardBackground }]}
         >
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Shopping Cart ({cartItemCount})</Text>
+            <Text 
+            style={[styles.modalTitle, { color: Colors.textPrimary }]}
+            // style={styles.modalTitle}
+            >Shopping Cart ({cartItemCount})</Text>
             <TouchableOpacity
               onPress={() => setIsCartVisible(false)}
               style={styles.modalCloseButton}
@@ -991,7 +996,10 @@ const BuyerDashboard = ({ navigation }) => {
                 ))}
               </ScrollView>
 
-              <View style={styles.cartFooter}>
+              <View 
+               style={[styles.cartFooter, { backgroundColor: Colors.cardBackground, borderTopColor: Colors.borderColor }]}
+              // style={styles.cartFooter}
+              >
                 <View style={styles.cartSummary}>
                   <View style={styles.cartTotal}>
                     <Text 
@@ -1021,11 +1029,16 @@ const BuyerDashboard = ({ navigation }) => {
                       );
                     }}
                   >
-                    <Text style={styles.clearCartText}>Clear Cart</Text>
+                    <Text 
+                    // style={styles.clearCartText}
+                     style={[styles.clearCartText, { color: Colors.textPrimary }]}
+                    >Clear Cart</Text>
                   </TouchableOpacity>
                 </View>
                 <TouchableOpacity style={styles.checkoutBtn}>
-                  <Text style={styles.checkoutBtnText}>Order Now</Text>
+                  <Text 
+                  style={styles.checkoutBtnText}
+                  >Order Now</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -1156,7 +1169,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
 
-  // Promotion Banner
   promotionBanner: {
     marginHorizontal: 20,
     marginBottom: 24,
@@ -1206,7 +1218,7 @@ const styles = StyleSheet.create({
     height: 70,
   },
 
-  // Sections
+
   section: {
     marginBottom: 24,
   },
@@ -1228,7 +1240,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 
-  // Categories
+
   categoriesContainer: {
     paddingHorizontal: 20,
     paddingRight: 40,
@@ -1239,7 +1251,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   selectedCategoryCard: {
-    // Additional styling for selected category
+
   },
   categoryIcon: {
     width: 56,
@@ -1293,6 +1305,7 @@ const styles = StyleSheet.create({
   //   justifyContent: 'center',
   //   alignItems: 'center',
   // },
+
   productImage: {
   width: '100%',
   height: '100%',
@@ -1640,6 +1653,8 @@ favoriteButton: {
     paddingHorizontal: 20,
     paddingVertical: 16,
     backgroundColor: Colors.cardBackground,
+    
+    
   },
   cartSummary: {
     flexDirection: 'row',

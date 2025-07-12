@@ -1,4 +1,4 @@
-// File: components/CartItem.js
+
 import React from 'react';
 import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';

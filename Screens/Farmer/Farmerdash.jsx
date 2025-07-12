@@ -55,6 +55,8 @@ const QuickActionButton = ({ icon, label, onPress, color = "#10B981", isDark }) 
   </TouchableOpacity>
 );
 
+
+
 export default function Farmerdash({ navigation }) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -366,11 +368,10 @@ export default function Farmerdash({ navigation }) {
 
   const getDisplayName = () => {
     if (userLoading) return "Loading...";
-    if (!user || !user.name) return "Farmer 👨‍🌾";
+    if (!user || !user.name) return "Farmer";
 
-    // Add farmer emoji if the name doesn't already contain an emoji
     const hasEmoji = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u.test(user.name);
-    return hasEmoji ? user.name : `${user.name} 👨‍🌾`;
+    return hasEmoji ? user.name : `${user.name} `;
   };
 
   return (
@@ -548,13 +549,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#EF4444",
   },
   addButton: {
-    backgroundColor: "#10B981",
+    backgroundColor: "#4CAF50",
     width: 52,
     height: 52,
     borderRadius: 26,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#10B981",
+    shadowColor: "#4CAF50",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
@@ -621,7 +622,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
   },
   gradientCard: {
-    backgroundColor: "#10B981",
+    backgroundColor: "#4CAF50",
   },
   statCardHeader: {
     flexDirection: "row",
@@ -663,11 +664,11 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 32,
     fontWeight: "bold",
-    color: "#10B981",
+    color: "#4CAF50",
     fontFamily: "Poppins_700Bold",
   },
   statValueDark: {
-    color: "#10B981",
+    color: "#4CAF50",
   },
   statValueWhite: {
     color: "white",
@@ -756,7 +757,7 @@ const styles = StyleSheet.create({
   },
   seeAllText: {
     fontSize: 14,
-    color: "#10B981",
+    color: "#4CAF50",
     fontFamily: "Poppins_500Medium",
   },
   loadingContainer: {
