@@ -19,6 +19,49 @@ import * as SecureStore from 'expo-secure-store';
 
 const { width } = Dimensions.get('window');
 
+// Color Schemes
+const LightColors = {
+  primary: '#4A90E2',
+  primaryDark: '#2D5AA0',
+  secondary: '#FF6B35',
+  accent: '#FFA726',
+  background: '#FFFFFF',
+  surface: '#F8F9FA',
+  surfaceLight: '#F0F0F0',
+  textPrimary: '#000000',
+  textSecondary: '#666666',
+  textTertiary: '#999999',
+  success: '#4CAF50',
+  warning: '#FF9800',
+  error: '#F44336',
+  cardBackground: '#FFFFFF',
+  inputBackground: '#F5F5F5',
+  borderColor: '#E0E0E0',
+  gradient: ['#4A90E2', '#357ABD'],
+  orangeGradient: ['#FF6B35', '#FF8A50'],
+};
+
+const DarkColors = {
+  primary: '#4A90E2',
+  primaryDark: '#2D5AA0',
+  secondary: '#FF6B35',
+  accent: '#FFA726',
+  background: '#121212',
+  surface: '#1E1E1E',
+  surfaceLight: '#2C2C2C',
+  textPrimary: '#FFFFFF',
+  textSecondary: '#B0B0B0',
+  textTertiary: '#808080',
+  success: '#4CAF50',
+  warning: '#FF9800',
+  error: '#F44336',
+  cardBackground: '#1A1A1A',
+  inputBackground: '#2C2C2C',
+  borderColor: '#3A3A3A',
+  gradient: ['#4A90E2', '#357ABD'],
+  orangeGradient: ['#FF6B35', '#FF8A50'],
+};
+
 const API_CONFIG = {
   ORDER_URL: 'https://agrihub-backend-4z99.onrender.com/api/orders/place-order',
 };
@@ -37,6 +80,7 @@ const CartScreen = ({ navigation }) => {
 
   const { cartItems, removeFromCart, updateQuantity, clearCart, refreshCart } = useCart();
   const { theme } = useTheme();
+  const Colors = theme === 'dark' ? DarkColors : LightColors;
 
   useEffect(() => {
     loadAuthToken();
@@ -218,8 +262,7 @@ const CartScreen = ({ navigation }) => {
     return (
       <View style={[
         styles.itemCard, 
-        { marginTop: index === 0 ? 8 : 6 },
-        theme === 'dark' && styles.itemCardDark
+        { marginTop: index === 0 ? 8 : 6, backgroundColor: Colors.cardBackground }
       ]}>
         <View style={styles.imageContainer}>
           <Image
@@ -236,10 +279,7 @@ const CartScreen = ({ navigation }) => {
 
         <View style={styles.itemContent}>
           <View style={styles.itemHeader}>
-            <Text style={[
-              styles.itemName, 
-              theme === 'dark' && styles.itemNameDark
-            ]} numberOfLines={2}>
+            <Text style={[styles.itemName, { color: Colors.textPrimary }]} numberOfLines={2}>
               {item.title || item.name || 'Product'}
             </Text>
             <TouchableOpacity
@@ -248,34 +288,27 @@ const CartScreen = ({ navigation }) => {
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               accessibilityLabel="Remove item"
             >
-              <Ionicons name="trash-outline" size={18} color="#FF6B6B" />
+              <Ionicons name="trash-outline" size={18} color={Colors.error} />
             </TouchableOpacity>
           </View>
 
           <View style={styles.priceContainer}>
-            <Text style={[
-              styles.unitPrice,
-              theme === 'dark' && styles.unitPriceDark
-            ]}>
+            <Text style={[styles.unitPrice, { color: Colors.textSecondary }]}>
               ${itemPrice.toFixed(2)} each
             </Text>
-            <Text style={styles.itemTotal}>
+            <Text style={[styles.itemTotal, { color: Colors.success }]}>
               ${itemTotal.toFixed(2)}
             </Text>
           </View>
 
           <View style={styles.quantitySection}>
-            <View style={[
-              styles.quantityControls,
-              theme === 'dark' && styles.quantityControlsDark
-            ]}>
+            <View style={[styles.quantityControls, { backgroundColor: Colors.surfaceLight }]}>
               <TouchableOpacity
                 style={[
                   styles.quantityButton, 
                   styles.decreaseButton, 
                   item.quantity <= 1 && styles.disabledButton,
-                  theme === 'dark' && styles.quantityButtonDark,
-                  theme === 'dark' && item.quantity <= 1 && styles.disabledButtonDark
+                  { backgroundColor: item.quantity <= 1 ? Colors.surfaceLight : Colors.surface }
                 ]}
                 onPress={() => handleQuantityUpdate(item._id, item.quantity - 1)}
                 disabled={item.quantity <= 1}
@@ -284,15 +317,12 @@ const CartScreen = ({ navigation }) => {
                 <Ionicons 
                   name="remove" 
                   size={16} 
-                  color={item.quantity <= 1 ? (theme === 'dark' ? '#555' : '#CCC') : (theme === 'dark' ? '#CCC' : '#666')} 
+                  color={item.quantity <= 1 ? Colors.textTertiary : Colors.textSecondary} 
                 />
               </TouchableOpacity>
 
               <View style={styles.quantityDisplay}>
-                <Text style={[
-                  styles.quantityText,
-                  theme === 'dark' && styles.quantityTextDark
-                ]}>
+                <Text style={[styles.quantityText, { color: Colors.textPrimary }]}>
                   {item.quantity}
                 </Text>
               </View>
@@ -301,7 +331,7 @@ const CartScreen = ({ navigation }) => {
                 style={[
                   styles.quantityButton, 
                   styles.increaseButton,
-                  theme === 'dark' && styles.quantityButtonDark
+                  { backgroundColor: Colors.surface }
                 ]}
                 onPress={() => handleQuantityUpdate(item._id, item.quantity + 1)}
                 accessibilityLabel="Increase quantity"
@@ -309,7 +339,7 @@ const CartScreen = ({ navigation }) => {
                 <Ionicons 
                   name="add" 
                   size={16} 
-                  color={theme === 'dark' ? '#CCC' : '#666'} 
+                  color={Colors.textSecondary} 
                 />
               </TouchableOpacity>
             </View>
@@ -325,23 +355,17 @@ const CartScreen = ({ navigation }) => {
         <Ionicons 
           name="bag-outline" 
           size={80} 
-          color={theme === 'dark' ? '#555' : '#DDD'} 
+          color={Colors.textTertiary} 
         />
       </View>
-      <Text style={[
-        styles.emptyTitle,
-        theme === 'dark' && styles.emptyTitleDark
-      ]}>
+      <Text style={[styles.emptyTitle, { color: Colors.textPrimary }]}>
         Your cart is empty
       </Text>
-      <Text style={[
-        styles.emptySubtitle,
-        theme === 'dark' && styles.emptySubtitleDark
-      ]}>
+      <Text style={[styles.emptySubtitle, { color: Colors.textSecondary }]}>
         Add some products to get started
       </Text>
       <TouchableOpacity
-        style={styles.shopButton}
+        style={[styles.shopButton, { backgroundColor: Colors.success }]}
         onPress={() => navigation.navigate('Home')}
         activeOpacity={0.8}
       >
@@ -352,15 +376,9 @@ const CartScreen = ({ navigation }) => {
 
   const LoadingOverlay = () => (
     <View style={styles.loadingOverlay}>
-      <View style={[
-        styles.loadingContainer,
-        theme === 'dark' && styles.loadingContainerDark
-      ]}>
-        <ActivityIndicator size="large" color="#2E7D31" />
-        <Text style={[
-          styles.loadingText,
-          theme === 'dark' && styles.loadingTextDark
-        ]}>
+      <View style={[styles.loadingContainer, { backgroundColor: Colors.cardBackground }]}>
+        <ActivityIndicator size="large" color={Colors.success} />
+        <Text style={[styles.loadingText, { color: Colors.textPrimary }]}>
           Placing your order...
         </Text>
       </View>
@@ -368,18 +386,12 @@ const CartScreen = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={[
-      styles.container,
-      theme === 'dark' && styles.containerDark
-    ]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: Colors.background }]}>
       <StatusBar 
         barStyle={theme === 'dark' ? 'light-content' : 'dark-content'} 
-        backgroundColor={theme === 'dark' ? '#1F2937' : '#FFFFFF'} 
+        backgroundColor={Colors.background} 
       />
-      <View style={[
-        styles.header,
-        theme === 'dark' && styles.headerDark
-      ]}>
+      <View style={[styles.header, { backgroundColor: Colors.cardBackground, borderBottomColor: Colors.borderColor }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
@@ -389,22 +401,16 @@ const CartScreen = ({ navigation }) => {
           <Ionicons 
             name="arrow-back" 
             size={24} 
-            color={theme === 'dark' ? '#F3F4F6' : '#333'} 
+            color={Colors.textPrimary} 
           />
         </TouchableOpacity>
 
         <View style={styles.headerTitleContainer}>
-          <Text style={[
-            styles.headerTitle,
-            theme === 'dark' && styles.headerTitleDark
-          ]}>
+          <Text style={[styles.headerTitle, { color: Colors.textPrimary }]}>
             My Cart
           </Text>
           {cartItems.length > 0 && (
-            <Text style={[
-              styles.itemCount,
-              theme === 'dark' && styles.itemCountDark
-            ]}>
+            <Text style={[styles.itemCount, { color: Colors.textSecondary }]}>
               {cartItems.length} item{cartItems.length !== 1 ? 's' : ''}
             </Text>
           )}
@@ -412,19 +418,16 @@ const CartScreen = ({ navigation }) => {
 
         {cartItems.length > 0 && (
           <TouchableOpacity
-            style={[
-              styles.updateButton,
-              theme === 'dark' && styles.updateButtonDark
-            ]}
+            style={[styles.updateButton, { backgroundColor: Colors.surfaceLight }]}
             onPress={handleRefreshCart}
             disabled={isUpdating}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             accessibilityLabel="Refresh cart"
           >
             {isUpdating ? (
-              <ActivityIndicator size="small" color="#2E7D31" />
+              <ActivityIndicator size="small" color={Colors.success} />
             ) : (
-              <Ionicons name="refresh-outline" size={20} color="#2E7D31" />
+              <Ionicons name="refresh-outline" size={20} color={Colors.success} />
             )}
           </TouchableOpacity>
         )}
@@ -436,7 +439,7 @@ const CartScreen = ({ navigation }) => {
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             accessibilityLabel="Clear cart"
           >
-            <Text style={styles.clearButtonText}>Clear</Text>
+            <Text style={[styles.clearButtonText, { color: Colors.success }]}>Clear</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -458,57 +461,40 @@ const CartScreen = ({ navigation }) => {
             windowSize={10}
           />
 
-          <View style={[
-            styles.summaryContainer,
-            theme === 'dark' && styles.summaryContainerDark
-          ]}>
+          <View style={[styles.summaryContainer, { backgroundColor: Colors.cardBackground }]}>
             <View style={styles.summaryRow}>
-              <Text style={[
-                styles.summaryLabel,
-                theme === 'dark' && styles.summaryLabelDark
-              ]}>
+              <Text style={[styles.summaryLabel, { color: Colors.textSecondary }]}>
                 Subtotal ({cartItems.length} item{cartItems.length !== 1 ? 's' : ''})
               </Text>
-              <Text style={[
-                styles.summaryValue,
-                theme === 'dark' && styles.summaryValueDark
-              ]}>
+              <Text style={[styles.summaryValue, { color: Colors.textPrimary }]}>
                 ${total.toFixed(2)}
               </Text>
             </View>
 
             <View style={styles.summaryRow}>
-              <Text style={[
-                styles.summaryLabel,
-                theme === 'dark' && styles.summaryLabelDark
-              ]}>
+              <Text style={[styles.summaryLabel, { color: Colors.textSecondary }]}>
                 Delivery Fee
               </Text>
-              <Text style={[
-                styles.summaryValue,
-                theme === 'dark' && styles.summaryValueDark
-              ]}>
+              <Text style={[styles.summaryValue, { color: Colors.textPrimary }]}>
                 FREE
               </Text>
             </View>
 
-            <View style={[
-              styles.divider,
-              theme === 'dark' && styles.dividerDark
-            ]} />
+            <View style={[styles.divider, { backgroundColor: Colors.borderColor }]} />
 
             <View style={styles.totalRow}>
-              <Text style={[
-                styles.totalLabel,
-                theme === 'dark' && styles.totalLabelDark
-              ]}>
+              <Text style={[styles.totalLabel, { color: Colors.textPrimary }]}>
                 Total
               </Text>
-              <Text style={styles.totalValue}>${total.toFixed(2)}</Text>
+              <Text style={[styles.totalValue, { color: Colors.success }]}>${total.toFixed(2)}</Text>
             </View>
 
             <TouchableOpacity
-              style={[styles.checkoutButton, (isPlacingOrder || total === 0) && styles.disabledCheckoutButton]}
+              style={[
+                styles.checkoutButton, 
+                { backgroundColor: (isPlacingOrder || total === 0) ? Colors.textTertiary : Colors.success },
+                (isPlacingOrder || total === 0) && styles.disabledCheckoutButton
+              ]}
               onPress={handlePlaceOrder}
               activeOpacity={0.8}
               disabled={isPlacingOrder || total === 0}

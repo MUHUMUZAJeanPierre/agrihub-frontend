@@ -11,6 +11,7 @@ import BottomNav from './Bottomnav';
 import Detail from '../Screens/Farmer/description';
 import Chat from '../Screens/Farmer/Chat';
 import ProductDetailScreen from '../Screens/ProductDetailScreen';
+import AgroDetail from '../Screens/Agronome/AgroDetail';
 
 const Stack = createNativeStackNavigator();
 
@@ -64,6 +65,7 @@ export default function StackNavigation() {
             {userRole === 'plant pathologist' && (
               <>
               <Stack.Screen name="agrono" component={BottomNav} />
+              <Stack.Screen name="AgroDetail" component={AgroDetail} />
               </>
             )}
           </>

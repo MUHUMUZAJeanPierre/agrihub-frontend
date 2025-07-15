@@ -25,19 +25,62 @@ const AnimatedIcon = Animated.createAnimatedComponent(Icon);
 
 const Tab = createBottomTabNavigator();
 
+// Color Schemes
+const LightColors = {
+  primary: '#4A90E2',
+  primaryDark: '#2D5AA0',
+  secondary: '#FF6B35',
+  accent: '#FFA726',
+  background: '#FFFFFF',
+  surface: '#F8F9FA',
+  surfaceLight: '#F0F0F0',
+  textPrimary: '#000000',
+  textSecondary: '#666666',
+  textTertiary: '#999999',
+  success: '#4CAF50',
+  warning: '#FF9800',
+  error: '#F44336',
+  cardBackground: '#FFFFFF',
+  inputBackground: '#F5F5F5',
+  borderColor: '#E0E0E0',
+  gradient: ['#4A90E2', '#357ABD'],
+  orangeGradient: ['#FF6B35', '#FF8A50'],
+};
+
+const DarkColors = {
+  primary: '#4A90E2',
+  primaryDark: '#2D5AA0',
+  secondary: '#FF6B35',
+  accent: '#FFA726',
+  background: '#121212',
+  surface: '#1E1E1E',
+  surfaceLight: '#2C2C2C',
+  textPrimary: '#FFFFFF',
+  textSecondary: '#B0B0B0',
+  textTertiary: '#808080',
+  success: '#4CAF50',
+  warning: '#FF9800',
+  error: '#F44336',
+  cardBackground: '#1A1A1A',
+  inputBackground: '#2C2C2C',
+  borderColor: '#3A3A3A',
+  gradient: ['#4A90E2', '#357ABD'],
+  orangeGradient: ['#FF6B35', '#FF8A50'],
+};
+
 // Custom Cart Icon with Badge Component
 const CartIconWithBadge = ({ focused, size = 24, theme }) => {
     const { cartItems } = useCart();
     const itemCount = cartItems.length;
-    const styles = getStyles(theme);
-    const isDark = theme === 'dark';
+    const Colors = theme === 'dark' ? DarkColors : LightColors;
+    const styles = getStyles(Colors);
 
     return (
         <View style={styles.iconContainer}>
             <Ionicons 
                 name="cart-outline" 
                 size={size} 
-                color={focused ? styles.activeColor : styles.inactiveColor} 
+                color={focused ? Colors.success : Colors.textTertiary} 
             />
             {itemCount > 0 && (
                 <View style={styles.badge}>
@@ -52,14 +95,15 @@ const CartIconWithBadge = ({ focused, size = 24, theme }) => {
 
 // Custom Orders Icon with Badge Component
 const OrdersIconWithBadge = ({ focused, size = 24, pendingOrdersCount = 0, theme }) => {
-    const styles = getStyles(theme);
+    const Colors = theme === 'dark' ? DarkColors : LightColors;
+    const styles = getStyles(Colors);
     
     return (
         <View style={styles.iconContainer}>
             <AnimatedIcon 
                 name="receipt-outline" 
                 size={size} 
-                color={focused ? styles.activeColor : styles.inactiveColor} 
+                color={focused ? Colors.success : Colors.textTertiary} 
             />
             {pendingOrdersCount > 0 && (
                 <View style={[styles.badge, styles.ordersBadge]}>
@@ -74,7 +118,8 @@ const OrdersIconWithBadge = ({ focused, size = 24, pendingOrdersCount = 0, theme
 
 // Custom Tab Bar Icon Component
 const TabBarIcon = ({ iconName, iconType = 'Ionicons', focused, size = 24, theme }) => {
-    const styles = getStyles(theme);
+    const Colors = theme === 'dark' ? DarkColors : LightColors;
+    const styles = getStyles(Colors);
     const IconComponent = iconType === 'MaterialIcons' ? MaterialIcons : Ionicons;
     
     return (
@@ -82,7 +127,7 @@ const TabBarIcon = ({ iconName, iconType = 'Ionicons', focused, size = 24, theme
             <IconComponent 
                 name={iconName} 
                 size={size} 
-                color={focused ? styles.activeColor : styles.inactiveColor} 
+                color={focused ? Colors.success : Colors.textTertiary} 
             />
         </View>
     );
@@ -92,8 +137,8 @@ export default function BottomNav() {
     const [userRole, setUserRole] = useState(null);
     const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
     const { theme } = useTheme();
-    const styles = getStyles(theme);
-    const isDark = theme === 'dark';
+    const Colors = theme === 'dark' ? DarkColors : LightColors;
+    const styles = getStyles(Colors);
 
     useEffect(() => {
         const fetchUserRole = async () => {
@@ -135,8 +180,8 @@ export default function BottomNav() {
             screenOptions={{
                 tabBarStyle: styles.tabBarStyle,
                 tabBarLabelStyle: styles.tabBarLabelStyle,
-                tabBarActiveTintColor: styles.activeColor,
-                tabBarInactiveTintColor: styles.inactiveColor,
+                        tabBarActiveTintColor: Colors.success,
+        tabBarInactiveTintColor: Colors.textTertiary,
                 headerShown: false,
                 tabBarBackground: () => (
                     <View style={styles.tabBarBackground} />
@@ -335,23 +380,21 @@ export default function BottomNav() {
     );
 }
 
-const getStyles = (theme) => {
-    const isDark = theme === 'dark';
-    
+const getStyles = (Colors) => {
     return StyleSheet.create({
         tabBarStyle: {
             height: Platform.OS === 'ios' ? 85 : 65,
             paddingBottom: Platform.OS === 'ios' ? 20 : 8,
-            paddingTop: 3   ,
-            backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
+            paddingTop: 3,
+            backgroundColor: Colors.cardBackground,
             borderTopWidth: 0.1,
-            borderTopColor: isDark ? '#2C2C2E' : '#E5E5E5',
-            shadowColor: isDark ? '#000000' : '#000000',
+            borderTopColor: Colors.borderColor,
+            shadowColor: '#000000',
             shadowOffset: {
                 width: 0,
                 height: -2,
             },
-            shadowOpacity: isDark ? 0.25 : 0.1,
+            shadowOpacity: 0.15,
             shadowRadius: 8,
             elevation: 10,
         },
@@ -361,9 +404,9 @@ const getStyles = (theme) => {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
+            backgroundColor: Colors.cardBackground,
             borderTopWidth: 1,
-            borderTopColor: isDark ? '#2C2C2E' : '#E5E5E5',
+            borderTopColor: Colors.borderColor,
         },
         tabBarLabelStyle: {
             fontSize: 12,
@@ -381,7 +424,7 @@ const getStyles = (theme) => {
             position: 'absolute',
             top: -6,
             right: -8,
-            backgroundColor: '#FF4444',
+            backgroundColor: Colors.error,
             borderRadius: 12,
             minWidth: 20,
             height: 20,
@@ -389,7 +432,7 @@ const getStyles = (theme) => {
             alignItems: 'center',
             paddingHorizontal: 4,
             borderWidth: 2,
-            borderColor: isDark ? '#1C1C1E' : '#FFFFFF',
+            borderColor: Colors.cardBackground,
             shadowColor: '#000000',
             shadowOffset: {
                 width: 0,
@@ -400,10 +443,10 @@ const getStyles = (theme) => {
             elevation: 5,
         },
         ordersBadge: {
-            backgroundColor: '#FF8C42',
+            backgroundColor: Colors.warning,
         },
         badgeText: {
-            color: '#FFFFFF',
+            color: Colors.textPrimary,
             fontSize: 11,
             fontWeight: '700',
             textAlign: 'center',
@@ -411,8 +454,6 @@ const getStyles = (theme) => {
             textAlignVertical: 'center',
             fontFamily: Platform.OS === 'ios' ? 'SF Pro Text' : 'Roboto',
         },
-        activeColor: isDark ? '#4BA26A' : '#4BA26A',
-        inactiveColor: isDark ? '#8E8E93' : '#999999',
     });
 };
 

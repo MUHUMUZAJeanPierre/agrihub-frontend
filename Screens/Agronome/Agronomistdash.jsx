@@ -606,7 +606,7 @@ export default function Agronomistdash({ navigation }) {
         ]}
       >
         <TouchableOpacity
-          onPress={() => navigation.navigate('BlogDetail', { blog: item })}
+          onPress={() => navigation.navigate('AgroDetail', { blog: item })}
           activeOpacity={0.9}
           style={styles.blogItemTouchable}
         >

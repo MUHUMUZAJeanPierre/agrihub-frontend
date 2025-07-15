@@ -1,9 +1,31 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Modal, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from '../contexts/ThemeContext';
+
+const LightColors = {
+  background: '#FFFFFF',
+  border: '#ccc',
+  text: '#000',
+  modalBg: 'rgba(0, 0, 0, 0.5)',
+  optionBg: '#fff',
+  optionBorder: '#ccc',
+  icon: '#000',
+};
+const DarkColors = {
+  background: '#1E1E1E',
+  border: '#3A3A3A',
+  text: '#FFF',
+  modalBg: 'rgba(0, 0, 0, 0.7)',
+  optionBg: '#232323',
+  optionBorder: '#444',
+  icon: '#FFF',
+};
 
 const Dropdown = ({ options = [], selectedOption, onSelect }) => {
   const [modalVisible, setModalVisible] = useState(false);
+  const { theme } = useTheme();
+  const Colors = theme === 'dark' ? DarkColors : LightColors;
 
   const handleOptionSelect = (option) => {
     setModalVisible(false);
@@ -12,9 +34,9 @@ const Dropdown = ({ options = [], selectedOption, onSelect }) => {
 
   return (
     <View>
-      <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.container}>
-        <Text>{selectedOption}</Text>
-        <Ionicons name="caret-down" size={20} color="black" />
+      <TouchableOpacity onPress={() => setModalVisible(true)} style={[styles.container, { backgroundColor: Colors.background, borderColor: Colors.border }]}> 
+        <Text style={{ color: Colors.text }}>{selectedOption}</Text>
+        <Ionicons name="caret-down" size={20} color={Colors.icon} />
       </TouchableOpacity>
       <Modal
         visible={modalVisible}
@@ -22,15 +44,15 @@ const Dropdown = ({ options = [], selectedOption, onSelect }) => {
         animationType="slide"
         onRequestClose={() => setModalVisible(false)}
       >
-        <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.modalContainer}>
-          <View style={[styles.optionsContainer, { top: 50 }]}>
+        <TouchableOpacity onPress={() => setModalVisible(false)} style={[styles.modalContainer, { backgroundColor: Colors.modalBg }]}> 
+          <View style={[styles.optionsContainer, { backgroundColor: Colors.optionBg, borderColor: Colors.optionBorder }]}> 
             {options.map((option, index) => (
               <TouchableOpacity
                 key={index}
                 onPress={() => handleOptionSelect(option)}
-                style={styles.option}
+                style={[styles.option, { borderBottomColor: Colors.optionBorder }]}
               >
-                <Text>{option}</Text>
+                <Text style={{ color: Colors.text }}>{option}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -45,12 +67,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#ccc",
     padding: 10,
     justifyContent: "space-between",
+    borderRadius: 6,
   },
   modalContainer: {
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
@@ -58,16 +79,13 @@ const styles = StyleSheet.create({
   option: {
     padding: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
   },
   optionsContainer: {
-    backgroundColor: "#fff",
     width: "80%",
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: "#ccc",
-    maxHeight: 150,
-    overflow: "auto",
+    maxHeight: 200,
+    overflow: "hidden",
   },
 });
 

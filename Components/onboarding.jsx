@@ -169,7 +169,7 @@ const Onboarding = ({ navigation }) => {
       ref.current?.scrollToOffset({ offset: nextSlideIndex * width });
       setCurrentSlideIndex(nextSlideIndex);
     } else {
-      navigation.navigate("login");
+      navigation.replace("BottomNav"); // Navigate to BuyerDashboard tab navigator
     }
   };
 
@@ -443,6 +443,9 @@ export default Onboarding;
 //   lightGray: "#F8F9FA",
 //   gray: "#A1A1A1",
 //   darkGray: "#6C757D",
+//   accent: "#E8F5E8",
+//   gradientStart: "#f8fffe",
+//   gradientEnd: "#e8f5f0",
 // };
 
 // const FONTS = {

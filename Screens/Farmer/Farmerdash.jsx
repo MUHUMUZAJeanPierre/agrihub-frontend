@@ -22,6 +22,59 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 import { useTheme } from "../../contexts/ThemeContext";
 
+// Color Scheme
+const LightColors = {
+  primary: '#4A90E2',
+  primaryDark: '#2D5AA0',
+  secondary: '#FF6B35',
+  accent: '#FFA726',
+
+  background: '#FFFFFF',
+  surface: '#F8F9FA',
+  surfaceLight: '#F0F0F0',
+
+  textPrimary: '#000000',
+  textSecondary: '#666666',
+  textTertiary: '#999999',
+
+  success: '#4CAF50',
+  warning: '#FF9800',
+  error: '#F44336',
+
+  cardBackground: '#FFFFFF',
+  inputBackground: '#F5F5F5',
+  borderColor: '#E0E0E0',
+
+  gradient: ['#4A90E2', '#357ABD'],
+  orangeGradient: ['#FF6B35', '#FF8A50'],
+};
+
+const DarkColors = {
+  primary: '#4A90E2',
+  primaryDark: '#2D5AA0',
+  secondary: '#FF6B35',
+  accent: '#FFA726',
+
+  background: '#121212',
+  surface: '#1E1E1E',
+  surfaceLight: '#2C2C2C',
+
+  textPrimary: '#FFFFFF',
+  textSecondary: '#B0B0B0',
+  textTertiary: '#808080',
+
+  success: '#4CAF50',
+  warning: '#FF9800',
+  error: '#F44336',
+
+  cardBackground: '#1A1A1A',
+  inputBackground: '#2C2C2C',
+  borderColor: '#3A3A3A',
+
+  gradient: ['#4A90E2', '#357ABD'],
+  orangeGradient: ['#FF6B35', '#FF8A50'],
+};
+
 // API Configuration
 const API_BASE_URL = 'https://agrihub-backend-4z99.onrender.com';
 const API_ENDPOINTS = {
@@ -30,36 +83,34 @@ const API_ENDPOINTS = {
   PRODUCTS: `${API_BASE_URL}/product`,
 };
 
-const SearchTextInput = ({ value, onChangeText, placeholder, isDark }) => (
-  <View style={[styles.searchContainer, isDark && styles.searchContainerDark]}>
+const SearchTextInput = ({ value, onChangeText, placeholder, Colors }) => (
+  <View style={[styles.searchContainer, { backgroundColor: Colors.inputBackground, borderColor: Colors.borderColor }]}>
     <View style={styles.searchIconContainer}>
-      <Feather name="search" size={20} color="#10B981" />
+      <Feather name="search" size={20} color={Colors.success} />
     </View>
     <TextInput
       value={value}
       onChangeText={onChangeText}
       placeholder={placeholder || "Search crop diseases..."}
-      placeholderTextColor={isDark ? "#9CA3AF" : "#9CA3AF"}
-      style={[styles.searchInput, isDark && styles.searchInputDark]}
+      placeholderTextColor={Colors.textTertiary}
+      style={[styles.searchInput, { color: Colors.textPrimary }]}
     />
     <TouchableOpacity style={styles.filterButton}>
-      <Ionicons name="filter" size={18} color={isDark ? "#9CA3AF" : "#6B7280"} />
+      <Ionicons name="filter" size={18} color={Colors.textSecondary} />
     </TouchableOpacity>
   </View>
 );
 
-const QuickActionButton = ({ icon, label, onPress, color = "#10B981", isDark }) => (
-  <TouchableOpacity onPress={onPress} style={[styles.quickActionButton, isDark && styles.quickActionButtonDark]}>
+const QuickActionButton = ({ icon, label, onPress, color = "#10B981", Colors }) => (
+  <TouchableOpacity onPress={onPress} style={[styles.quickActionButton, { backgroundColor: Colors.cardBackground }]}>
     <View style={[styles.quickActionIcon, { backgroundColor: `${color}15` }]}>{icon}</View>
-    <Text style={[styles.quickActionLabel, isDark && styles.quickActionLabelDark]}>{label}</Text>
+    <Text style={[styles.quickActionLabel, { color: Colors.textSecondary }]}>{label}</Text>
   </TouchableOpacity>
 );
 
-
-
 export default function Farmerdash({ navigation }) {
   const { theme } = useTheme();
-  const isDark = theme === 'dark';
+  const Colors = theme === 'dark' ? DarkColors : LightColors;
 
   const [originalblogs, setOriginalBlogs] = useState([]);
   const [search, setSearch] = useState("");
@@ -263,26 +314,26 @@ export default function Farmerdash({ navigation }) {
     <TouchableOpacity onPress={onPress} style={[
       styles.statCard, 
       gradient && styles.gradientCard,
-      isDark && !gradient && styles.statCardDark
+      { backgroundColor: gradient ? Colors.success : Colors.cardBackground }
     ]}>
       <View style={styles.statCardHeader}>
         <View style={[
           styles.iconContainer, 
-          { backgroundColor: gradient ? 'rgba(255,255,255,0.2)' : (isDark ? '#1F2937' : '#E8FDF5') }
+          { backgroundColor: gradient ? 'rgba(255,255,255,0.2)' : Colors.surfaceLight }
         ]}>
           {icon}
         </View>
         {trend && !isLoading && (
           <View style={[
             styles.trendContainer, 
-            { backgroundColor: trend === 'up' ? (isDark ? '#1F2937' : '#DCFCE7') : (isDark ? '#2D1B1B' : '#FEF2F2') }
+            { backgroundColor: trend === 'up' ? Colors.surfaceLight : Colors.surfaceLight }
           ]}>
             <Feather
               name={trend === 'up' ? 'trending-up' : 'trending-down'}
               size={12}
-              color={trend === 'up' ? '#16A34A' : '#DC2626'}
+              color={trend === 'up' ? Colors.success : Colors.error}
             />
-            <Text style={[styles.trendText, { color: trend === 'up' ? '#16A34A' : '#DC2626' }]}>
+            <Text style={[styles.trendText, { color: trend === 'up' ? Colors.success : Colors.error }]}>
               {trendValue}
             </Text>
           </View>
@@ -290,27 +341,25 @@ export default function Farmerdash({ navigation }) {
       </View>
       <Text style={[
         styles.statTitle, 
-        gradient && styles.statTitleWhite,
-        isDark && !gradient && styles.statTitleDark
+        { color: gradient ? 'rgba(255,255,255,0.8)' : Colors.textSecondary }
       ]}>{title}</Text>
       {isLoading ? (
-        <ActivityIndicator size="small" color={gradient ? "white" : "#10B981"} />
+        <ActivityIndicator size="small" color={gradient ? "white" : Colors.success} />
       ) : (
         <Text style={[
           styles.statValue, 
-          gradient && styles.statValueWhite,
-          isDark && !gradient && styles.statValueDark
+          { color: gradient ? "white" : Colors.success }
         ]}>{value}</Text>
       )}
     </TouchableOpacity>
   );
 
   const BlogCard = ({ item, onPress }) => (
-    <TouchableOpacity onPress={onPress} style={[styles.blogCard, isDark && styles.blogCardDark]}>
+    <TouchableOpacity onPress={onPress} style={[styles.blogCard, { backgroundColor: Colors.cardBackground }]}>
       <View style={styles.blogImageContainer}>
         {imageLoading[item.id] !== false && (
-          <View style={[styles.imageLoader, isDark && styles.imageLoaderDark]}>
-            <ActivityIndicator size="small" color="#10B981" />
+          <View style={[styles.imageLoader, { backgroundColor: Colors.surface }]}>
+            <ActivityIndicator size="small" color={Colors.success} />
           </View>
         )}
         <Image
@@ -327,38 +376,38 @@ export default function Farmerdash({ navigation }) {
         </View>
 
         {/* Category Badge */}
-        <View style={[styles.categoryBadge, isDark && styles.categoryBadgeDark]}>
-          <Text style={[styles.categoryText, isDark && styles.categoryTextDark]}>{item.category}</Text>
+        <View style={[styles.categoryBadge, { backgroundColor: Colors.cardBackground + 'E6' }]}>
+          <Text style={[styles.categoryText, { color: Colors.textPrimary }]}>{item.category}</Text>
         </View>
       </View>
 
       <View style={styles.blogContent}>
         <View style={styles.blogMetaContainer}>
-          <Text style={[styles.blogDate, isDark && styles.blogDateDark]}>{item.date}</Text>
+          <Text style={[styles.blogDate, { color: Colors.textTertiary }]}>{item.date}</Text>
           <View style={styles.readTimeContainer}>
-            <Feather name="clock" size={12} color={isDark ? "#9CA3AF" : "#9CA3AF"} />
-            <Text style={[styles.readTime, isDark && styles.readTimeDark]}>{item.readTime}</Text>
+            <Feather name="clock" size={12} color={Colors.textTertiary} />
+            <Text style={[styles.readTime, { color: Colors.textTertiary }]}>{item.readTime}</Text>
           </View>
         </View>
 
-        <Text style={[styles.blogTitle, isDark && styles.blogTitleDark]} numberOfLines={2}>{item.blogTitle}</Text>
+        <Text style={[styles.blogTitle, { color: Colors.textPrimary }]} numberOfLines={2}>{item.blogTitle}</Text>
 
         {item.description && (
-          <Text style={[styles.blogDescription, isDark && styles.blogDescriptionDark]} numberOfLines={2}>{item.description}</Text>
+          <Text style={[styles.blogDescription, { color: Colors.textSecondary }]} numberOfLines={2}>{item.description}</Text>
         )}
 
         <View style={styles.blogFooter}>
           <View style={styles.readMoreContainer}>
-            <Text style={styles.readMoreText}>Read Article</Text>
-            <Feather name="arrow-right" size={14} color="#10B981" />
+            <Text style={[styles.readMoreText, { color: Colors.success }]}>Read Article</Text>
+            <Feather name="arrow-right" size={14} color={Colors.success} />
           </View>
 
           <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.actionButton}>
-              <Feather name="bookmark" size={16} color={isDark ? "#9CA3AF" : "#6B7280"} />
+            <TouchableOpacity key="bookmark" style={styles.actionButton}>
+              <Feather name="bookmark" size={16} color={Colors.textSecondary} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton}>
-              <Feather name="share-2" size={16} color={isDark ? "#9CA3AF" : "#6B7280"} />
+            <TouchableOpacity key="share" style={styles.actionButton}>
+              <Feather name="share-2" size={16} color={Colors.textSecondary} />
             </TouchableOpacity>
           </View>
         </View>
@@ -375,21 +424,21 @@ export default function Farmerdash({ navigation }) {
   };
 
   return (
-    <View style={[styles.container, isDark && styles.containerDark]}>
+    <View style={[styles.container, { backgroundColor: Colors.background }]}>
       <StatusBar 
-        barStyle={isDark ? "light-content" : "dark-content"} 
-        backgroundColor={isDark ? "#1F2937" : "#FFFFFF"} 
+        barStyle={theme === 'dark' ? "light-content" : "dark-content"} 
+        backgroundColor={Colors.background} 
       />
 
-      <View style={[styles.header, isDark && styles.headerDark]}>
+      <View style={[styles.header, { backgroundColor: Colors.cardBackground }]}>
         <View style={styles.headerTop}>
           <View style={styles.headerLeft}>
-            <Text style={[styles.headerTitle, isDark && styles.headerTitleDark]}>{getDisplayName()}</Text>
+            <Text style={[styles.headerTitle, { color: Colors.textPrimary }]}>{getDisplayName()}</Text>
           </View>
 
           <View style={styles.headerRight}>
             <TouchableOpacity style={styles.notificationButton}>
-              <Ionicons name="notifications-outline" size={24} color={isDark ? "#D1D5DB" : "#6B7280"} />
+              <Ionicons name="notifications-outline" size={24} color={Colors.textSecondary} />
               <View style={styles.notificationBadge} />
             </TouchableOpacity>
 
@@ -407,7 +456,7 @@ export default function Farmerdash({ navigation }) {
               searchFilter(text);
             }}
             placeholder="Search crop diseases & solutions..."
-            isDark={isDark}
+            Colors={Colors}
           />
         </View>
       </View>
@@ -441,27 +490,27 @@ export default function Farmerdash({ navigation }) {
         <View style={styles.contentSection}>
           <View style={styles.sectionHeader}>
             <View>
-              <Text style={[styles.sectionTitle, isDark && styles.sectionTitleDark]}>Disease Alerts & Prevention</Text>
-              <Text style={[styles.sectionSubtitle, isDark && styles.sectionSubtitleDark]}>Stay ahead of crop diseases</Text>
+              <Text style={[styles.sectionTitle, { color: Colors.textPrimary }]}>Disease Alerts & Prevention</Text>
+              <Text style={[styles.sectionSubtitle, { color: Colors.textSecondary }]}>Stay ahead of crop diseases</Text>
             </View>
             <TouchableOpacity style={styles.seeAllButton}>
-              <Text style={styles.seeAllText}>See all</Text>
-              <Feather name="arrow-right" size={16} color="#10B981" />
+              <Text style={[styles.seeAllText, { color: Colors.success }]}>See all</Text>
+              <Feather name="arrow-right" size={16} color={Colors.success} />
             </TouchableOpacity>
           </View>
 
           {blogsLoading ? (
             <View style={styles.loadingContainer}>
               <View style={styles.loadingAnimation}>
-                <ActivityIndicator size="large" color="#10B981" />
+                <ActivityIndicator size="large" color={Colors.success} />
               </View>
-              <Text style={[styles.loadingText, isDark && styles.loadingTextDark]}>Loading latest disease alerts...</Text>
-              <Text style={[styles.loadingSubtext, isDark && styles.loadingSubtextDark]}>Analyzing crop conditions</Text>
+              <Text style={[styles.loadingText, { color: Colors.textSecondary }]}>Loading latest disease alerts...</Text>
+              <Text style={[styles.loadingSubtext, { color: Colors.textTertiary }]}>Analyzing crop conditions</Text>
             </View>
           ) : blogs.length === 0 ? (
             <View style={styles.loadingContainer}>
-              <Text style={[styles.loadingText, isDark && styles.loadingTextDark]}>No disease alerts available</Text>
-              <Text style={[styles.loadingSubtext, isDark && styles.loadingSubtextDark]}>Check back later for updates</Text>
+              <Text style={[styles.loadingText, { color: Colors.textSecondary }]}>No disease alerts available</Text>
+              <Text style={[styles.loadingSubtext, { color: Colors.textTertiary }]}>Check back later for updates</Text>
             </View>
           ) : (
             <View style={styles.blogList}>
@@ -483,13 +532,8 @@ export default function Farmerdash({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
-  },
-  containerDark: {
-    backgroundColor: "#111827",
   },
   header: {
-    backgroundColor: "white",
     paddingTop: Platform.OS === 'ios' ? 50 : 30,
     paddingBottom: 25,
     paddingHorizontal: 20,
@@ -500,11 +544,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 8,
-  },
-  headerDark: {
-    backgroundColor: "#1F2937",
-    shadowColor: "#000",
-    shadowOpacity: 0.3,
   },
   headerTop: {
     flexDirection: "row",
@@ -529,11 +568,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 26,
     fontWeight: "bold",
-    color: "#1F2937",
     fontFamily: "Poppins_700Bold",
-  },
-  headerTitleDark: {
-    color: "#F9FAFB",
   },
   notificationButton: {
     position: "relative",
@@ -567,16 +602,10 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F9FAFB",
     borderRadius: 16,
     paddingHorizontal: 16,
     height: 54,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  searchContainerDark: {
-    backgroundColor: "#374151",
-    borderColor: "#4B5563",
   },
   searchIconContainer: {
     marginRight: 12,
@@ -584,11 +613,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: "#1F2937",
     fontFamily: "Poppins_400Regular",
-  },
-  searchInputDark: {
-    color: "#F9FAFB",
   },
   filterButton: {
     padding: 8,
@@ -608,7 +633,6 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: "white",
     borderRadius: 24,
     padding: 20,
     shadowColor: "#000",
@@ -616,10 +640,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 12,
     elevation: 6,
-  },
-  statCardDark: {
-    backgroundColor: "#1F2937",
-    shadowOpacity: 0.3,
   },
   gradientCard: {
     backgroundColor: "#4CAF50",
@@ -651,27 +671,13 @@ const styles = StyleSheet.create({
   },
   statTitle: {
     fontSize: 14,
-    color: "#6B7280",
     fontFamily: "Poppins_500Medium",
     marginBottom: 8,
-  },
-  statTitleDark: {
-    color: "#9CA3AF",
-  },
-  statTitleWhite: {
-    color: "rgba(255,255,255,0.8)",
   },
   statValue: {
     fontSize: 32,
     fontWeight: "bold",
-    color: "#4CAF50",
     fontFamily: "Poppins_700Bold",
-  },
-  statValueDark: {
-    color: "#4CAF50",
-  },
-  statValueWhite: {
-    color: "white",
   },
   quickActionsContainer: {
     paddingHorizontal: 20,

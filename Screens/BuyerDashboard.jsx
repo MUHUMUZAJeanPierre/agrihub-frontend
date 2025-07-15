@@ -129,6 +129,7 @@ const CATEGORIES = [
 const BuyerDashboard = ({ navigation }) => {
   const { theme } = useTheme();
   const Colors = theme === 'dark' ? DarkColors : LightColors;
+  const styles = useMemo(() => createStyles(Colors), [Colors]);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState(CATEGORIES);
   const [favorites, setFavorites] = useState([]);
@@ -389,11 +390,23 @@ const BuyerDashboard = ({ navigation }) => {
   // Enhanced addToCart function with loading state
   const handleAddToCart = useCallback(async (product) => {
     try {
+      // Check authentication
+      const token = authToken || await getAuthToken();
+      if (!token) {
+        Alert.alert(
+          'Login Required',
+          'You must be logged in to add items to your cart.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Login', onPress: () => navigation.navigate('login') },
+            { text: "Register", onPress: () => navigation.navigate('register') },
+          ]
+        );
+        return;
+      }
       setAddingToCart(product._id);
-
       // Use CartContext addToCart
       addToCart(product);
-
       Alert.alert(
         '✅ Added to Cart',
         `${product.title} has been added to your cart.`,
@@ -411,7 +424,7 @@ const BuyerDashboard = ({ navigation }) => {
     } finally {
       setAddingToCart(null);
     }
-  }, [addToCart]);
+  }, [addToCart, authToken, getAuthToken, navigation]);
 
   // Remove item from cart
   const handleRemoveFromCart = useCallback((productId) => {
@@ -500,7 +513,7 @@ const BuyerDashboard = ({ navigation }) => {
             style={[styles.placeholderImage, { backgroundColor: Colors.surfaceLight }]}
             // style={styles.placeholderImage}
           >
-            <Ionicons name="image-outline" size={48} color={Colors.textTertiary} />
+            // <Ionicons name="image-outline" size={48} color={Colors.textTertiary} />
           </View>
         )}
 
@@ -1049,7 +1062,7 @@ const BuyerDashboard = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (Colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

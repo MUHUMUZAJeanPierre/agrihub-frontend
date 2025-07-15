@@ -115,8 +115,8 @@ export default function ProductDetailScreen({ navigation, route }) {
           <TouchableOpacity style={styles.headerButton} onPress={toggleFavorite}>
             <Heart
               size={22}
-              color={favorited ? "#ef4444" : styles.headerIconColor.color}
-              fill={favorited ? "#ef4444" : "none"}
+              color={favorited ? styles.discountBadge.backgroundColor : styles.headerIconColor.color}
+              fill={favorited ? styles.discountBadge.backgroundColor : "none"}
             />
           </TouchableOpacity>
           <TouchableOpacity style={styles.headerButton} onPress={shareProduct}>
@@ -167,7 +167,7 @@ export default function ProductDetailScreen({ navigation, route }) {
               <Text style={styles.categoryText}>{product.category || 'Fresh Produce'}</Text>
             </View>
             <View style={styles.ratingBadge}>
-              <Star size={12} color="#fbbf24" fill="#fbbf24" />
+              <Star size={12} color={styles.ratingText.color} fill={styles.ratingText.color} />
               <Text style={styles.ratingText}>4.8</Text>
               <Text style={styles.reviewCount}>(124)</Text>
             </View>
@@ -192,14 +192,14 @@ export default function ProductDetailScreen({ navigation, route }) {
                 onPress={() => setQuantity(Math.max(1, quantity - 1))}
                 disabled={quantity <= 1}
               >
-                <Minus size={16} color={quantity <= 1 ? (isDark ? "#4b5563" : "#d1d5db") : "#10b981"} />
+                <Minus size={16} color={quantity <= 1 ? (isDark ? "#4b5563" : "#d1d5db") : styles.accentLight} />
               </TouchableOpacity>
               <Text style={styles.quantityText}>{quantity}</Text>
               <TouchableOpacity
                 style={styles.quantityButton}
                 onPress={() => setQuantity(quantity + 1)}
               >
-                <Plus size={16} color="#10b981" />
+                <Plus size={16} color={styles.accentLight} />
               </TouchableOpacity>
             </View>
           </View>
@@ -207,15 +207,15 @@ export default function ProductDetailScreen({ navigation, route }) {
           {/* Features */}
           <View style={styles.featuresContainer}>
             <View style={styles.feature}>
-              <ShieldCheck size={16} color="#10b981" />
+              <ShieldCheck size={16} color={styles.accentLight} />
               <Text style={styles.featureText}>Organic Certified</Text>
             </View>
             <View style={styles.feature}>
-              <Truck size={16} color="#10b981" />
+              <Truck size={16} color={styles.accentLight} />
               <Text style={styles.featureText}>Fast Delivery</Text>
             </View>
             <View style={styles.feature}>
-              <Clock size={16} color="#10b981" />
+              <Clock size={16} color={styles.accentLight} />
               <Text style={styles.featureText}>Fresh Daily</Text>
             </View>
           </View>
@@ -311,7 +311,7 @@ export default function ProductDetailScreen({ navigation, route }) {
                     </View>
                   </View>
                   <TouchableOpacity style={styles.relatedAddButton}>
-                    <Plus size={14} color="#10b981" />
+                    <Plus size={14} color={styles.accentLight} />
                   </TouchableOpacity>
                 </TouchableOpacity>
               ))}
@@ -363,6 +363,16 @@ const getStyles = (theme) => {
     primaryText: isDark ? '#f9fafb' : '#1f2937',
     secondaryText: isDark ? '#d1d5db' : '#6b7280',
     mutedText: isDark ? '#9ca3af' : '#9ca3af',
+    accent: '#2E7D31',
+    accentLight: '#10b981',
+    accentRed: '#ef4444',
+    accentYellow: '#fbbf24',
+    accentGreen: '#16a34a',
+    accentBadge: isDark ? '#064e3b' : '#dcfce7',
+    accentBadgeBorder: isDark ? '#10b981' : '#bbf7d0',
+    ratingBg: isDark ? '#451a03' : '#fef3c7',
+    ratingText: isDark ? '#fbbf24' : '#92400e',
+    favoriteBtnBg: isDark ? 'rgba(31,41,55,0.9)' : 'rgba(255,255,255,0.9)',
   };
 
   return StyleSheet.create({
@@ -386,7 +396,7 @@ const getStyles = (theme) => {
       marginBottom: 16,
     },
     goBackButton: {
-      backgroundColor: '#2E7D31',
+      backgroundColor: colors.accent,
       paddingHorizontal: 24,
       paddingVertical: 12,
       borderRadius: 25,
@@ -446,7 +456,7 @@ const getStyles = (theme) => {
       justifyContent: 'space-between',
     },
     discountBadge: {
-      backgroundColor: '#ef4444',
+      backgroundColor: colors.accentRed,
       paddingHorizontal: 12,
       paddingVertical: 6,
       borderRadius: 20,
@@ -472,7 +482,7 @@ const getStyles = (theme) => {
       borderColor: colors.border,
     },
     selectedThumbnail: {
-      borderColor: '#10b981',
+      borderColor: colors.accentLight,
       borderWidth: 3,
     },
     thumbnailImage: {
@@ -502,15 +512,15 @@ const getStyles = (theme) => {
       marginBottom: 12,
     },
     categoryBadge: {
-      backgroundColor: isDark ? '#1f2937' : '#dcfce7',
+      backgroundColor: isDark ? colors.cardBackground : colors.accentBadge,
       paddingHorizontal: 12,
       paddingVertical: 6,
       borderRadius: 16,
       borderWidth: isDark ? 1 : 0,
-      borderColor: isDark ? '#10b981' : 'transparent',
+      borderColor: isDark ? colors.accentLight : 'transparent',
     },
     categoryText: {
-      color: '#2E7D31',
+      color: colors.accent,
       fontSize: 12,
       fontWeight: '500',
     },
@@ -518,7 +528,7 @@ const getStyles = (theme) => {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 4,
-      backgroundColor: isDark ? '#451a03' : '#fef3c7',
+      backgroundColor: colors.ratingBg,
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderRadius: 12,
@@ -526,11 +536,11 @@ const getStyles = (theme) => {
     ratingText: {
       fontSize: 12,
       fontWeight: '500',
-      color: isDark ? '#fbbf24' : '#92400e',
+      color: colors.ratingText,
     },
     reviewCount: {
       fontSize: 11,
-      color: isDark ? '#fbbf24' : '#92400e',
+      color: colors.ratingText,
     },
     productTitle: {
       fontSize: 26,
@@ -551,7 +561,7 @@ const getStyles = (theme) => {
     productPrice: {
       fontSize: 18,
       fontWeight: '500',
-      color: '#2E7D31',
+      color: colors.accent,
       marginBottom: 4,
     },
     unitPrice: {
@@ -617,7 +627,7 @@ const getStyles = (theme) => {
     },
     featureText: {
       fontSize: 12,
-      color: '#2E7D31',
+      color: colors.accent,
       fontWeight: '500',
     },
 
@@ -637,7 +647,7 @@ const getStyles = (theme) => {
     sellerAvatar: {
       width: 48,
       height: 48,
-      backgroundColor: '#2E7D31',
+      backgroundColor: colors.accent,
       borderRadius: 24,
       alignItems: 'center',
       justifyContent: 'center',
@@ -671,11 +681,11 @@ const getStyles = (theme) => {
     },
     statText: {
       fontSize: 12,
-      color: '#2E7D31',
+      color: colors.accent,
       fontWeight: '500',
     },
     contactButton: {
-      backgroundColor: '#2E7D31',
+      backgroundColor: colors.accent,
       paddingHorizontal: 20,
       paddingVertical: 10,
       borderRadius: 20,
@@ -723,7 +733,7 @@ const getStyles = (theme) => {
     },
     seeAllText: {
       fontSize: 14,
-      color: '#2E7D31',
+      color: colors.accent,
       fontWeight: '600',
     },
     relatedScrollContent: {
@@ -752,7 +762,7 @@ const getStyles = (theme) => {
       right: 12,
       width: 28,
       height: 28,
-      backgroundColor: isDark ? 'rgba(31,41,55,0.9)' : 'rgba(255,255,255,0.9)',
+      backgroundColor: colors.favoriteBtnBg,
       borderRadius: 14,
       alignItems: 'center',
       justifyContent: 'center',
@@ -761,7 +771,7 @@ const getStyles = (theme) => {
       position: 'absolute',
       top: 12,
       left: 12,
-      backgroundColor: '#ef4444',
+      backgroundColor: colors.accentRed,
       paddingHorizontal: 8,
       paddingVertical: 4,
       borderRadius: 12,
@@ -800,7 +810,7 @@ const getStyles = (theme) => {
     },
     relatedPrice: {
       fontSize: 16,
-      color: '#2E7D31',
+      color: colors.accent,
       fontWeight: '500',
     },
     relatedOriginalPrice: {
@@ -814,12 +824,12 @@ const getStyles = (theme) => {
       right: 12,
       width: 30,
       height: 30,
-      backgroundColor: isDark ? '#064e3b' : '#dcfce7',
+      backgroundColor: colors.accentBadge,
       borderRadius: 16,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 1,
-      borderColor: isDark ? '#10b981' : '#bbf7d0',
+      borderColor: colors.accentBadgeBorder,
     },
 
     // Bottom Container
@@ -857,19 +867,19 @@ const getStyles = (theme) => {
     },
     bottomSavings: {
       fontSize: 12,
-      color: '#16a34a',
+      color: colors.accentGreen,
       fontWeight: '500',
     },
     buyButton: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: '#2E7D31',
+      backgroundColor: colors.accent,
       paddingVertical: 16,
       paddingHorizontal: 28,
       borderRadius: 28,
       gap: 8,
-      shadowColor: '#2E7D31',
+      shadowColor: colors.accent,
       shadowOffset: { width: 0, width: 4 },
       shadowOpacity: 0.3,
       shadowRadius: 8,

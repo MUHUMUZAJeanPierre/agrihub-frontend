@@ -18,45 +18,53 @@ import { useTheme } from '../contexts/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
-const Colors = {
+// Color Schemes
+const LightColors = {
   primary: '#4A90E2',
   primaryDark: '#2D5AA0',
   secondary: '#FF6B35',
   accent: '#FFA726',
-
   background: '#FFFFFF',
   surface: '#F8F9FA',
   surfaceLight: '#F0F0F0',
-
   textPrimary: '#000000',
   textSecondary: '#666666',
   textTertiary: '#999999',
-
   success: '#4CAF50',
   warning: '#FF9800',
   error: '#F44336',
-
   cardBackground: '#FFFFFF',
   inputBackground: '#F5F5F5',
   borderColor: '#E0E0E0',
-
   gradient: ['#4A90E2', '#357ABD'],
   orangeGradient: ['#FF6B35', '#FF8A50'],
 };
 
-const CATEGORIES = [
-  { id: 'all', name: 'All', icon: 'grid-outline', color: Colors.primary },
-  { id: 'fruits', name: 'Fruits', icon: 'nutrition-outline', color: Colors.accent },
-  { id: 'dairy', name: 'Dairy', icon: 'water-outline', color: Colors.primary },
-  { id: 'vegetables', name: 'Veggies', icon: 'leaf-outline', color: Colors.success },
-  { id: 'meat', name: 'Meat', icon: 'restaurant-outline', color: Colors.error },
-  { id: 'tubers', name: 'Tubers', icon: 'flower-outline', color: Colors.warning },
-];
+const DarkColors = {
+  primary: '#4A90E2',
+  primaryDark: '#2D5AA0',
+  secondary: '#FF6B35',
+  accent: '#FFA726',
+  background: '#121212',
+  surface: '#1E1E1E',
+  surfaceLight: '#2C2C2C',
+  textPrimary: '#FFFFFF',
+  textSecondary: '#B0B0B0',
+  textTertiary: '#808080',
+  success: '#4CAF50',
+  warning: '#FF9800',
+  error: '#F44336',
+  cardBackground: '#1A1A1A',
+  inputBackground: '#2C2C2C',
+  borderColor: '#3A3A3A',
+  gradient: ['#4A90E2', '#357ABD'],
+  orangeGradient: ['#FF6B35', '#FF8A50'],
+};
 
 const SearchScreen = () => {
   const { theme } = useTheme();
-  const isDark = theme === 'dark';
-  const styles = createStyles(isDark);
+  const Colors = theme === 'dark' ? DarkColors : LightColors;
+  const styles = createStyles(Colors);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -69,6 +77,16 @@ const SearchScreen = () => {
   const fadeAnim = new Animated.Value(0);
   const slideAnim = new Animated.Value(50);
   const spinValue = new Animated.Value(0);
+
+  // Categories with dynamic colors
+  const CATEGORIES = [
+    { id: 'all', name: 'All', icon: 'grid-outline', color: Colors.primary },
+    { id: 'fruits', name: 'Fruits', icon: 'nutrition-outline', color: Colors.accent },
+    { id: 'dairy', name: 'Dairy', icon: 'water-outline', color: Colors.primary },
+    { id: 'vegetables', name: 'Veggies', icon: 'leaf-outline', color: Colors.success },
+    { id: 'meat', name: 'Meat', icon: 'restaurant-outline', color: Colors.error },
+    { id: 'tubers', name: 'Tubers', icon: 'flower-outline', color: Colors.warning },
+  ];
 
   useEffect(() => {
     fetchProducts();
@@ -230,7 +248,7 @@ const SearchScreen = () => {
           <View style={styles.productHeader}>
             <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
             <TouchableOpacity style={styles.favoriteButton}>
-              <Ionicons name="heart-outline" size={18} color={isDark ? '#FF6B6B' : '#FF4757'} />
+              <Ionicons name="heart-outline" size={18} color={Colors.error} />
             </TouchableOpacity>
           </View>
 
@@ -250,7 +268,7 @@ const SearchScreen = () => {
       <Ionicons 
         name={searchQuery.length === 0 ? "search-outline" : "sad-outline"} 
         size={80} 
-        color={isDark ? '#4A5568' : '#CBD5E0'} 
+        color={Colors.textTertiary} 
       />
       <Text style={styles.emptyTitle}>
         {searchQuery.length === 0 ? 'Start Your Search' : 'No Products Found'}
@@ -326,7 +344,7 @@ const SearchScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={isDark ? '#1A202C' : '#FFFFFF'} />
+      <StatusBar barStyle={theme === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={Colors.background} />
       <View style={styles.header}>
         {/* <View style={styles.headerContent}>
           <Text style={styles.title}>Search Products</Text>
@@ -336,17 +354,17 @@ const SearchScreen = () => {
 
       <View style={styles.searchContainer}>
         <View style={styles.searchInputContainer}>
-          <Ionicons name="search-outline" size={20} color={isDark ? '#A0AEC0' : '#718096'} style={styles.searchIcon} />
+          <Ionicons name="search-outline" size={20} color={Colors.textTertiary} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search for products..."
-            placeholderTextColor={isDark ? '#A0AEC0' : '#718096'}
+            placeholderTextColor={Colors.textTertiary}
             value={searchQuery}
             onChangeText={handleSearch}
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
-              <Ionicons name="close-circle" size={20} color={isDark ? '#A0AEC0' : '#718096'} />
+              <Ionicons name="close-circle" size={20} color={Colors.textTertiary} />
             </TouchableOpacity>
           )}
         </View>
@@ -380,18 +398,18 @@ const SearchScreen = () => {
   );
 };
 
-const createStyles = (isDark) => StyleSheet.create({
+const createStyles = (Colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: isDark ? '#1A202C' : '#F7FAFC',
+    backgroundColor: Colors.background,
   },
   header: {
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 15,
-    backgroundColor: isDark ? '#1A202C' : '#FFFFFF',
+    backgroundColor: Colors.cardBackground,
     borderBottomWidth: 1,
-    borderBottomColor: isDark ? '#2D3748' : '#E2E8F0',
+    borderBottomColor: Colors.borderColor,
   },
   headerContent: {
     marginBottom: 5,
@@ -399,12 +417,12 @@ const createStyles = (isDark) => StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: isDark ? '#FFFFFF' : '#1A202C',
+    color: Colors.textPrimary,
     marginBottom: 5,
   },
   subtitle: {
     fontSize: 16,
-    color: isDark ? '#A0AEC0' : '#718096',
+    color: Colors.textSecondary,
     fontWeight: '400',
   },
   searchContainer: {
@@ -418,12 +436,12 @@ const createStyles = (isDark) => StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: isDark ? '#2D3748' : '#FFFFFF',
+    backgroundColor: Colors.inputBackground,
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 3,
     borderWidth: 1,
-    borderColor: isDark ? '#4A5568' : '#E2E8F0',
+    borderColor: Colors.borderColor,
   },
   searchIcon: {
     marginRight: 12,
@@ -431,14 +449,14 @@ const createStyles = (isDark) => StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: isDark ? '#FFFFFF' : '#1A202C',
+    color: Colors.textPrimary,
     fontWeight: '400',
   },
   clearButton: {
     padding: 4,
   },
   filterButton: {
-    backgroundColor: isDark ? '#2E7D31' : '#2E7D31',
+    backgroundColor: Colors.success,
     borderRadius: 12,
     padding: 12,
     shadowColor: '#000',
@@ -460,7 +478,7 @@ const createStyles = (isDark) => StyleSheet.create({
   categoriesTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: isDark ? '#FFFFFF' : '#1A202C',
+    color: Colors.textPrimary,
     marginBottom: 12,
   },
   categoryCard: {
@@ -471,7 +489,7 @@ const createStyles = (isDark) => StyleSheet.create({
     borderRadius: 12,
   },
   selectedCategoryCard: {
-    backgroundColor: isDark ? '#2D3748' : '#EDF2F7',
+    backgroundColor: Colors.surfaceLight,
   },
   categoryIcon: {
     width: 56,
@@ -484,10 +502,10 @@ const createStyles = (isDark) => StyleSheet.create({
   categoryName: {
     fontSize: 12,
     fontWeight: '500',
-    color: isDark ? '#A0AEC0' : '#4A5568',
+    color: Colors.textSecondary,
   },
   selectedCategoryName: {
-    color: isDark ? '#FFFFFF' : '#1A202C',
+    color: Colors.textPrimary,
     fontWeight: '600',
   },
 
@@ -511,8 +529,8 @@ const createStyles = (isDark) => StyleSheet.create({
     height: 50,
     borderRadius: 25,
     borderWidth: 3,
-    borderColor: isDark ? '#4A5568' : '#E2E8F0',
-    borderTopColor: isDark ? '#2E7D31' : '#2E7D31',
+    borderColor: Colors.borderColor,
+    borderTopColor: Colors.success,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -520,12 +538,12 @@ const createStyles = (isDark) => StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: isDark ? '#2E7D31' : '#2E7D31',
+    backgroundColor: Colors.success,
     opacity: 0.6,
   },
   loadingText: {
     fontSize: 16,
-    color: isDark ? '#A0AEC0' : '#718096',
+    color: Colors.textSecondary,
     fontWeight: '500',
   },
   
@@ -540,14 +558,14 @@ const createStyles = (isDark) => StyleSheet.create({
   emptyTitle: {
     fontSize: 22,
     fontWeight: '600',
-    color: isDark ? '#FFFFFF' : '#1A202C',
+    color: Colors.textPrimary,
     marginTop: 20,
     marginBottom: 8,
     textAlign: 'center',
   },
   emptySubtitle: {
     fontSize: 16,
-    color: isDark ? '#A0AEC0' : '#718096',
+    color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
   },
@@ -558,7 +576,7 @@ const createStyles = (isDark) => StyleSheet.create({
   },
   resultsCount: {
     fontSize: 14,
-    color: isDark ? '#A0AEC0' : '#718096',
+    color: Colors.textSecondary,
     marginBottom: 16,
     fontWeight: '500',
   },
@@ -568,11 +586,11 @@ const createStyles = (isDark) => StyleSheet.create({
   
   // Product Card
   productCard: {
-    backgroundColor: isDark ? '#2D3748' : '#FFFFFF',
+    backgroundColor: Colors.cardBackground,
     borderRadius: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: isDark ? '#4A5568' : '#E2E8F0',
+    borderColor: Colors.borderColor,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -591,13 +609,13 @@ const createStyles = (isDark) => StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 12,
-    backgroundColor: isDark ? '#4A5568' : '#F7FAFC',
+    backgroundColor: Colors.surfaceLight,
   },
   discountBadge: {
     position: 'absolute',
     top: -4,
     right: -4,
-    backgroundColor: '#FF4757',
+    backgroundColor: Colors.error,
     borderRadius: 8,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -620,7 +638,7 @@ const createStyles = (isDark) => StyleSheet.create({
   productName: {
     fontSize: 16,
     fontWeight: '600',
-    color: isDark ? '#FFFFFF' : '#1A202C',
+    color: Colors.textPrimary,
     flex: 1,
     marginRight: 8,
   },
@@ -629,7 +647,7 @@ const createStyles = (isDark) => StyleSheet.create({
   },
   categoryText: {
     fontSize: 12,
-    color: isDark ? '#A0AEC0' : '#718096',
+    color: Colors.textSecondary,
     fontWeight: '500',
     marginBottom: 8,
   },
@@ -644,7 +662,7 @@ const createStyles = (isDark) => StyleSheet.create({
   },
   ratingText: {
     fontSize: 12,
-    color: isDark ? '#A0AEC0' : '#718096',
+    color: Colors.textSecondary,
   },
   priceContainer: {
     flexDirection: 'row',
@@ -652,13 +670,13 @@ const createStyles = (isDark) => StyleSheet.create({
   },
   productPrice: {
     fontSize: 18,
-    color: isDark ? '#2E7D31' : '#2E7D31',
+    color: Colors.success,
     fontWeight: '600',
     marginRight: 8,
   },
   originalPrice: {
     fontSize: 14,
-    color: isDark ? '#A0AEC0' : '#718096',
+    color: Colors.textSecondary,
     textDecorationLine: 'line-through',
   },
 });
