@@ -15,7 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useCart } from '../contexts/CartContext';
 import { useTheme } from '../contexts/ThemeContext';
-import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
@@ -67,9 +67,9 @@ const API_CONFIG = {
 };
 
 const AUTH_KEYS = {
-  TOKEN: 'auth_token',
-  USER_ID: 'user_id',
-  USER_DATA: 'user_data',
+  TOKEN: '@auth_token',
+  USER_ID: '@user_id',
+  USER_DATA: '@user_data',
 };
 
 const CartScreen = ({ navigation }) => {
@@ -88,7 +88,7 @@ const CartScreen = ({ navigation }) => {
 
   const loadAuthToken = async () => {
     try {
-      const token = await SecureStore.getItemAsync(AUTH_KEYS.TOKEN);
+      const token = await AsyncStorage.getItem(AUTH_KEYS.TOKEN);
       setAuthToken(token);
     } catch (error) {
       console.log('Token load error:', error);
@@ -111,87 +111,167 @@ const CartScreen = ({ navigation }) => {
     }
   };
 
+  // const handlePlaceOrder = async () => {
+  //   if (isPlacingOrder) return; 
+
+  //   try {
+  //     setIsPlacingOrder(true);
+
+  //     const token = await AsyncStorage.getItem(AUTH_KEYS.TOKEN);
+  //     if (!token) {
+  //       Alert.alert('Authentication Required', 'Please log in to place an order.');
+  //       navigation.navigate('Login');
+  //       return;
+  //     }
+
+  //     if (cartItems.length === 0) {
+  //       Alert.alert('Cart is Empty', 'Add items to cart before placing an order.');
+  //       return;
+  //     }
+
+  //     console.log('Cart Items:', cartItems);
+
+  //     const totalAmount = cartItems.reduce((sum, item) => {
+  //       const price = extractPrice(item.current_price || item.price);
+  //       return sum + price * item.quantity;
+  //     }, 0);
+
+  //     if (totalAmount <= 0) {
+  //       Alert.alert('Error', 'Total amount calculation failed.');
+  //       return;
+  //     }
+
+  //     const orderData = {
+  //       items: cartItems.map(item => ({
+  //         product: item._id,  
+  //         quantity: item.quantity,
+  //       })),
+  //       totalAmount: totalAmount,  
+  //     };
+
+  //     console.log("Sending order data:", JSON.stringify(orderData));
+
+  //     const response = await fetch(API_CONFIG.ORDER_URL, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Authorization': `Bearer ${token}`,
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify(orderData),
+  //     });
+
+  //     const data = await response.json();
+  //     if (response.ok) {
+  //       Alert.alert(
+  //         '✅ Order Placed Successfully',
+  //         'Your order has been submitted and will be processed soon.',
+  //         [
+  //           {
+  //             text: 'Continue Shopping',
+  //             onPress: () => {
+  //               clearCart();
+  //               navigation.navigate('Home');
+  //             }
+  //           }
+  //         ]
+  //       );
+  //     } else {
+  //       console.error('❌ Order failed:', data);
+  //       Alert.alert(
+  //         '❌ Order Failed',
+  //         data?.message || data?.error || 'Unable to place order. Please try again.'
+  //       );
+  //     }
+  //   } catch (error) {
+  //     console.error('❌ Network/order error:', error);
+  //     Alert.alert(
+  //       'Network Error',
+  //       'Unable to place your order. Please check your connection and try again.'
+  //     );
+  //   } finally {
+  //     setIsPlacingOrder(false);
+  //   }
+  // };
+
   const handlePlaceOrder = async () => {
-    if (isPlacingOrder) return; 
+  if (isPlacingOrder) return;
 
-    try {
-      setIsPlacingOrder(true);
+  try {
+    setIsPlacingOrder(true);
 
-      const token = await SecureStore.getItemAsync(AUTH_KEYS.TOKEN);
-      if (!token) {
-        Alert.alert('Authentication Required', 'Please log in to place an order.');
-        navigation.navigate('Login');
-        return;
-      }
-
-      if (cartItems.length === 0) {
-        Alert.alert('Cart is Empty', 'Add items to cart before placing an order.');
-        return;
-      }
-
-      console.log('Cart Items:', cartItems);
-
-      const totalAmount = cartItems.reduce((sum, item) => {
-        const price = extractPrice(item.current_price || item.price);
-        return sum + price * item.quantity;
-      }, 0);
-
-      if (totalAmount <= 0) {
-        Alert.alert('Error', 'Total amount calculation failed.');
-        return;
-      }
-
-      const orderData = {
-        items: cartItems.map(item => ({
-          product: item._id,  
-          quantity: item.quantity,
-        })),
-        totalAmount: totalAmount,  
-      };
-
-      console.log("Sending order data:", JSON.stringify(orderData));
-
-      const response = await fetch(API_CONFIG.ORDER_URL, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(orderData),
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        Alert.alert(
-          '✅ Order Placed Successfully',
-          'Your order has been submitted and will be processed soon.',
-          [
-            {
-              text: 'Continue Shopping',
-              onPress: () => {
-                clearCart();
-                navigation.navigate('Home');
-              }
-            }
-          ]
-        );
-      } else {
-        console.error('❌ Order failed:', data);
-        Alert.alert(
-          '❌ Order Failed',
-          data?.message || data?.error || 'Unable to place order. Please try again.'
-        );
-      }
-    } catch (error) {
-      console.error('❌ Network/order error:', error);
-      Alert.alert(
-        'Network Error',
-        'Unable to place your order. Please check your connection and try again.'
-      );
-    } finally {
-      setIsPlacingOrder(false);
+    const token = await AsyncStorage.getItem(AUTH_KEYS.TOKEN);
+    if (!token) {
+      Alert.alert('Authentication Required', 'Please log in to place an order.');
+      navigation.navigate('Login');
+      return;
     }
-  };
+
+    if (cartItems.length === 0) {
+      Alert.alert('Cart is Empty', 'Add items to cart before placing an order.');
+      return;
+    }
+
+    const totalAmount = cartItems.reduce((sum, item) => {
+      const price = extractPrice(item.current_price || item.price);
+      return sum + price * item.quantity;
+    }, 0);
+
+    if (totalAmount <= 0) {
+      Alert.alert('Error', 'Total amount calculation failed.');
+      return;
+    }
+
+    const orderData = {
+      items: cartItems.map(item => ({
+        product: item._id,  // Ensure that you are sending the correct product ID
+        quantity: item.quantity,
+      })),
+      totalAmount: totalAmount,  
+    };
+
+    console.log("Sending order data:", JSON.stringify(orderData));
+
+    const response = await fetch(API_CONFIG.ORDER_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(orderData),
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      Alert.alert(
+        '✅ Order Placed Successfully',
+        'Your order has been submitted and will be processed soon.',
+        [
+          {
+            text: 'Continue Shopping',
+            onPress: () => {
+              clearCart();
+              navigation.navigate('Home');
+            }
+          }
+        ]
+      );
+    } else {
+      console.error('❌ Order failed:', data);
+      Alert.alert(
+        '❌ Order Failed',
+        data?.message || data?.error || 'Unable to place order. Please try again.'
+      );
+    }
+  } catch (error) {
+    console.error('❌ Network/order error:', error);
+    Alert.alert(
+      'Network Error',
+      'Unable to place your order. Please check your connection and try again.'
+    );
+  } finally {
+    setIsPlacingOrder(false);
+  }
+};
 
   const extractPrice = (price) => {
     if (!price) return 0;
@@ -443,6 +523,7 @@ const CartScreen = ({ navigation }) => {
           </TouchableOpacity>
         )}
       </View>
+
 
       {cartItems.length === 0 ? (
         <EmptyCart />

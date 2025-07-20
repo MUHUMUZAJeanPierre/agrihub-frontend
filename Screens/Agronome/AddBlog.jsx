@@ -140,7 +140,6 @@ export default function AddBlog({ navigation }) {
     try {
       setIsLoading(true);
       
-      // Request permissions
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert(
@@ -224,7 +223,7 @@ export default function AddBlog({ navigation }) {
         day: 'numeric',
       }),
       id: `blog-${Date.now()}`,
-      author: authorName, // ✅ Use logged-in user's name
+      author: authorName, 
     };
 
     const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.FARMERS}`, {

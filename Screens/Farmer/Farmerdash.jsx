@@ -160,12 +160,26 @@ export default function Farmerdash({ navigation }) {
 
   const fetchBlogsFromAPI = async () => {
     try {
+      // Get authentication token
+      const token = await AsyncStorage.getItem('@auth_token');
+      
       const response = await fetch(API_ENDPOINTS.FARMERS, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
       });
 
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        if (response.status === 401) {
+          console.error('Authentication failed - token may be invalid or expired');
+          setBlogs([]);
+          return;
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const result = await response.json();
       if (result.status === 'success' && result.data) {
         setBlogs(result.data);
@@ -174,11 +188,13 @@ export default function Farmerdash({ navigation }) {
       }
     } catch (error) {
       console.error('Error fetching blogs from API:', error);
-      Alert.alert(
-        'Network Error',
-        'Failed to load disease alerts. Please check your internet connection and try again.',
-        [{ text: 'OK' }]
-      );
+      if (!error.message.includes('401')) {
+        Alert.alert(
+          'Network Error',
+          'Failed to load disease alerts. Please check your internet connection and try again.',
+          [{ text: 'OK' }]
+        );
+      }
       setBlogs([]);
     }
   };
@@ -186,12 +202,27 @@ export default function Farmerdash({ navigation }) {
   const fetchOrdersFromAPI = async () => {
     try {
       setOrdersLoading(true);
+      
+      // Get authentication token
+      const token = await AsyncStorage.getItem('@auth_token');
+      
       const response = await fetch(API_ENDPOINTS.ORDERS, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
       });
 
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        if (response.status === 401) {
+          console.error('Authentication failed - token may be invalid or expired');
+          setOrders([]);
+          return;
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const result = await response.json();
 
       if (Array.isArray(result)) {
@@ -206,11 +237,13 @@ export default function Farmerdash({ navigation }) {
       }
     } catch (error) {
       console.error('Error fetching orders from API:', error);
-      Alert.alert(
-        'Network Error',
-        'Failed to load orders. Please check your internet connection and try again.',
-        [{ text: 'OK' }]
-      );
+      if (!error.message.includes('401')) {
+        Alert.alert(
+          'Network Error',
+          'Failed to load orders. Please check your internet connection and try again.',
+          [{ text: 'OK' }]
+        );
+      }
       setOrders([]);
     } finally {
       setOrdersLoading(false);
@@ -220,12 +253,28 @@ export default function Farmerdash({ navigation }) {
   const fetchProductsFromAPI = async () => {
     try {
       setProductsLoading(true);
+      
+      // Get authentication token
+      const token = await AsyncStorage.getItem('@auth_token');
+      
       const response = await fetch(API_ENDPOINTS.PRODUCTS, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
       });
 
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        if (response.status === 401) {
+          console.error('Authentication failed - token may be invalid or expired');
+          // Don't show alert for auth errors, just log them
+          setProducts([]);
+          return;
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const result = await response.json();
 
       if (Array.isArray(result)) {
@@ -237,11 +286,14 @@ export default function Farmerdash({ navigation }) {
       }
     } catch (error) {
       console.error('Error fetching products from API:', error);
-      Alert.alert(
-        'Network Error',
-        'Failed to load products. Please check your internet connection and try again.',
-        [{ text: 'OK' }]
-      );
+      // Only show alert for network errors, not auth errors
+      if (!error.message.includes('401')) {
+        Alert.alert(
+          'Network Error',
+          'Failed to load products. Please check your internet connection and try again.',
+          [{ text: 'OK' }]
+        );
+      }
       setProducts([]);
     } finally {
       setProductsLoading(false);
@@ -470,19 +522,19 @@ export default function Farmerdash({ navigation }) {
           <StatCard
             title="Products Listed"
             value={totalProducts.toString()}
-            icon={<MaterialIcons name="inventory" size={24} color="#10B981" />}
+            // icon={<MaterialIcons name="inventory" size={24} color="#10B981" />}
             onPress={() => handleNavigation("farmerblog")}
-            trend="up"
-            trendValue="+12%"
+            // trend="up"
+            // trendValue="+12%"
           />
           <StatCard
             title="Orders Received"
             value={totalOrders.toString()}
-            icon={<MaterialIcons name="shopping-cart" size={24} color="white" />}
+            // icon={<MaterialIcons name="shopping-cart" size={24} color="white" />}
             onPress={() => handleNavigation("farmerblog")}
             gradient={true}
-            trend="up"
-            trendValue="+23%"
+            // trend="up"
+            // trendValue="+23%"
             isLoading={ordersLoading}
           />
         </View>

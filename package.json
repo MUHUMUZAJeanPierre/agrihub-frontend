@@ -26,6 +26,7 @@
     "expo-secure-store": "^14.2.3",
     "expo-status-bar": "~2.2.3",
     "firebase": "^11.9.1",
+    "jwt-decode": "^4.0.0",
     "lucide-react": "^0.511.0",
     "lucide-react-native": "^0.522.0",
     "nativewind": "^4.1.23",

@@ -139,20 +139,20 @@ export default function Agronomistdash({ navigation }) {
   const [username, setUsername] = useState('');
 
   useEffect(() => {
-  const loadUserName = async () => {
-    try {
-      const userData = await AsyncStorage.getItem('@user_data');
-      if (userData) {
-        const parsed = JSON.parse(userData);
-        setUsername(parsed.name || 'User');
+    const loadUserName = async () => {
+      try {
+        const userData = await AsyncStorage.getItem('@user_data');
+        if (userData) {
+          const parsed = JSON.parse(userData);
+          setUsername(parsed.name || 'User');
+        }
+      } catch (error) {
+        console.error('Failed to load user data:', error);
       }
-    } catch (error) {
-      console.error('Failed to load user data:', error);
-    }
-  };
+    };
 
-  loadUserName();
-}, []);
+    loadUserName();
+  }, []);
   // Enhanced animation refs
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(-30)).current;
@@ -301,11 +301,12 @@ export default function Agronomistdash({ navigation }) {
         }
       }
 
-      // Enhanced blog processing
-      const processedBlogs = blogsData.length > 0 ? blogsData.map((blog, index) => ({
+
+
+      const processedBlogs = blogsData.map((blog, index) => ({
         id: blog._id || `blog-${index}`,
         blogTitle: blog.blogTitle || `Article ${index + 1}`,
-        blogurl: blog.blogurl || `https://images.unsplash.com/photo-157432334740${index}-f5e1ad6d020b?w=400&h=300&fit=crop`,
+        blogurl: blog.blogurl || `https://placehold.co/400x300`, // placeholder or leave null
         date: blog.date || new Date().toLocaleDateString('en-US', {
           year: 'numeric',
           month: 'short',
@@ -314,74 +315,13 @@ export default function Agronomistdash({ navigation }) {
         description: blog.description || 'No description available',
         category: blog.category || 'General',
         readTime: blog.readTime || `${Math.floor(Math.random() * 8) + 3} min read`,
-        severity: blog.severity || ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)],
-        author: blog.author || 'Unknown Author',
-        tags: blog.tags || ['agriculture', 'farming', 'technology'],
-        views: blog.views || Math.floor(Math.random() * 1000) + 100,
-        likes: blog.likes || Math.floor(Math.random() * 50) + 5,
-        featured: blog.featured || Math.random() > 0.8,
-      })) : [
-        {
-          id: 'blog-1',
-          blogTitle: "AI-Powered Crop Disease Detection: Revolutionary Breakthrough",
-          blogurl: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop",
-          date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
-          description: "Discover how cutting-edge artificial intelligence is transforming early disease detection in crops, enabling farmers to prevent catastrophic yield losses with unprecedented accuracy.",
-          category: "AI Technology",
-          readTime: "6 min read",
-          severity: "High",
-          author: "Dr. Sarah Chen",
-          tags: ["AI", "disease-detection", "precision-farming"],
-          views: 1247,
-          likes: 89,
-          featured: true,
-        },
-        {
-          id: 'blog-2',
-          blogTitle: "Sustainable Agriculture: The Future of Food Production",
-          blogurl: "https://images.unsplash.com/photo-1592841200221-a6898f307baa?w=400&h=300&fit=crop",
-          date: new Date(Date.now() - 86400000).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
-          description: "Explore innovative sustainable farming techniques that enhance soil health, boost productivity, and protect our environment for future generations.",
-          category: "Sustainability",
-          readTime: "8 min read",
-          severity: "Medium",
-          author: "Prof. Michael Rodriguez",
-          tags: ["sustainability", "soil-health", "organic-farming"],
-          views: 856,
-          likes: 64,
-          featured: false,
-        },
-        {
-          id: 'blog-3',
-          blogTitle: "Smart Irrigation Systems: Maximize Water Efficiency",
-          blogurl: "https://images.unsplash.com/photo-1586771107445-d3ca888129ff?w=400&h=300&fit=crop",
-          date: new Date(Date.now() - 172800000).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
-          description: "Master the implementation of intelligent irrigation systems that optimize water usage, reduce costs, and significantly improve crop yields.",
-          category: "Smart Farming",
-          readTime: "7 min read",
-          severity: "Low",
-          author: "Dr. Amanda Park",
-          tags: ["irrigation", "water-management", "IoT"],
-          views: 623,
-          likes: 42,
-          featured: false,
-        },
-        {
-          id: 'blog-4',
-          blogTitle: "Climate-Resilient Crops: Adapting to Change",
-          blogurl: "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=400&h=300&fit=crop",
-          date: new Date(Date.now() - 259200000).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
-          description: "Learn about breakthrough crop varieties designed to withstand extreme weather conditions and climate change challenges.",
-          category: "Climate Science",
-          readTime: "9 min read",
-          severity: "Critical",
-          author: "Dr. James Thompson",
-          tags: ["climate-change", "crop-resilience", "genetics"],
-          views: 1089,
-          likes: 78,
-          featured: true,
-        },
-      ];
+        severity: blog.severity || 'Medium',
+        author: blog.author || 'Unknown',
+        tags: blog.tags || [],
+        views: blog.views || 0,
+        likes: blog.likes || 0,
+        featured: blog.featured || false,
+      }));
 
       updateState({
         blogs: processedBlogs,
@@ -620,7 +560,7 @@ export default function Agronomistdash({ navigation }) {
               colors={['transparent', 'rgba(0,0,0,0.7)']}
               style={styles.blogImageOverlay}
             />
-            <View style={styles.blogBadgeContainer}>              
+            <View style={styles.blogBadgeContainer}>
               <View style={[styles.severityBadge, { backgroundColor: SEVERITY_COLORS[item.severity] }]}>
                 <Text style={styles.severityText}>
                   {PRIORITY_ICONS[item.severity]} {item.severity}
@@ -628,7 +568,7 @@ export default function Agronomistdash({ navigation }) {
               </View>
             </View>
 
-         
+
           </View>
 
           <View style={styles.blogContent}>
@@ -666,28 +606,28 @@ export default function Agronomistdash({ navigation }) {
 
   // Enhanced Search Component
   const SearchComponent = React.memo(() => (
-  <View style={styles.searchSection}>
-    <View style={styles.searchContainer}>
-      <View style={[styles.searchInputContainer, { backgroundColor: Colors.searchBackground }]}>
-        <Ionicons name="search-outline" size={20} color={Colors.textSecondary} />
-        <TextInput
-          style={[styles.searchInput, { color: Colors.text }]}
-          placeholder="Search articles, topics..."
-          placeholderTextColor={Colors.textMuted}
-          value={state.search}
-          onChangeText={searchFilter}
-          returnKeyType="search"
-        />
+    <View style={styles.searchSection}>
+      <View style={styles.searchContainer}>
+        <View style={[styles.searchInputContainer, { backgroundColor: Colors.searchBackground }]}>
+          <Ionicons name="search-outline" size={20} color={Colors.textSecondary} />
+          <TextInput
+            style={[styles.searchInput, { color: Colors.text }]}
+            placeholder="Search articles, topics..."
+            placeholderTextColor={Colors.textMuted}
+            value={state.search}
+            onChangeText={searchFilter}
+            returnKeyType="search"
+          />
+        </View>
+        <TouchableOpacity
+          style={[styles.filterButton, { backgroundColor: Colors.searchBackground }]}
+          onPress={() => Alert.alert('Filter', 'Filter options coming soon!')}
+        >
+          <Ionicons name="options-outline" size={20} color={Colors.textSecondary} />
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity
-        style={[styles.filterButton, { backgroundColor: Colors.searchBackground }]}
-        onPress={() => Alert.alert('Filter', 'Filter options coming soon!')}
-      >
-        <Ionicons name="options-outline" size={20} color={Colors.textSecondary} />
-      </TouchableOpacity>
     </View>
-  </View>
-));
+  ));
 
 
 
@@ -1085,8 +1025,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 12,
   },
-  
-    filterButton: {
+
+  filterButton: {
     width: 44,
     height: 44,
     justifyContent: 'center',

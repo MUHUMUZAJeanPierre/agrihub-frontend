@@ -1,311 +1,3 @@
-// import {
-//   View,
-//   Text,
-//   Image,
-//   StyleSheet,
-//   TouchableOpacity,
-//   ActivityIndicator,
-//   Alert,
-//   Dimensions,
-//   KeyboardAvoidingView,
-//   ScrollView,
-//   Platform,
-// } from "react-native";
-// import React, { useState, useEffect } from "react";
-// import { getItemAsync } from "expo-secure-store";
-// import * as ImagePicker from "expo-image-picker";
-// import UploadTextInput from "../../Components/uploadtextInpu";
-// import { Picker } from "@react-native-picker/picker";
-
-// const height = Dimensions.get("screen").height;
-
-// export default function Addproduct() {
-//   const [title, setTitle] = useState("");
-//   const [description, setDescription] = useState("");
-//   const [price, setPrice] = useState("");
-//   const [category, setCategory] = useState("");
-//   const [region, setRegion] = useState("");
-//   const [farmerName, setFarmerName] = useState("");
-//   const [minOrder, setMinOrder] = useState("");
-//   const [isFlashDeal, setIsFlashDeal] = useState(false);
-//   const [discount, setDiscount] = useState("");
-//   const [picurl, setPicurl] = useState(null);
-//   const [addedId, setAddedId] = useState();
-//   const [isLoading, setIsLoading] = useState(false);
-//   const [status, setStatus] = useState("");
-//   const [amount, setAmount] = useState(0);
-
-//   const categories = [
-//     { label: "Select Category", value: "" },
-//     { label: "Kamere (Organic)", value: "organic" },
-//     { label: "Imboga (Vegetables)", value: "vegetables" },
-//     { label: "Imbuto (Fruits)", value: "fruits" },
-//     { label: "Imbuto (Seeds)", value: "seeds" },
-//     { label: "Amata (Dairy)", value: "dairy" },
-//     { label: "Ingano (Grains)", value: "grains" },
-//     { label: "Inyama (Meat)", value: "meat" },
-//     { label: "Ibinyobwa (Beverages)", value: "beverages" },
-//   ];
-
-//   const regions = [
-//     { label: "Select Region", value: "" },
-//     { label: "Kigali", value: "Kigali" },
-//     { label: "Eastern Province", value: "Eastern" },
-//     { label: "Western Province", value: "Western" },
-//     { label: "Northern Province", value: "Northern" },
-//     { label: "Southern Province", value: "Southern" },
-//   ];
-
-//   useEffect(() => {
-//     getItemAsync("userId")
-//       .then((data) => setAddedId(data))
-//       .catch((err) => console.log(err));
-//   }, []);
-
-//   const pickImage = async (setLoadingState, setImageUrl) => {
-//     try {
-//       setLoadingState(true);
-//       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-//       if (!permissionResult.granted) {
-//         Alert.alert("Permission Required", "Permission to access camera roll is required!");
-//         return;
-//       }
-//       const result = await ImagePicker.launchImageLibraryAsync({
-//         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-//         allowsEditing: true,
-//         aspect: [4, 3],
-//         quality: 1,
-//       });
-
-//       if (!result.canceled) {
-//         setImageUrl(result.assets[0].uri);
-//       }
-//     } catch (error) {
-//       console.log("Image picker error:", error);
-//       Alert.alert("Error", "Failed to pick image");
-//     } finally {
-//       setLoadingState(false);
-//     }
-//   };
-
-//   const AddProduct = async (productData) => {
-//     try {
-//       const formattedPrice = `RWF ${parseInt(productData.price).toLocaleString()}`;
-//       const product = {
-//         title: productData.title,
-//         description: productData.description,
-//         price: formattedPrice,
-//         basePrice: formattedPrice,
-//         category: productData.category,
-//         region: productData.region,
-//         farmer: productData.farmerName,
-//         minOrder: productData.minOrder,
-//         img: productData.picurl,
-//         isFlashDeal: productData.isFlashDeal,
-//         discount: productData.isFlashDeal ? productData.discount : null,
-//         addedBy: productData.addedId,
-//         status: productData.status,
-//         amount: productData.amount,
-//         createdAt: new Date().toISOString(),
-//       };
-
-//       console.log("Submitting product:", product);
-
-//       // Simulate API call
-//       await new Promise((resolve) => setTimeout(resolve, 1000));
-
-//       console.log("Product added successfully");
-//       return product;
-//     } catch (error) {
-//       console.error("Add product failed:", error);
-//       throw error;
-//     }
-//   };
-
-//   const handleAddProducts = async () => {
-//     if (
-//       !title ||
-//       !description ||
-//       !price ||
-//       !category ||
-//       !region ||
-//       !farmerName ||
-//       !minOrder ||
-//       !picurl ||
-//       !status ||
-//       !amount
-//     ) {
-//       Alert.alert("Error", "Please fill all required fields");
-//       return;
-//     }
-
-//     if (isNaN(parseInt(price)) || isNaN(parseInt(amount))) {
-//       Alert.alert("Error", "Price and amount must be numeric");
-//       return;
-//     }
-
-//     if (isFlashDeal && !discount) {
-//       Alert.alert("Error", "Enter discount for flash deal");
-//       return;
-//     }
-
-//     try {
-//       setIsLoading(true);
-//       const productData = {
-//         title,
-//         description,
-//         price,
-//         category,
-//         region,
-//         farmerName,
-//         minOrder,
-//         picurl,
-//         isFlashDeal,
-//         discount,
-//         addedId,
-//         status,
-//         amount,
-//       };
-
-//       await AddProduct(productData);
-//       Alert.alert("Success", "Product added");
-
-//       // Reset
-//       setTitle("");
-//       setDescription("");
-//       setPrice("");
-//       setCategory("");
-//       setRegion("");
-//       setFarmerName("");
-//       setMinOrder("");
-//       setDiscount("");
-//       setIsFlashDeal(false);
-//       setPicurl(null);
-//       setStatus("");
-//       setAmount(0);
-//     } catch (error) {
-//       Alert.alert("Error", "Product submission failed");
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   };
-
-//   return (
-//     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-//       <ScrollView>
-//         <View style={styles.container}>
-//           <Text style={styles.title}>ADD A NEW PRODUCT</Text>
-
-//           <View style={styles.imageSection}>
-//             {picurl ? (
-//               <TouchableOpacity onPress={() => pickImage(setIsLoading, setPicurl)}>
-//                 <Image style={styles.image} source={{ uri: picurl }} />
-//               </TouchableOpacity>
-//             ) : isLoading ? (
-//               <View style={styles.loadingContainer}>
-//                 <ActivityIndicator size="large" color="#4ba26a" />
-//                 <Text style={styles.uploadText}>Loading...</Text>
-//               </View>
-//             ) : (
-//               <View style={styles.uploadContainer}>
-//                 <Image style={styles.image} source={require("../../assets/upload.png")} />
-//                 <TouchableOpacity onPress={() => pickImage(setIsLoading, setPicurl)}>
-//                   <Text style={styles.uploadText}>Click to upload</Text>
-//                 </TouchableOpacity>
-//               </View>
-//             )}
-//           </View>
-
-//           <View style={styles.formSection}>
-//             <UploadTextInput placeholder="Enter product title" value={title} onChangeText={setTitle} />
-//             <UploadTextInput placeholder="Enter description" value={description} onChangeText={setDescription} />
-//             <UploadTextInput placeholder="Enter product price" keyboardType="numeric" value={price} onChangeText={setPrice} />
-//             <UploadTextInput placeholder="Enter product status" value={status} onChangeText={setStatus} />
-//             <UploadTextInput placeholder="Enter product amount" keyboardType="numeric" value={amount.toString()} onChangeText={(text) => setAmount(Number(text))} />
-//             <UploadTextInput placeholder="Enter region" value={region} onChangeText={setRegion} />
-//             <UploadTextInput placeholder="Enter category" value={category} onChangeText={setCategory} />
-//             <UploadTextInput placeholder="Enter farmer name" value={farmerName} onChangeText={setFarmerName} />
-//             <UploadTextInput placeholder="Minimum order quantity" keyboardType="numeric" value={minOrder} onChangeText={setMinOrder} />
-
-//             {isFlashDeal && (
-//               <UploadTextInput placeholder="Enter discount (%)" keyboardType="numeric" value={discount} onChangeText={setDiscount} />
-//             )}
-
-//             <View style={styles.buttonContainer}>
-//               <TouchableOpacity
-//                 style={[styles.addButton, isLoading && styles.addButtonDisabled]}
-//                 onPress={handleAddProducts}
-//                 disabled={isLoading}
-//               >
-//                 <Text style={styles.addButtonText}>{isLoading ? "ADDING..." : "ADD PRODUCT"}</Text>
-//               </TouchableOpacity>
-//             </View>
-//           </View>
-//         </View>
-//       </ScrollView>
-//     </KeyboardAvoidingView>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     minHeight: height,
-//     backgroundColor: "white",
-//     padding: 20,
-//   },
-//   title: {
-//     color: "#4ba26a",
-//     fontWeight: "bold",
-//     fontSize: 18,
-//     paddingBottom: 20,
-//     textAlign: "center",
-//   },
-//   imageSection: {
-//     alignItems: "center",
-//     marginBottom: 20,
-//   },
-//   uploadContainer: {
-//     alignItems: "center",
-//   },
-//   loadingContainer: {
-//     alignItems: "center",
-//     padding: 20,
-//   },
-//   image: {
-//     width: 100,
-//     height: 100,
-//     marginBottom: 10,
-//     borderRadius: 10,
-//   },
-//   uploadText: {
-//     fontSize: 14,
-//     color: "#212121",
-//   },
-//   formSection: {
-//     paddingTop: 10,
-//   },
-//   buttonContainer: {
-//     marginTop: 30,
-//   },
-//   addButton: {
-//     backgroundColor: "#4ba26a",
-//     paddingVertical: 15,
-//     borderRadius: 10,
-//     alignItems: "center",
-//     elevation: 3,
-//   },
-//   addButtonDisabled: {
-//     backgroundColor: "#A9A9A9",
-//     opacity: 0.6,
-//   },
-//   addButtonText: {
-//     color: "white",
-//     fontSize: 16,
-//     fontWeight: "bold",
-//   },
-// });
-
-
 import {
   View,
   Text,
@@ -319,34 +11,85 @@ import {
   ScrollView,
   Platform,
   StatusBar,
+  Animated,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+import axios from 'axios';
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { getItemAsync } from "expo-secure-store";
 import * as ImagePicker from "expo-image-picker";
 import { useTheme } from "../../contexts/ThemeContext";
 import UploadTextInput from "../../Components/uploadtextInpu";
 import { Picker } from "@react-native-picker/picker";
+import Button from "../../Components/Button";
 
-const height = Dimensions.get("screen").height;
+const { width, height } = Dimensions.get("window");
 
-export default function Addproduct() {
+
+const THEME_COLORS = {
+  light: {
+    background: '#F8F9FA',
+    cardBackground: '#FFFFFF',
+    text: '#1A202C',
+    textSecondary: '#718096',
+    textMuted: '#A0AEC0',
+    primary: '#10B981',
+    primaryLight: '#D1FAE5',
+    secondary: '#3B82F6',
+    accent: '#F59E0B',
+    shadow: '#000000',
+    placeholder: '#9CA3AF',
+    success: '#10B981',
+    warning: '#F59E0B',
+    error: '#EF4444',
+    border: '#E5E7EB',
+    gradientStart: '#10B981',
+    gradientEnd: '#059669',
+  },
+  dark: {
+    background: '#000000',
+    cardBackground: '#1F2937',
+    text: '#F9FAFB',
+    textSecondary: '#D1D5DB',
+    textMuted: '#9CA3AF',
+    primary: '#10B981',
+    primaryLight: '#064E3B',
+    secondary: '#3B82F6',
+    accent: '#F59E0B',
+    shadow: '#000000',
+    placeholder: '#6B7280',
+    success: '#10B981',
+    warning: '#F59E0B',
+    error: '#EF4444',
+    border: '#374151',
+    gradientStart: '#10B981',
+    gradientEnd: '#059669',
+  },
+};
+
+export default function AddProduct({ navigation }) {
   const { theme } = useTheme();
-  const isDark = theme === 'dark';
+  const Colors = useMemo(() => THEME_COLORS[theme] || THEME_COLORS.light, [theme]);
+  
+  // Animation refs
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const scaleAnim = useRef(new Animated.Value(0.95)).current;
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("");
-  const [category, setCategory] = useState("");
-  const [region, setRegion] = useState("");
-  const [farmerName, setFarmerName] = useState("");
-  const [minOrder, setMinOrder] = useState("");
-  const [isFlashDeal, setIsFlashDeal] = useState(false);
-  const [discount, setDiscount] = useState("");
-  const [picurl, setPicurl] = useState(null);
-  const [addedId, setAddedId] = useState();
+  // State management
+  const [productData, setProductData] = useState({
+    title: "",
+    description: "",
+    price: "",
+    pastPrice: "",
+    category: "",
+    region: "",
+    picurl: null,
+  });
+  
+  const [addedId, setAddedId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [status, setStatus] = useState("");
-  const [amount, setAmount] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const categories = [
     { label: "Select Category", value: "" },
@@ -369,355 +112,563 @@ export default function Addproduct() {
     { label: "Southern Province", value: "Southern" },
   ];
 
+  // Animation effects
+  useEffect(() => {
+    const initAnimations = Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]);
+
+    initAnimations.start();
+  }, [fadeAnim, slideAnim, scaleAnim]);
+
   useEffect(() => {
     getItemAsync("userId")
-      .then((data) => setAddedId(data))
-      .catch((err) => console.log(err));
+      .then((data) => {
+        if (data) {
+          setAddedId(data);
+        }
+      })
+      .catch((err) => console.log("Error getting userId:", err));
   }, []);
 
-  const pickImage = async (setLoadingState, setImageUrl) => {
-    try {
-      setLoadingState(true);
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permissionResult.granted) {
-        Alert.alert("Permission Required", "Permission to access camera roll is required!");
-        return;
-      }
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 1,
-      });
-
-      if (!result.canceled) {
-        setImageUrl(result.assets[0].uri);
-      }
-    } catch (error) {
-      console.log("Image picker error:", error);
-      Alert.alert("Error", "Failed to pick image");
-    } finally {
-      setLoadingState(false);
-    }
-  };
-
-  const AddProduct = async (productData) => {
-    try {
-      const formattedPrice = `RWF ${parseInt(productData.price).toLocaleString()}`;
-      const product = {
-        title: productData.title,
-        description: productData.description,
-        price: formattedPrice,
-        basePrice: formattedPrice,
-        category: productData.category,
-        region: productData.region,
-        farmer: productData.farmerName,
-        minOrder: productData.minOrder,
-        img: productData.picurl,
-        isFlashDeal: productData.isFlashDeal,
-        discount: productData.isFlashDeal ? productData.discount : null,
-        addedBy: productData.addedId,
-        status: productData.status,
-        amount: productData.amount,
-        createdAt: new Date().toISOString(),
-      };
-
-      console.log("Submitting product:", product);
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      console.log("Product added successfully");
-      return product;
-    } catch (error) {
-      console.error("Add product failed:", error);
-      throw error;
-    }
-  };
-
-  const handleAddProducts = async () => {
-    if (
-      !title ||
-      !description ||
-      !price ||
-      !category ||
-      !region ||
-      !farmerName ||
-      !minOrder ||
-      !picurl ||
-      !status ||
-      !amount
-    ) {
-      Alert.alert("Error", "Please fill all required fields");
-      return;
-    }
-
-    if (isNaN(parseInt(price)) || isNaN(parseInt(amount))) {
-      Alert.alert("Error", "Price and amount must be numeric");
-      return;
-    }
-
-    if (isFlashDeal && !discount) {
-      Alert.alert("Error", "Enter discount for flash deal");
-      return;
-    }
-
+  // Fixed image picker with updated API
+  const pickImage = async () => {
     try {
       setIsLoading(true);
-      const productData = {
-        title,
-        description,
-        price,
-        category,
-        region,
-        farmerName,
-        minOrder,
-        picurl,
-        isFlashDeal,
-        discount,
-        addedId,
-        status,
-        amount,
-      };
+      
+      // Request permissions
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission Required',
+          'Please grant camera roll permissions to upload images.'
+        );
+        return;
+      }
 
-      await AddProduct(productData);
-      Alert.alert("Success", "Product added successfully!");
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: 'Images',
+        allowsEditing: true,
+        aspect: [4, 3], // Better aspect ratio for product images
+        quality: 0.8,
+        allowsMultipleSelection: false,
+      });
 
-      // Reset form
-      setTitle("");
-      setDescription("");
-      setPrice("");
-      setCategory("");
-      setRegion("");
-      setFarmerName("");
-      setMinOrder("");
-      setDiscount("");
-      setIsFlashDeal(false);
-      setPicurl(null);
-      setStatus("");
-      setAmount(0);
+      if (!result.canceled && result.assets?.length > 0) {
+        setProductData(prev => ({
+          ...prev,
+          picurl: result.assets[0].uri
+        }));
+        setErrors(prev => ({ ...prev, picurl: null }));
+      }
     } catch (error) {
-      Alert.alert("Error", "Product submission failed");
+      console.error('Image picker error:', error);
+      Alert.alert('Error', 'Failed to pick image. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const styles = createStyles(isDark);
+  // Enhanced validation with better error messages
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!productData.title.trim()) {
+      newErrors.title = 'Product title is required';
+    } else if (productData.title.length < 3) {
+      newErrors.title = 'Title must be at least 3 characters';
+    } else if (productData.title.length > 100) {
+      newErrors.title = 'Title must be less than 100 characters';
+    }
+
+    if (!productData.description.trim()) {
+      newErrors.description = 'Product description is required';
+    } else if (productData.description.length < 20) {
+      newErrors.description = 'Description must be at least 20 characters';
+    } else if (productData.description.length > 500) {
+      newErrors.description = 'Description must be less than 500 characters';
+    }
+
+    if (!productData.price.trim()) {
+      newErrors.price = 'Current price is required';
+    } else {
+      const priceValue = parseInt(productData.price.replace(/[^0-9]/g, ''));
+      if (isNaN(priceValue) || priceValue <= 0) {
+        newErrors.price = 'Current price must be a valid positive number';
+      }
+    }
+
+    if (!productData.pastPrice.trim()) {
+      newErrors.pastPrice = 'Past price is required';
+    } else {
+      const pastPriceValue = parseInt(productData.pastPrice.replace(/[^0-9]/g, ''));
+      if (isNaN(pastPriceValue) || pastPriceValue <= 0) {
+        newErrors.pastPrice = 'Past price must be a valid positive number';
+      }
+    }
+
+    if (!productData.category) {
+      newErrors.category = 'Category is required';
+    }
+
+    if (!productData.region) {
+      newErrors.region = 'Region is required';
+    }
+
+    if (!productData.picurl) {
+      newErrors.picurl = 'Product image is required';
+    }
+
+    if (!addedId) {
+      newErrors.auth = 'User authentication required';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Improved price formatting
+  const formatPrice = (priceValue) => {
+    const numericPrice = parseInt(priceValue.replace(/[^0-9]/g, ''));
+    if (isNaN(numericPrice) || numericPrice <= 0) {
+      return '';
+    }
+    return `${numericPrice.toLocaleString()} RWF`;
+  };
+
+  // Enhanced API call with better error handling
+  const AddProduct = async () => {
+    try {
+      const token = await getItemAsync("authToken");
+      
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      if (!addedId) {
+        throw new Error("User ID not found");
+      }
+
+      const formattedPrice = formatPrice(productData.price);
+      const formattedPastPrice = formatPrice(productData.pastPrice);
+
+      // Validate formatted prices
+      if (!formattedPrice || !formattedPastPrice) {
+        throw new Error("Invalid price format");
+      }
+
+      const product = {
+        farmer: addedId,
+        title: productData.title.trim(),
+        description: productData.description.trim(),
+        current_price: formattedPrice,
+        past_price: formattedPastPrice,
+        img: productData.picurl,
+        category: productData.category,
+        region: productData.region,
+      };
+
+      console.log("Sending product data:", product);
+
+      const response = await axios.post(
+        "https://agrihub-backend-4z99.onrender.com/product",
+        product,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: 30000, // 30 second timeout
+        }
+      );
+
+      console.log("Product added successfully:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Add product failed:", error.response?.data || error.message);
+      
+      if (error.code === 'ECONNABORTED') {
+        throw new Error("Request timed out. Please check your internet connection.");
+      } else if (error.response?.status === 401) {
+        throw new Error("Authentication failed. Please login again.");
+      } else if (error.response?.status === 400) {
+        throw new Error("Invalid product data. Please check all fields.");
+      } else if (error.response?.status === 413) {
+        throw new Error("Image file is too large. Please select a smaller image.");
+      } else if (error.response?.status >= 500) {
+        throw new Error("Server error. Please try again later.");
+      } else {
+        throw new Error(error.response?.data?.message || "Failed to add product");
+      }
+    }
+  };
+
+  const handleAddProducts = async () => {
+    if (!validateForm()) {
+      Alert.alert('Validation Error', 'Please fix the errors below.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      await AddProduct();
+      
+      Alert.alert(
+        'Success!',
+        'Your product has been added successfully.',
+        [
+          { text: 'Add Another', onPress: resetForm },
+          { text: 'View Products', onPress: () => navigation.goBack() },
+        ]
+      );
+    } catch (error) {
+      Alert.alert(
+        'Upload Failed',
+        error.message || 'There was an error adding your product. Please try again.',
+        [
+          { text: 'Retry', onPress: () => setIsSubmitting(false) },
+          { text: 'Cancel', style: 'cancel', onPress: () => setIsSubmitting(false) },
+        ]
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Reset form
+  const resetForm = () => {
+    setProductData({
+      title: "",
+      description: "",
+      price: "",
+      pastPrice: "",
+      category: "",
+      region: "",
+      picurl: null,
+    });
+    setErrors({});
+  };
+
+  // Update product data
+  const updateProductData = (field, value) => {
+    setProductData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: null }));
+    }
+  };
+
+  // Improved price change handler
+  const handlePriceChange = (value) => {
+    const numericValue = value.replace(/[^0-9]/g, '');
+    updateProductData('price', numericValue);
+  };
+
+  const handlePastPriceChange = (value) => {
+    const numericValue = value.replace(/[^0-9]/g, '');
+    updateProductData('pastPrice', numericValue);
+  };
 
   return (
-    <View style={styles.wrapper}>
-      <StatusBar 
-        barStyle={isDark ? "light-content" : "dark-content"} 
-        backgroundColor={isDark ? "#121212" : "#ffffff"} 
+    <View style={[styles.container, { backgroundColor: Colors.background }]}>
+      <StatusBar
+        barStyle={theme === 'dark' ? 'light-content' : 'dark-content'}
+        backgroundColor={Colors.background}
       />
+      
       <KeyboardAvoidingView 
-        style={styles.keyboardView} 
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
       >
         <ScrollView 
           style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.container}>
+          <Animated.View
+            style={[
+              styles.content,
+              {
+                opacity: fadeAnim,
+                transform: [
+                  { translateY: slideAnim },
+                  { scale: scaleAnim }
+                ],
+              },
+            ]}
+          >
             {/* Header */}
             <View style={styles.header}>
-              <Text style={styles.title}>Add New Product</Text>
-              <Text style={styles.subtitle}>Create a new product listing</Text>
+              <Text style={[styles.headerTitle, { color: Colors.text }]}>
+                Add New Product
+              </Text>
+              <Text style={[styles.headerSubtitle, { color: Colors.textSecondary }]}>
+                Create a new product listing
+              </Text>
             </View>
 
             {/* Image Upload Section */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Product Image</Text>
-              <View style={styles.imageSection}>
-                {picurl ? (
-                  <TouchableOpacity 
-                    onPress={() => pickImage(setIsLoading, setPicurl)}
-                    style={styles.imageContainer}
-                    activeOpacity={0.8}
-                  >
-                    <Image style={styles.selectedImage} source={{ uri: picurl }} />
+            <View style={[styles.imageSection, { backgroundColor: Colors.cardBackground, borderColor: Colors.border }]}>
+              <Text style={[styles.sectionTitle, { color: Colors.text }]}>
+                Product Image
+              </Text>
+              
+              <TouchableOpacity
+                style={[
+                  styles.imageUploadContainer,
+                  {
+                    borderColor: errors.picurl ? Colors.error : Colors.border,
+                    backgroundColor: productData.picurl ? 'transparent' : Colors.background,
+                  }
+                ]}
+                onPress={pickImage}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color={Colors.primary} />
+                    <Text style={[styles.loadingText, { color: Colors.textSecondary }]}>
+                      Processing image...
+                    </Text>
+                  </View>
+                ) : productData.picurl ? (
+                  <View style={styles.selectedImageContainer}>
+                    <Image
+                      style={styles.selectedImage}
+                      source={{ uri: productData.picurl }}
+                      resizeMode="cover"
+                    />
                     <View style={styles.imageOverlay}>
                       <Text style={styles.changeImageText}>Tap to change</Text>
                     </View>
-                  </TouchableOpacity>
-                ) : isLoading ? (
-                  <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#4ba26a" />
-                    <Text style={styles.loadingText}>Uploading...</Text>
                   </View>
                 ) : (
-                  <TouchableOpacity 
-                    style={styles.uploadContainer}
-                    onPress={() => pickImage(setIsLoading, setPicurl)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.uploadIcon}>
-                      <Text style={styles.uploadIconText}>📸</Text>
-                    </View>
-                    <Text style={styles.uploadText}>Tap to upload image</Text>
-                    <Text style={styles.uploadSubtext}>JPG, PNG up to 10MB</Text>
-                  </TouchableOpacity>
+                  <View style={styles.uploadPlaceholder}>
+                    <Text style={[styles.uploadIcon, { color: Colors.primary }]}>📸</Text>
+                    <Text style={[styles.uploadText, { color: Colors.textSecondary }]}>
+                      Tap to select image
+                    </Text>
+                    <Text style={[styles.uploadSubtext, { color: Colors.textMuted }]}>
+                      Recommended: 4:3 aspect ratio
+                    </Text>
+                  </View>
                 )}
-              </View>
-            </View>
-
-            {/* Product Details Section */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Product Details</Text>
-              <View style={styles.formGrid}>
-                <UploadTextInput 
-                  placeholder="Product title" 
-                  value={title} 
-                  onChangeText={setTitle}
-                  style={[styles.input, isDark && styles.inputDark]}
-                />
-                <UploadTextInput 
-                  placeholder="Product description" 
-                  value={description} 
-                  onChangeText={setDescription}
-                  multiline
-                  numberOfLines={3}
-                  style={[styles.input, styles.textArea, isDark && styles.inputDark]}
-                />
-                
-                <View style={styles.row}>
-                  <View style={styles.halfWidth}>
-                    <UploadTextInput 
-                      placeholder="Price (RWF)" 
-                      keyboardType="numeric" 
-                      value={price} 
-                      onChangeText={setPrice}
-                      style={[styles.input, isDark && styles.inputDark]}
-                    />
-                  </View>
-                  <View style={styles.halfWidth}>
-                    <UploadTextInput 
-                      placeholder="Quantity available" 
-                      keyboardType="numeric" 
-                      value={amount.toString()} 
-                      onChangeText={(text) => setAmount(Number(text))}
-                      style={[styles.input, isDark && styles.inputDark]}
-                    />
-                  </View>
-                </View>
-
-                {/* Picker Sections */}
-                <View style={styles.pickerContainer}>
-                  <Text style={styles.pickerLabel}>Category</Text>
-                  <View style={[styles.pickerWrapper, isDark && styles.pickerWrapperDark]}>
-                    <Picker
-                      selectedValue={category}
-                      onValueChange={setCategory}
-                      style={[styles.picker, isDark && styles.pickerDark]}
-                    >
-                      {categories.map((cat) => (
-                        <Picker.Item key={cat.value} label={cat.label} value={cat.value} />
-                      ))}
-                    </Picker>
-                  </View>
-                </View>
-
-                <View style={styles.pickerContainer}>
-                  <Text style={styles.pickerLabel}>Region</Text>
-                  <View style={[styles.pickerWrapper, isDark && styles.pickerWrapperDark]}>
-                    <Picker
-                      selectedValue={region}
-                      onValueChange={setRegion}
-                      style={[styles.picker, isDark && styles.pickerDark]}
-                    >
-                      {regions.map((reg) => (
-                        <Picker.Item key={reg.value} label={reg.label} value={reg.value} />
-                      ))}
-                    </Picker>
-                  </View>
-                </View>
-
-                <UploadTextInput 
-                  placeholder="Farmer/Supplier name" 
-                  value={farmerName} 
-                  onChangeText={setFarmerName}
-                  style={[styles.input, isDark && styles.inputDark]}
-                />
-                
-                <View style={styles.row}>
-                  <View style={styles.halfWidth}>
-                    <UploadTextInput 
-                      placeholder="Min. order qty" 
-                      keyboardType="numeric" 
-                      value={minOrder} 
-                      onChangeText={setMinOrder}
-                      style={[styles.input, isDark && styles.inputDark]}
-                    />
-                  </View>
-                  <View style={styles.halfWidth}>
-                    <UploadTextInput 
-                      placeholder="Product status" 
-                      value={status} 
-                      onChangeText={setStatus}
-                      style={[styles.input, isDark && styles.inputDark]}
-                    />
-                  </View>
-                </View>
-              </View>
-            </View>
-
-            {/* Flash Deal Section */}
-            <View style={styles.section}>
-              <TouchableOpacity 
-                style={styles.flashDealToggle}
-                onPress={() => setIsFlashDeal(!isFlashDeal)}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.checkbox, isFlashDeal && styles.checkboxActive]}>
-                  {isFlashDeal && <Text style={styles.checkmark}>✓</Text>}
-                </View>
-                <Text style={styles.flashDealText}>Enable Flash Deal</Text>
               </TouchableOpacity>
               
-              {isFlashDeal && (
-                <View style={styles.discountContainer}>
-                  <UploadTextInput 
-                    placeholder="Discount percentage (%)" 
-                    keyboardType="numeric" 
-                    value={discount} 
-                    onChangeText={setDiscount}
-                    style={[styles.input, isDark && styles.inputDark]}
-                  />
-                </View>
+              {errors.picurl && (
+                <Text style={[styles.errorText, { color: Colors.error }]}>
+                  {errors.picurl}
+                </Text>
               )}
             </View>
 
-            {/* Submit Button */}
-            <View style={styles.buttonSection}>
-              <TouchableOpacity
-                style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
-                onPress={handleAddProducts}
-                disabled={isLoading}
-                activeOpacity={0.8}
-              >
-                {isLoading ? (
-                  <View style={styles.loadingButton}>
-                    <ActivityIndicator size="small" color="white" />
-                    <Text style={styles.submitButtonText}>Adding Product...</Text>
-                  </View>
-                ) : (
-                  <Text style={styles.submitButtonText}>Add Product</Text>
+            {/* Product Details Section */}
+            <View style={styles.inputSection}>
+              <Text style={[styles.sectionTitle, { color: Colors.text }]}>
+                Product Details
+              </Text>
+              
+              {/* Title Input */}
+              <View style={styles.inputGroup}>
+                <UploadTextInput
+                  placeholder="Product title *"
+                  value={productData.title}
+                  onChangeText={(text) => updateProductData('title', text)}
+                  style={[
+                    styles.input,
+                    { borderColor: errors.title ? Colors.error : Colors.border }
+                  ]}
+                  maxLength={100}
+                />
+                <View style={styles.inputMeta}>
+                  <Text style={[styles.characterCount, { color: Colors.textMuted }]}>
+                    {productData.title.length}/100
+                  </Text>
+                </View>
+                {errors.title && (
+                  <Text style={[styles.errorText, { color: Colors.error }]}>
+                    {errors.title}
+                  </Text>
                 )}
+              </View>
+
+              {/* Description Input */}
+              <View style={styles.inputGroup}>
+                <UploadTextInput
+                  placeholder="Product description *"
+                  value={productData.description}
+                  onChangeText={(text) => updateProductData('description', text)}
+                  multiline
+                  numberOfLines={4}
+                  style={[
+                    styles.input,
+                    styles.textArea,
+                    { borderColor: errors.description ? Colors.error : Colors.border }
+                  ]}
+                  maxLength={500}
+                />
+                <View style={styles.inputMeta}>
+                  <Text style={[styles.characterCount, { color: Colors.textMuted }]}>
+                    {productData.description.length}/500
+                  </Text>
+                </View>
+                {errors.description && (
+                  <Text style={[styles.errorText, { color: Colors.error }]}>
+                    {errors.description}
+                  </Text>
+                )}
+              </View>
+
+              {/* Price Input */}
+              <View style={styles.inputGroup}>
+                <UploadTextInput
+                  placeholder="Current Price (RWF) *"
+                  keyboardType="numeric"
+                  value={productData.price}
+                  onChangeText={handlePriceChange}
+                  style={[
+                    styles.input,
+                    { borderColor: errors.price ? Colors.error : Colors.border }
+                  ]}
+                />
+                {productData.price && (
+                  <Text style={[styles.pricePreview, { color: Colors.textSecondary }]}>
+                    Preview: {formatPrice(productData.price)}
+                  </Text>
+                )}
+                {errors.price && (
+                  <Text style={[styles.errorText, { color: Colors.error }]}>
+                    {errors.price}
+                  </Text>
+                )}
+              </View>
+
+              {/* Past Price Input */}
+              <View style={styles.inputGroup}>
+                <UploadTextInput
+                  placeholder="Past Price (RWF) *"
+                  keyboardType="numeric"
+                  value={productData.pastPrice}
+                  onChangeText={handlePastPriceChange}
+                  style={[
+                    styles.input,
+                    { borderColor: errors.pastPrice ? Colors.error : Colors.border }
+                  ]}
+                />
+                {productData.pastPrice && (
+                  <Text style={[styles.pricePreview, { color: Colors.textSecondary }]}>
+                    Preview: {formatPrice(productData.pastPrice)}
+                  </Text>
+                )}
+                {errors.pastPrice && (
+                  <Text style={[styles.errorText, { color: Colors.error }]}>
+                    {errors.pastPrice}
+                  </Text>
+                )}
+              </View>
+
+              {/* Category Picker */}
+              <View style={styles.inputGroup}>
+                <Text style={[styles.pickerLabel, { color: Colors.text }]}>Category *</Text>
+                <View style={[
+                  styles.pickerWrapper,
+                  { 
+                    backgroundColor: Colors.cardBackground,
+                    borderColor: errors.category ? Colors.error : Colors.border 
+                  }
+                ]}>
+                  <Picker
+                    selectedValue={productData.category}
+                    onValueChange={(value) => updateProductData('category', value)}
+                    style={[styles.picker, { color: Colors.text }]}
+                  >
+                    {categories.map((cat) => (
+                      <Picker.Item key={cat.value} label={cat.label} value={cat.value} />
+                    ))}
+                  </Picker>
+                </View>
+                {errors.category && (
+                  <Text style={[styles.errorText, { color: Colors.error }]}>
+                    {errors.category}
+                  </Text>
+                )}
+              </View>
+
+              {/* Region Picker */}
+              <View style={styles.inputGroup}>
+                <Text style={[styles.pickerLabel, { color: Colors.text }]}>Region *</Text>
+                <View style={[
+                  styles.pickerWrapper,
+                  { 
+                    backgroundColor: Colors.cardBackground,
+                    borderColor: errors.region ? Colors.error : Colors.border 
+                  }
+                ]}>
+                  <Picker
+                    selectedValue={productData.region}
+                    onValueChange={(value) => updateProductData('region', value)}
+                    style={[styles.picker, { color: Colors.text }]}
+                  >
+                    {regions.map((reg) => (
+                      <Picker.Item key={reg.value} label={reg.label} value={reg.value} />
+                    ))}
+                  </Picker>
+                </View>
+                {errors.region && (
+                  <Text style={[styles.errorText, { color: Colors.error }]}>
+                    {errors.region}
+                  </Text>
+                )}
+              </View>
+            </View>
+
+            <View style={styles.buttonContainer}>
+              <Button
+                title={isSubmitting ? "Adding Product..." : "ADD PRODUCT"}
+                onPress={handleAddProducts}
+                disabled={isSubmitting}
+                style={[
+                  styles.submitButton,
+                  {
+                    backgroundColor: isSubmitting ? Colors.textMuted : Colors.primary,
+                  }
+                ]}
+              />
+              
+              <TouchableOpacity
+                style={[styles.resetButton, { borderColor: Colors.border }]}
+                onPress={resetForm}
+                disabled={isSubmitting}
+              >
+                <Text style={[styles.resetButtonText, { color: Colors.textSecondary }]}>
+                  Clear Form
+                </Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );
 }
 
-const createStyles = (isDark) => StyleSheet.create({
-  wrapper: {
+const styles = StyleSheet.create({
+  container: {
     flex: 1,
-    backgroundColor: isDark ? "#121212" : "#f8f9fa",
   },
   keyboardView: {
     flex: 1,
@@ -725,244 +676,170 @@ const createStyles = (isDark) => StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  container: {
-    flex: 1,
+  content: {
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 60,
     paddingBottom: 40,
   },
+  
+  // Header
   header: {
-    marginBottom: 30,
-    alignItems: "center",
+    marginBottom: 32,
+    alignItems: 'center',
   },
-  title: {
+  headerTitle: {
     fontSize: 28,
-    fontWeight: "bold",
-    color: isDark ? "#ffffff" : "#2c3e50",
+    fontWeight: 'bold',
     marginBottom: 8,
   },
-  subtitle: {
+  headerSubtitle: {
     fontSize: 16,
-    color: isDark ? "#a0a0a0" : "#7f8c8d",
-    textAlign: "center",
+    textAlign: 'center',
   },
-  section: {
-    marginBottom: 30,
+  
+  // Sections
+  imageSection: {
+    marginBottom: 24,
+    padding: 20,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  inputSection: {
+    marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "600",
-    color: isDark ? "#ffffff" : "#2c3e50",
-    marginBottom: 15,
-  },
-  imageSection: {
-    alignItems: "center",
-  },
-  uploadContainer: {
-    width: "100%",
-    height: 200,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: isDark ? "#333333" : "#e1e8ed",
-    borderStyle: "dashed",
-    backgroundColor: isDark ? "#1e1e1e" : "#ffffff",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: isDark ? "#000" : "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: isDark ? 0.3 : 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  uploadIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: isDark ? "#333333" : "#f1f3f4",
-    justifyContent: "center",
-    alignItems: "center",
+    fontWeight: '600',
     marginBottom: 12,
   },
-  uploadIconText: {
-    fontSize: 24,
-  },
-  uploadText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: isDark ? "#ffffff" : "#4ba26a",
-    marginBottom: 4,
-  },
-  uploadSubtext: {
-    fontSize: 12,
-    color: isDark ? "#a0a0a0" : "#7f8c8d",
-  },
-  imageContainer: {
-    position: "relative",
+  
+  // Image Upload
+  imageUploadContainer: {
     borderRadius: 16,
-    overflow: "hidden",
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    overflow: 'hidden',
+    minHeight: 200,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  loadingText: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginTop: 12,
+  },
+  selectedImageContainer: {
+    position: 'relative',
   },
   selectedImage: {
-    width: 200,
+    width: '100%',
     height: 200,
-    borderRadius: 16,
   },
   imageOverlay: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    paddingVertical: 8,
-    alignItems: "center",
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    padding: 12,
+    alignItems: 'center',
   },
   changeImageText: {
-    color: "white",
-    fontSize: 12,
-    fontWeight: "500",
-  },
-  loadingContainer: {
-    width: "100%",
-    height: 200,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: isDark ? "#1e1e1e" : "#ffffff",
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: isDark ? "#333333" : "#e1e8ed",
-  },
-  loadingText: {
-    marginTop: 12,
+    color: 'white',
     fontSize: 14,
-    color: isDark ? "#a0a0a0" : "#7f8c8d",
+    fontWeight: '600',
   },
-  formGrid: {
-    gap: 16,
+  uploadPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+  },
+  uploadIcon: {
+    fontSize: 48,
+    marginBottom: 16,
+  },
+  uploadText: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  uploadSubtext: {
+    fontSize: 14,
+  },
+  
+  // Inputs
+  inputGroup: {
+    marginBottom: 16,
   },
   input: {
-    backgroundColor: isDark ? "#1e1e1e" : "#ffffff",
+    fontSize: 16,
     borderWidth: 1,
-    borderColor: isDark ? "#333333" : "#e1e8ed",
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    fontSize: 16,
-    color: isDark ? "#ffffff" : "#2c3e50",
-    shadowColor: isDark ? "#000" : "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: isDark ? 0.2 : 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  inputDark: {
-    backgroundColor: "#1e1e1e",
-    borderColor: "#333333",
-    color: "#ffffff",
   },
   textArea: {
-    minHeight: 80,
-    textAlignVertical: "top",
+    minHeight: 100,
+    textAlignVertical: 'top',
   },
-  row: {
-    flexDirection: "row",
-    gap: 12,
+  inputMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
   },
-  halfWidth: {
-    flex: 1,
+  characterCount: {
+    fontSize: 12,
+    fontWeight: '500',
   },
-  pickerContainer: {
-    marginVertical: 8,
-  },
-  pickerLabel: {
+  pricePreview: {
     fontSize: 14,
-    fontWeight: "500",
-    color: isDark ? "#ffffff" : "#2c3e50",
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  
+  // Pickers
+  pickerLabel: {
+    fontSize: 16,
+    fontWeight: '600',
     marginBottom: 8,
   },
   pickerWrapper: {
-    backgroundColor: isDark ? "#1e1e1e" : "#ffffff",
     borderWidth: 1,
-    borderColor: isDark ? "#333333" : "#e1e8ed",
     borderRadius: 12,
-    overflow: "hidden",
-    shadowColor: isDark ? "#000" : "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: isDark ? 0.2 : 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  pickerWrapperDark: {
-    backgroundColor: "#1e1e1e",
-    borderColor: "#333333",
+    overflow: 'hidden',
   },
   picker: {
     height: 50,
-    color: isDark ? "#ffffff" : "#2c3e50",
   },
-  pickerDark: {
-    color: "#ffffff",
-  },
-  flashDealToggle: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: isDark ? "#666666" : "#d1d5db",
-    backgroundColor: isDark ? "#1e1e1e" : "#ffffff",
-    marginRight: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  checkboxActive: {
-    backgroundColor: "#4ba26a",
-    borderColor: "#4ba26a",
-  },
-  checkmark: {
-    color: "white",
-    fontSize: 14,
-    fontWeight: "bold",
-  },
-  flashDealText: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: isDark ? "#ffffff" : "#2c3e50",
-  },
-  discountContainer: {
-    marginTop: 12,
-  },
-  buttonSection: {
-    marginTop: 20,
+  
+  // Buttons
+  buttonContainer: {
+    marginTop: 32,
   },
   submitButton: {
-    backgroundColor: "#4ba26a",
-    paddingVertical: 18,
     borderRadius: 16,
-    alignItems: "center",
-    shadowColor: "#4ba26a",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    paddingVertical: 16,
+    marginBottom: 16,
   },
-  submitButtonDisabled: {
-    backgroundColor: "#a0a0a0",
-    shadowOpacity: 0.1,
+  resetButton: {
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingVertical: 16,
+    alignItems: 'center',
   },
-  submitButtonText: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "bold",
+  resetButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
-  loadingButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  
+  // Error handling
+  errorText: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 4,
   },
 });

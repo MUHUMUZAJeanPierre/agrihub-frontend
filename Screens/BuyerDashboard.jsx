@@ -44,7 +44,7 @@ const Colors = {
   accent: '#FFA726',
 
   background: '#FFFFFF',
-  surface: '#F8F9FA',
+  surface: '#F8F9FA', 
   surfaceLight: '#F0F0F0',
 
   textPrimary: '#000000',
@@ -1825,4 +1825,3 @@ favoriteButton: {
 });
 
 export default BuyerDashboard;
-
