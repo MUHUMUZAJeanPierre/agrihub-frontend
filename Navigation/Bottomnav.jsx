@@ -70,7 +70,6 @@ const DarkColors = {
   orangeGradient: ['#FF6B35', '#FF8A50'],
 };
 
-// Custom Cart Icon with Badge Component
 const CartIconWithBadge = ({ focused, size = 24, theme }) => {
     const { cartItems } = useCart();
     const itemCount = cartItems.length;
@@ -157,12 +156,6 @@ export default function BottomNav() {
     useEffect(() => {
         const fetchPendingOrders = async () => {
             try {
-                // Replace with your actual API call to get pending orders
-                // const response = await fetch('your-api-endpoint/pending-orders');
-                // const data = await response.json();
-                // setPendingOrdersCount(data.count || 0);
-                
-                // For now, using mock data - remove this when implementing real API
                 setPendingOrdersCount(0);
             } catch (error) {
                 console.error('Error fetching pending orders:', error);

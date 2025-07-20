@@ -1,4 +1,3 @@
-// components/BuyerDashboard/CartModal.js
 import React from 'react';
 import { 
   Modal, 

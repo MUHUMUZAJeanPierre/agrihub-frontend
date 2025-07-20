@@ -93,12 +93,10 @@ export default function AddBlog({ navigation }) {
   const { theme } = useTheme();
   const Colors = useMemo(() => THEME_COLORS[theme] || THEME_COLORS.light, [theme]);
   
-  // Animation refs
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
 
-  // State management
   const [blogData, setBlogData] = useState({
     blogurl: null,
     blogTitle: '',

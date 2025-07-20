@@ -145,12 +145,10 @@ export default function AddProduct({ navigation }) {
       .catch((err) => console.log("Error getting userId:", err));
   }, []);
 
-  // Fixed image picker with updated API
   const pickImage = async () => {
     try {
       setIsLoading(true);
       
-      // Request permissions
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert(
@@ -163,7 +161,7 @@ export default function AddProduct({ navigation }) {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: 'Images',
         allowsEditing: true,
-        aspect: [4, 3], // Better aspect ratio for product images
+        aspect: [4, 3], 
         quality: 0.8,
         allowsMultipleSelection: false,
       });
@@ -364,7 +362,6 @@ export default function AddProduct({ navigation }) {
     setErrors({});
   };
 
-  // Update product data
   const updateProductData = (field, value) => {
     setProductData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {

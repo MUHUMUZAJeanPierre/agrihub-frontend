@@ -1,4 +1,3 @@
-// components/BuyerDashboard/CategoryCard.js
 import React from 'react';
 import { 
   View, 
