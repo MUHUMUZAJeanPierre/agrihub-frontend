@@ -3,6 +3,12 @@ import { View, Text, TouchableOpacity, Modal, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from '../contexts/ThemeContext';
 
+const FONTS = {
+  regular: "Poppins_400Regular",
+  semiBold: "Poppins_600SemiBold",
+  bold: "Poppins_700Bold",
+};
+
 const LightColors = {
   background: '#FFFFFF',
   border: '#ccc',
@@ -12,6 +18,7 @@ const LightColors = {
   optionBorder: '#ccc',
   icon: '#000',
 };
+
 const DarkColors = {
   background: '#1E1E1E',
   border: '#3A3A3A',
@@ -34,8 +41,11 @@ const Dropdown = ({ options = [], selectedOption, onSelect }) => {
 
   return (
     <View>
-      <TouchableOpacity onPress={() => setModalVisible(true)} style={[styles.container, { backgroundColor: Colors.background, borderColor: Colors.border }]}> 
-        <Text style={{ color: Colors.text }}>{selectedOption}</Text>
+      <TouchableOpacity
+        onPress={() => setModalVisible(true)}
+        style={[styles.container, { backgroundColor: Colors.background, borderColor: Colors.border }]}
+      >
+        <Text style={[{ color: Colors.text, fontFamily: FONTS.regular }]}>{selectedOption}</Text>
         <Ionicons name="caret-down" size={20} color={Colors.icon} />
       </TouchableOpacity>
       <Modal
@@ -44,15 +54,18 @@ const Dropdown = ({ options = [], selectedOption, onSelect }) => {
         animationType="slide"
         onRequestClose={() => setModalVisible(false)}
       >
-        <TouchableOpacity onPress={() => setModalVisible(false)} style={[styles.modalContainer, { backgroundColor: Colors.modalBg }]}> 
-          <View style={[styles.optionsContainer, { backgroundColor: Colors.optionBg, borderColor: Colors.optionBorder }]}> 
+        <TouchableOpacity
+          onPress={() => setModalVisible(false)}
+          style={[styles.modalContainer, { backgroundColor: Colors.modalBg }]}
+        >
+          <View style={[styles.optionsContainer, { backgroundColor: Colors.optionBg, borderColor: Colors.optionBorder }]}>
             {options.map((option, index) => (
               <TouchableOpacity
                 key={index}
                 onPress={() => handleOptionSelect(option)}
                 style={[styles.option, { borderBottomColor: Colors.optionBorder }]}
               >
-                <Text style={{ color: Colors.text }}>{option}</Text>
+                <Text style={[{ color: Colors.text, fontFamily: FONTS.regular }]}>{option}</Text>
               </TouchableOpacity>
             ))}
           </View>

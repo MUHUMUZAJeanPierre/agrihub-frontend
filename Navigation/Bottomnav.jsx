@@ -243,20 +243,6 @@ export default function BottomNav() {
                         }}
                     />
                     <Tab.Screen
-                        name="Add Product"
-                        component={Addproduct}
-                        options={{
-                            tabBarIcon: ({ focused }) => (
-                                <TabBarIcon 
-                                    iconName="add-to-photos" 
-                                    iconType="MaterialIcons"
-                                    focused={focused} 
-                                    theme={theme}
-                                />
-                            ),
-                        }}
-                    />
-                    <Tab.Screen
                         name="Profile"
                         component={ProfileScreen}
                         options={{

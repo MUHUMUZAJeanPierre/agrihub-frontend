@@ -52,6 +52,13 @@ const CATEGORY_COLORS = {
   'System': '#6B7280',
 };
 
+// Add font family to your font styles
+const FONTS = {
+  regular: "Poppins_400Regular",
+  semiBold: "Poppins_600SemiBold",
+  bold: "Poppins_700Bold",
+};
+
 export default function CategoryFilter({ categories, selectedCategory, onSelect, Colors }) {
   const { theme } = useTheme();
 
@@ -74,26 +81,30 @@ export default function CategoryFilter({ categories, selectedCategory, onSelect,
               activeOpacity={0.7}
             >
               <View
-                style={[
+                style={[ 
                   styles.iconContainer,
                   {
-                    backgroundColor: isSelected ? categoryColor : `${categoryColor}15`,
+                    backgroundColor: isSelected ? categoryColor : `${categoryColor}30`,
                   },
                 ]}
               >
                 <Text style={[
-                  styles.icon,
-                  { color: isSelected ? '#FFFFFF' : categoryColor }
+                  styles.icon, 
+                  { 
+                    color: isSelected ? '#FFFFFF' : categoryColor,
+                    fontFamily: FONTS.regular // Apply regular font to icon
+                  }
                 ]}>
                   {CATEGORY_ICONS[category.name] || '📚'}
                 </Text>
               </View>
               <Text
-                style={[
-                  styles.categoryText,
+                style={[ 
+                  styles.categoryText, 
                   {
                     color: isSelected ? (Colors?.text || '#000000') : (Colors?.textSecondary || '#6B7280'),
                     fontWeight: isSelected ? '600' : '500',
+                    fontFamily: isSelected ? FONTS.semiBold : FONTS.regular, 
                   },
                 ]}
               >

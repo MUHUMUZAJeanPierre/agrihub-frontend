@@ -79,7 +79,6 @@ const MessagesList = ({ navigation, onSelectRecipient }) => {
       }
 
       const data = await response.json();
-      console.log("Plant pathologists fetched:", data);
 
       const conversationsWithMessages = await Promise.all(
         data.map(async (pathologist) => {
@@ -126,7 +125,6 @@ const MessagesList = ({ navigation, onSelectRecipient }) => {
       );
 
       setConversations(sortedConversations);
-      console.log("Conversations set:", sortedConversations);
     } catch (error) {
       console.error("Error fetching plant pathologists:", error);
       Alert.alert("Error", "Failed to load conversations. Please check your internet connection.");

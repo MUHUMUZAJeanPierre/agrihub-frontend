@@ -39,7 +39,7 @@ const THEME_COLORS = {
     textSecondary: '#718096',
     textMuted: '#A0AEC0',
     primary: '#10B981',
-    primaryLight: '#D1FAE5',
+    primaryLight: '#D1FAE5', 
     secondary: '#3B82F6',
     accent: '#F59E0B',
     shadow: '#000000',
@@ -88,6 +88,12 @@ const CATEGORIES = [
 ];
 
 const SEVERITY_LEVELS = ['Low', 'Medium', 'High'];
+
+const FONTS = {
+  regular: "Poppins_400Regular",
+  semiBold: "Poppins_600SemiBold",
+  bold: "Poppins_700Bold",
+};
 
 export default function AddBlog({ navigation }) {
   const { theme } = useTheme();
@@ -305,8 +311,9 @@ export default function AddBlog({ navigation }) {
           >
             <Text style={[
               styles.selectorText,
-              {
+               { 
                 color: blogData.category === category ? '#FFFFFF' : Colors.textSecondary,
+                fontFamily: blogData.category === category ? FONTS.semiBold : FONTS.regular
               }
             ]}>
               {category}
@@ -320,7 +327,7 @@ export default function AddBlog({ navigation }) {
   // Severity Selection Component
   const SeveritySelector = () => (
     <View style={styles.selectorContainer}>
-      <Text style={[styles.selectorLabel, { color: Colors.text }]}>
+      <Text style={[styles.selectorLabel, { color: Colors.text,  fontFamily: FONTS.regular }]}>
         Priority Level
       </Text>
       <View style={styles.severityContainer}>
@@ -340,6 +347,7 @@ export default function AddBlog({ navigation }) {
               styles.severityText,
               {
                 color: blogData.severity === level ? '#FFFFFF' : Colors.textSecondary,
+                fontFamily: blogData.severity === level ? FONTS.semiBold : FONTS.regular
               }
             ]}>
               {level}
@@ -380,17 +388,17 @@ export default function AddBlog({ navigation }) {
           >
             {/* Header */}
             <View style={styles.header}>
-              <Text style={[styles.headerTitle, { color: Colors.text }]}>
+              <Text style={[styles.headerTitle, {  color: Colors.text, fontFamily: FONTS.semiBold }]}>
                 Create New Article
               </Text>
-              <Text style={[styles.headerSubtitle, { color: Colors.textSecondary }]}>
+              <Text style={[styles.headerSubtitle, { color: Colors.textSecondary, fontFamily: FONTS.regular }]}>
                 Share your agricultural expertise
               </Text>
             </View>
 
             {/* Image Upload Section */}
             <View style={[styles.imageSection, { backgroundColor: Colors.cardBackground, borderColor: Colors.border }]}>
-              <Text style={[styles.sectionTitle, { color: Colors.text }]}>
+              <Text style={[styles.sectionTitle, { color: Colors.text,   fontFamily: FONTS.regular }]}>
                 Featured Image
               </Text>
               
@@ -408,7 +416,7 @@ export default function AddBlog({ navigation }) {
                 {isLoading ? (
                   <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color={Colors.primary} />
-                    <Text style={[styles.loadingText, { color: Colors.textSecondary }]}>
+                    <Text style={[styles.loadingText, { color: Colors.textSecondary, fontFamily: FONTS.regular }]}>
                       Processing image...
                     </Text>
                   </View>
@@ -420,16 +428,18 @@ export default function AddBlog({ navigation }) {
                       resizeMode="cover"
                     />
                     <View style={styles.imageOverlay}>
-                      <Text style={styles.changeImageText}>Tap to change</Text>
+                     <Text style={[styles.changeImageText, { fontFamily: FONTS.regular }]}>
+                        Tap to change
+                      </Text>
                     </View>
                   </View>
                 ) : (
                   <View style={styles.uploadPlaceholder}>
-                    <Text style={[styles.uploadIcon, { color: Colors.primary }]}>📸</Text>
-                    <Text style={[styles.uploadText, { color: Colors.textSecondary }]}>
+                    <Text style={[styles.uploadIcon, { color: Colors.primary, fontFamily: FONTS.regular  }]}>📸</Text>
+                    <Text style={[styles.uploadText, { color: Colors.textSecondary, fontFamily: FONTS.regular }]}>
                       Tap to select image
                     </Text>
-                    <Text style={[styles.uploadSubtext, { color: Colors.textMuted }]}>
+                    <Text style={[styles.uploadSubtext, { color: Colors.textMuted,  fontFamily: FONTS.regular }]}>
                       Recommended: 16:9 aspect ratio
                     </Text>
                   </View>
@@ -437,7 +447,7 @@ export default function AddBlog({ navigation }) {
               </TouchableOpacity>
               
               {errors.blogurl && (
-                <Text style={[styles.errorText, { color: Colors.error }]}>
+                <Text style={[styles.errorText, { color: Colors.error, fontFamily: FONTS.regular }]}>
                   {errors.blogurl}
                 </Text>
               )}
@@ -445,7 +455,7 @@ export default function AddBlog({ navigation }) {
 
             {/* Title Input */}
             <View style={styles.inputSection}>
-              <Text style={[styles.sectionTitle, { color: Colors.text }]}>
+              <Text style={[styles.sectionTitle, { color: Colors.text, fontFamily: FONTS.regular }]}>
                 Article Title
               </Text>
               <UploadTextInput
@@ -461,26 +471,23 @@ export default function AddBlog({ navigation }) {
                 maxLength={100}
               />
               <View style={styles.inputMeta}>
-                <Text style={[styles.characterCount, { color: Colors.textMuted }]}>
+                <Text style={[styles.characterCount, { color: Colors.textMuted, fontFamily: FONTS.regular }]}>
                   {blogData.blogTitle.length}/100
                 </Text>
               </View>
               {errors.blogTitle && (
-                <Text style={[styles.errorText, { color: Colors.error }]}>
+                <Text style={[styles.errorText, { color: Colors.error, fontFamily: FONTS.regular }]}>
                   {errors.blogTitle}
                 </Text>
               )}
             </View>
 
-            {/* Category Selection */}
             <CategorySelector />
 
-            {/* Severity Selection */}
             <SeveritySelector />
 
-            {/* Description Input */}
             <View style={styles.inputSection}>
-              <Text style={[styles.sectionTitle, { color: Colors.text }]}>
+              <Text style={[styles.sectionTitle, { color: Colors.text, fontFamily: FONTS.regular }]}>
                 Article Content
               </Text>
               <TextInput
@@ -496,6 +503,7 @@ export default function AddBlog({ navigation }) {
                     borderColor: errors.description ? Colors.error : Colors.border,
                     backgroundColor: Colors.cardBackground,
                     color: Colors.text,
+                    fontFamily: FONTS.regular
                   }
                 ]}
                 underlineColor="transparent"
@@ -510,20 +518,18 @@ export default function AddBlog({ navigation }) {
                 maxLength={1000}
               />
               <View style={styles.inputMeta}>
-                <Text style={[styles.characterCount, { color: Colors.textMuted }]}>
+                <Text style={[styles.characterCount, { color: Colors.textMuted, fontFamily: FONTS.regular }]}>
                   {blogData.description.length}/1000
                 </Text>
               </View>
               {errors.description && (
-                <Text style={[styles.errorText, { color: Colors.error }]}>
+                <Text style={[styles.errorText, { color: Colors.error, fontFamily: FONTS.regular }]}>
                   {errors.description}
                 </Text>
               )}
             </View>
-
-            {/* Read Time Input */}
             <View style={styles.inputSection}>
-              <Text style={[styles.sectionTitle, { color: Colors.text }]}>
+              <Text style={[styles.sectionTitle, { color: Colors.text, fontFamily: FONTS.regular }]}>
                 Estimated Read Time
               </Text>
               <UploadTextInput
@@ -534,7 +540,6 @@ export default function AddBlog({ navigation }) {
               />
             </View>
 
-            {/* Submit Button */}
             <View style={styles.buttonContainer}>
               <Button
                 title={isSubmitting ? "Publishing..." : "PUBLISH ARTICLE"}
@@ -553,7 +558,7 @@ export default function AddBlog({ navigation }) {
                 onPress={resetForm}
                 disabled={isSubmitting}
               >
-                <Text style={[styles.resetButtonText, { color: Colors.textSecondary }]}>
+                <Text style={[styles.resetButtonText, { color: Colors.textSecondary, fontFamily: FONTS.regular }]}>
                   Clear Form
                 </Text>
               </TouchableOpacity>
@@ -581,7 +586,6 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   
-  // Header
   header: {
     marginBottom: 32,
     alignItems: 'start',
@@ -592,11 +596,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   headerSubtitle: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '500',
   },
   
-  // Sections
   imageSection: {
     marginBottom: 24,
     padding: 20,
@@ -713,7 +716,7 @@ const styles = StyleSheet.create({
   selectorItem: {
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 20,
+    borderRadius: 50,
     borderWidth: 1,
     marginRight: 12,
     marginBottom: 8,
@@ -729,7 +732,7 @@ const styles = StyleSheet.create({
   severityItem: {
     paddingHorizontal: 20,
     paddingVertical: 12,
-    borderRadius: 20,
+    borderRadius: 50,
     borderWidth: 1,
     marginRight: 12,
     marginBottom: 8,
@@ -743,12 +746,16 @@ const styles = StyleSheet.create({
   
   // Buttons
   buttonContainer: {
-    marginTop: 32,
+    marginTop: 20,
+    gap:20
+    // flexDirection: 'row', 
+    // justifyContent: 'space-between', alignItems: 'center'
   },
   submitButton: {
     borderRadius: 16,
+    borderWidth: 1,
     paddingVertical: 16,
-    marginBottom: 16,
+    alignItems: 'center',
   },
   resetButton: {
     borderRadius: 16,

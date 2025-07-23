@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from "react"; 
 import {
   Text,
   View,
@@ -14,7 +14,9 @@ import { showMessage } from "react-native-flash-message";
 import Dropdown from "../Components/Dropdown";
 import { useTheme } from "../contexts/ThemeContext";
 
+ 
 const registerUser = async (name, email, password, role) => {
+  
   const response = await fetch("https://agrihub-backend-4z99.onrender.com/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -22,6 +24,9 @@ const registerUser = async (name, email, password, role) => {
   });
 
   const data = await response.json();
+
+
+
 
   if (!response.ok) {
     const message = data?.message || data?.error || "Registration failed. Please try again.";
@@ -31,6 +36,11 @@ const registerUser = async (name, email, password, role) => {
   return data;
 };
 
+const FONTS = {
+regular: "Poppins_400Regular",
+semiBold: "Poppins_600SemiBold",
+bold: "Poppins_700Bold",
+};
 export default function Register({ navigation }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -139,7 +149,7 @@ export default function Register({ navigation }) {
               <Text style={[styles.title, { color: isDark ? "#ffffff" : "#1a1a1a" }]}>
                 Sign Up
               </Text>
-              <Text style={{ color: isDark ? "#999" : "#b0abab", textAlign: "center" }}>
+              <Text style={{ color: isDark ? "#999" : "#b0abab", textAlign: "center", fontFamily: FONTS.regular, }}>
                 Create an account to continue
               </Text>
             </View>
@@ -176,6 +186,7 @@ export default function Register({ navigation }) {
                 fontSize: 15,
                 padding: 10,
                 color: isDark ? "#ccc" : "#333",
+                 fontFamily: FONTS.regular, 
               }}
             >
               Select Role
@@ -193,10 +204,12 @@ export default function Register({ navigation }) {
           </TouchableOpacity>
 
           <View style={styles.loginContainer}>
-            <Text style={{ color: isDark ? "#ccc" : "#000" }}>
+            <Text style={{ color: isDark ? "#ccc" : "#000", fontFamily: FONTS.regular,  }}>
               Already have an account?{" "}
             </Text>
-            <TouchableOpacity onPress={() => navigation.navigate("login")}>
+            <TouchableOpacity onPress={() => {
+              navigation.navigate("login");
+              }}>
               <Text style={{ color: "#4ba26a", fontWeight: "bold" }}>Login</Text>
             </TouchableOpacity>
           </View>
@@ -222,8 +235,9 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 35,
-    fontWeight: "bold",
+    fontWeight: "600",
     textAlign: "center",
+    fontFamily: FONTS.semiBold, 
   },
   error: {
     color: "red",

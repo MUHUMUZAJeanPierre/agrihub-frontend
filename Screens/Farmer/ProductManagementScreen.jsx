@@ -30,6 +30,11 @@ import UploadTextInput from '../../Components/uploadtextInpu';
 import Button from '../../Components/Button';
 
 const { width, height } = Dimensions.get('window');
+const FONTS = {
+  regular: "Poppins_400Regular",
+  semiBold: "Poppins_600SemiBold",
+  bold: "Poppins_700Bold",
+};
 
 const THEME_COLORS = {
   light: {
@@ -969,7 +974,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 3,
     borderRadius: 12,
     borderWidth: 1,
   },
@@ -977,6 +982,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 8,
     fontSize: 16,
+    fontFamily: FONTS.regular,
   },
   filterContainer: {
     borderRadius: 12,
@@ -1022,6 +1028,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     textTransform: 'capitalize',
+    fontFamily: FONTS.semiBold,
   },
   productDetails: {
     padding: 16,
@@ -1030,6 +1037,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 8,
+    fontFamily: FONTS.semiBold,
   },
   priceContainer: {
     flexDirection: 'row',
@@ -1038,12 +1046,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   currentPrice: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 19,
+    fontWeight: '500',
+    fontFamily: FONTS.bold,
   },
   pastPrice: {
     fontSize: 16,
     textDecorationLine: 'line-through',
+    fontFamily: FONTS.regular,
   },
   productActions: {
     flexDirection: 'row',
@@ -1062,6 +1072,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
     fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
   emptyState: {
     flex: 1,
@@ -1098,6 +1109,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
+    fontFamily: FONTS.regular,
   },
   placeholder: {
     width: 32,
@@ -1115,6 +1127,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 12,
+    fontFamily: FONTS.regular,
   },
   imageUploadContainer: {
     height: 200,
@@ -1160,6 +1173,7 @@ const styles = StyleSheet.create({
   uploadText: {
     fontSize: 16,
     marginTop: 8,
+    fontFamily: FONTS.regular,
   },
   formFields: {
     marginBottom: 24,
@@ -1171,6 +1185,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 8,
+    fontFamily: FONTS.regular,
   },
   textInput: {
     borderWidth: 1,
@@ -1178,6 +1193,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 12,
     fontSize: 16,
+    fontFamily: FONTS.regular,
   },
   textArea: {
     height: 80,
@@ -1193,11 +1209,13 @@ const styles = StyleSheet.create({
   },
   picker: {
     height: 48,
+    fontFamily: FONTS.regular,
   },
   errorText: {
     fontSize: 12,
     marginTop: 4,
     fontWeight: '500',
+    fontFamily: FONTS.regular,
   },
   submitButton: {
     paddingVertical: 16,
@@ -1210,6 +1228,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: FONTS.regular,
   },
 });
 

@@ -353,6 +353,7 @@ export default function ProductDetailScreen({ navigation, route }) {
 const getStyles = (theme) => {
   const isDark = theme === 'dark';
   
+ 
   const colors = {
     background: isDark ? '#111827' : '#ffffff',
     cardBackground: isDark ? '#1f2937' : '#ffffff',
@@ -394,6 +395,7 @@ const getStyles = (theme) => {
       color: colors.secondaryText,
       textAlign: 'center',
       marginBottom: 16,
+      fontFamily: 'Poppins_400Regular',
     },
     goBackButton: {
       backgroundColor: colors.accent,
@@ -405,6 +407,7 @@ const getStyles = (theme) => {
       color: '#fff',
       fontSize: 16,
       fontWeight: '500',
+      fontFamily: 'Poppins_400Regular',
     },
 
     // Header Styles
@@ -465,6 +468,7 @@ const getStyles = (theme) => {
       color: '#fff',
       fontSize: 12,
       fontWeight: '500',
+      fontFamily: 'Poppins_400Regular',
     },
     thumbnailContainer: {
       flexDirection: 'row',
@@ -523,6 +527,7 @@ const getStyles = (theme) => {
       color: colors.accent,
       fontSize: 12,
       fontWeight: '500',
+      fontFamily: 'Poppins_400Regular',
     },
     ratingBadge: {
       flexDirection: 'row',
@@ -548,6 +553,7 @@ const getStyles = (theme) => {
       color: colors.primaryText,
       marginBottom: 16,
       lineHeight: 32,
+      fontFamily: 'Poppins_400Regular',
     },
     priceQuantityRow: {
       flexDirection: 'row',
@@ -563,16 +569,19 @@ const getStyles = (theme) => {
       fontWeight: '500',
       color: colors.accent,
       marginBottom: 4,
+      fontFamily: 'Poppins_400Regular',
     },
     unitPrice: {
       fontSize: 14,
       color: colors.secondaryText,
       marginBottom: 2,
+       fontFamily: 'Poppins_400Regular', 
     },
     originalPrice: {
       fontSize: 14,
       color: colors.mutedText,
       textDecorationLine: 'line-through',
+      fontFamily: 'Poppins_400Regular',  
     },
     quantityContainer: {
       flexDirection: 'row',
@@ -607,6 +616,7 @@ const getStyles = (theme) => {
       marginHorizontal: 20,
       minWidth: 24,
       textAlign: 'center',
+      fontFamily: 'Poppins_400Regular',
     },
     secondaryText: {
       color: colors.secondaryText,
@@ -629,6 +639,7 @@ const getStyles = (theme) => {
       fontSize: 12,
       color: colors.accent,
       fontWeight: '500',
+      fontFamily: 'Poppins_400Regular',
     },
 
     // Seller Card
@@ -656,6 +667,7 @@ const getStyles = (theme) => {
       color: '#fff',
       fontSize: 20,
       fontWeight: '500',
+      fontFamily: 'Poppins_400Regular',
     },
     sellerDetails: {
       flex: 1,
@@ -665,6 +677,7 @@ const getStyles = (theme) => {
       fontWeight: '600',
       color: colors.primaryText,
       marginBottom: 4,
+       fontFamily: 'Poppins_400Regular',
     },
     locationRow: {
       flexDirection: 'row',
@@ -675,6 +688,7 @@ const getStyles = (theme) => {
     sellerLocation: {
       fontSize: 13,
       color: colors.secondaryText,
+      fontFamily: 'Poppins_400Regular', 
     },
     sellerStats: {
       marginTop: 2,
@@ -683,6 +697,7 @@ const getStyles = (theme) => {
       fontSize: 12,
       color: colors.accent,
       fontWeight: '500',
+      fontFamily: 'Poppins_400Regular',
     },
     contactButton: {
       backgroundColor: colors.accent,
@@ -695,6 +710,7 @@ const getStyles = (theme) => {
       color: '#fff',
       fontSize: 14,
       fontWeight: '500',
+      fontFamily: 'Poppins_400Regular', 
     },
 
     // Description
@@ -706,11 +722,13 @@ const getStyles = (theme) => {
       fontWeight: '500',
       color: colors.primaryText,
       marginBottom: 12,
+       fontFamily: 'Poppins_400Regular', 
     },
     description: {
       fontSize: 15,
       color: colors.secondaryText,
       lineHeight: 24,
+      fontFamily: 'Poppins_400Regular', 
     },
 
     // Related Products
@@ -730,11 +748,13 @@ const getStyles = (theme) => {
       fontSize: 20,
       fontWeight: '500',
       color: colors.primaryText,
+      fontFamily: 'Poppins_400Regular', 
     },
     seeAllText: {
       fontSize: 14,
       color: colors.accent,
       fontWeight: '600',
+       fontFamily: 'Poppins_400Regular', 
     },
     relatedScrollContent: {
       paddingHorizontal: 20,
@@ -780,6 +800,7 @@ const getStyles = (theme) => {
       color: '#fff',
       fontSize: 10,
       fontWeight: '500',
+      fontFamily: 'Poppins_400Regular',
     },
     relatedInfo: {
       padding: 8,
@@ -792,6 +813,7 @@ const getStyles = (theme) => {
       marginBottom: 5,
       lineHeight: 20,
       minHeight: 10,
+      fontFamily: 'Poppins_400Regular', 
     },
     relatedRating: {
       flexDirection: 'row',
@@ -801,22 +823,26 @@ const getStyles = (theme) => {
     productRegion: {
       fontSize: 12,
       color: colors.secondaryText,
+      fontFamily: 'Poppins_400Regular',
     },
     relatedPriceRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
+      gap: 30,
       marginBottom: 2,
+      fontFamily: 'Poppins_400Regular',
     },
     relatedPrice: {
       fontSize: 16,
       color: colors.accent,
       fontWeight: '500',
+      fontFamily: 'Poppins_400Regular',
     },
     relatedOriginalPrice: {
       fontSize: 12,
       color: colors.mutedText,
       textDecorationLine: 'line-through',
+      fontFamily: 'Poppins_400Regular', 
     },
     relatedAddButton: {
       position: 'absolute',
@@ -858,17 +884,20 @@ const getStyles = (theme) => {
       fontSize: 12,
       color: colors.secondaryText,
       marginBottom: 4,
+      fontFamily: 'Poppins_400Regular',  
     },
     bottomTotalPrice: {
       fontSize: 22,
       fontWeight: '500',
       color: colors.primaryText,
       marginBottom: 2,
+      fontFamily: 'Poppins_400Regular',
     },
     bottomSavings: {
       fontSize: 12,
       color: colors.accentGreen,
       fontWeight: '500',
+      fontFamily: 'Poppins_400Regular',
     },
     buyButton: {
       flexDirection: 'row',
@@ -893,6 +922,7 @@ const getStyles = (theme) => {
       color: '#fff',
       fontSize: 16,
       fontWeight: '500',
+      fontFamily: 'Poppins_400Regular',
     },
   });
 };

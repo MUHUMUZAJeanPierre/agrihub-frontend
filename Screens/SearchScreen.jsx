@@ -419,29 +419,31 @@ const createStyles = (Colors) => StyleSheet.create({
     fontWeight: '700',
     color: Colors.textPrimary,
     marginBottom: 5,
+    fontFamily: 'Poppins_400Regular', 
   },
   subtitle: {
     fontSize: 16,
     color: Colors.textSecondary,
     fontWeight: '400',
+    fontFamily: 'Poppins_400Regular', 
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: 20,
     marginVertical: 20,
-    gap: 12,
+    gap: 11,
   },
-  searchInputContainer: {
+searchInputContainer: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.inputBackground,
-    borderRadius: 16,
     paddingHorizontal: 16,
-    paddingVertical: 3,
-    borderWidth: 1,
-    borderColor: Colors.borderColor,
+    textAlign: 'center',
+    borderRadius: 12,
+    gap: 12,
+    fontFamily: 'Poppins_400Regular',
   },
   searchIcon: {
     marginRight: 12,
@@ -451,6 +453,7 @@ const createStyles = (Colors) => StyleSheet.create({
     fontSize: 16,
     color: Colors.textPrimary,
     fontWeight: '400',
+    fontFamily: 'Poppins_400Regular',
   },
   clearButton: {
     padding: 4,
@@ -480,34 +483,46 @@ const createStyles = (Colors) => StyleSheet.create({
     fontWeight: '600',
     color: Colors.textPrimary,
     marginBottom: 12,
+    fontFamily: 'Poppins_400Regular', 
   },
-  categoryCard: {
+   categoryCard: {
     alignItems: 'center',
     marginRight: 20,
     paddingVertical: 8,
-    paddingHorizontal: 4,
-    borderRadius: 12,
+    // backgroundColor: Colors.surfaceLight,
+    // borderRadius: 12,
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
   },
-  selectedCategoryCard: {
-    backgroundColor: Colors.surfaceLight,
+   selectedCategoryCard: {
+    // backgroundColor: Colors.primaryLight,
+    // borderColor: Colors.primaryDark,
+    // borderWidth: 2,
   },
-  categoryIcon: {
+ categoryIcon: {
     width: 56,
     height: 56,
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
+    backgroundColor: Colors.primaryLight,
   },
-  categoryName: {
-    fontSize: 12,
+   categoryName: {
+    fontSize: 14,
     fontWeight: '500',
-    color: Colors.textSecondary,
+    color: Colors.textPrimary,
+    fontFamily: 'Poppins_400Regular', // Apply fontFamily
   },
   selectedCategoryName: {
-    color: Colors.textPrimary,
+    color: '#fff', // Highlighted text for selected category
     fontWeight: '600',
   },
+
 
   // Loading States
   loadingContainer: {
@@ -545,6 +560,7 @@ const createStyles = (Colors) => StyleSheet.create({
     fontSize: 16,
     color: Colors.textSecondary,
     fontWeight: '500',
+    fontFamily: 'Poppins_400Regular',
   },
   
   // Empty State
@@ -562,12 +578,14 @@ const createStyles = (Colors) => StyleSheet.create({
     marginTop: 20,
     marginBottom: 8,
     textAlign: 'center',
+    fontFamily: 'Poppins_400Regular', 
   },
   emptySubtitle: {
     fontSize: 16,
     color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
+    fontFamily: 'Poppins_400Regular',
   },
   
   // Results
@@ -579,6 +597,7 @@ const createStyles = (Colors) => StyleSheet.create({
     color: Colors.textSecondary,
     marginBottom: 16,
     fontWeight: '500',
+    fontFamily: 'Poppins_400Regular', 
   },
   listContainer: {
     paddingBottom: 20,
@@ -624,6 +643,7 @@ const createStyles = (Colors) => StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 10,
     fontWeight: '600',
+    fontFamily: 'Poppins_400Regular', 
   },
   productInfo: {
     flex: 1,
@@ -639,6 +659,7 @@ const createStyles = (Colors) => StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: Colors.textPrimary,
+    fontFamily: 'Poppins_400Regular',
     flex: 1,
     marginRight: 8,
   },
@@ -650,6 +671,7 @@ const createStyles = (Colors) => StyleSheet.create({
     color: Colors.textSecondary,
     fontWeight: '500',
     marginBottom: 8,
+    fontFamily: 'Poppins_400Regular', 
   },
   ratingContainer: {
     flexDirection: 'row',
@@ -663,6 +685,7 @@ const createStyles = (Colors) => StyleSheet.create({
   ratingText: {
     fontSize: 12,
     color: Colors.textSecondary,
+    fontFamily: 'Poppins_400Regular', 
   },
   priceContainer: {
     flexDirection: 'row',
@@ -673,11 +696,13 @@ const createStyles = (Colors) => StyleSheet.create({
     color: Colors.success,
     fontWeight: '600',
     marginRight: 8,
+    fontFamily: 'Poppins_400Regular', 
   },
   originalPrice: {
     fontSize: 14,
     color: Colors.textSecondary,
     textDecorationLine: 'line-through',
+    fontFamily: 'Poppins_400Regular',
   },
 });
 

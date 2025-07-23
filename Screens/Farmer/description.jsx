@@ -74,8 +74,8 @@ const Detail = ({ navigation, route }) => {
     setReadingProgress(Math.min(100, Math.max(0, progress)));
   };
 
-  // Enhanced article content with practical information
-  const articleContent = `
+
+const articleContent = `
 Wheat rust is one of the most devastating diseases affecting wheat crops worldwide, capable of destroying entire harvests if left unchecked. This comprehensive guide will help you identify, prevent, and manage wheat rust effectively.
 
 ## Understanding Wheat Rust
@@ -228,20 +228,17 @@ For more information on wheat rust management:
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      
-      {/* Reading Progress Bar */}
+    
       <View style={styles.progressContainer}>
         <View style={[styles.progressBar, { width: `${readingProgress}%` }]} />
       </View>
 
-      {/* Header with Image */}
+
       <View style={styles.headerContainer}>
         <Image source={{ uri: blogItem.blogurl }} style={styles.headerImage} />
         
-        {/* Header Overlay */}
+      
         <View style={styles.headerOverlay} />
-        
-        {/* Navigation Bar */}
         <View style={styles.navigationBar}>
           <TouchableOpacity 
             onPress={() => navigation?.goBack()} 

@@ -68,7 +68,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   selectedCategoryCard: {
-    // Additional styling for selected category if needed
   },
   categoryIcon: {
     width: 56,

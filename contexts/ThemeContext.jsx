@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Appearance } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -6,22 +6,31 @@ const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState('light');
+  const [fontFamily, setFontFamily] = useState('Poppins_400Regular');  // Default font
 
-  const loadStoredTheme = async () => {
+  // Load stored theme and font from AsyncStorage
+  const loadStoredPreferences = useCallback(async () => {
     try {
       const storedTheme = await AsyncStorage.getItem('theme');
+      const storedFont = await AsyncStorage.getItem('fontFamily');
+      
       if (storedTheme) {
         setTheme(storedTheme);
       } else {
         const systemTheme = Appearance.getColorScheme();
-        setTheme(systemTheme || 'light');
+        setTheme(systemTheme || 'light');  // Fallback to light if system theme is not available
+      }
+
+      if (storedFont) {
+        setFontFamily(storedFont);
       }
     } catch (error) {
-      console.error('Failed to load theme:', error);
+      console.error('Failed to load preferences:', error);
     }
-  };
+  }, []);
 
-  const toggleTheme = async () => {
+  // Toggle theme between light and dark
+  const toggleTheme = useCallback(async () => {
     try {
       const newTheme = theme === 'light' ? 'dark' : 'light';
       setTheme(newTheme);
@@ -29,14 +38,25 @@ export const ThemeProvider = ({ children }) => {
     } catch (error) {
       console.error('Failed to save theme:', error);
     }
-  };
+  }, [theme]);
+
+  // Function to toggle font between two (or more) font options
+  const toggleFont = useCallback(async () => {
+    try {
+      const newFont = fontFamily === 'Poppins_400Regular' ? 'Poppins_500Medium' : 'Poppins_400Regular';  // Example toggle
+      setFontFamily(newFont);
+      await AsyncStorage.setItem('fontFamily', newFont);
+    } catch (error) {
+      console.error('Failed to save font:', error);
+    }
+  }, [fontFamily]);
 
   useEffect(() => {
-    loadStoredTheme();
-  }, []);
+    loadStoredPreferences();
+  }, [loadStoredPreferences]);
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, fontFamily, toggleFont }}>
       {children}
     </ThemeContext.Provider>
   );

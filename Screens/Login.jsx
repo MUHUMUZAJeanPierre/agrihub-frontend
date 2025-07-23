@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   View,
@@ -23,6 +22,11 @@ const AUTH_KEYS = {
   USER_ID: '@user_id',
   USER_DATA: '@user_data',
 };
+const FONTS = {
+  regular: "Poppins_400Regular",
+  semiBold: "Poppins_600SemiBold",
+  bold: "Poppins_700Bold",
+};
 
 export default function Login({ navigation }) {
   const { theme } = useTheme();
@@ -35,7 +39,6 @@ export default function Login({ navigation }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Colored tokens based on theme
   const bgColor = isDark ? '#121212' : '#fff';
   const textColor = isDark ? '#f0f0f0' : '#2D5016';
   const subTextColor = isDark ? '#aaaaaa' : '#B0ABAB';
@@ -252,11 +255,13 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '600',
     textAlign: 'center',
+    fontFamily: FONTS.semiBold,
   },
   subtitle: {
     textAlign: 'center',
     fontSize: 14,
     marginBottom: 10,
+    fontFamily: FONTS.regular, 
   },
   formContainer: {
     paddingVertical: 25,
@@ -267,15 +272,20 @@ const styles = StyleSheet.create({
   },
   forgotText: {
     fontSize: 14,
+    fontFamily: FONTS.regular,
   },
   bottomText: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 25,
   },
-  signupPrompt: { fontSize: 14 },
+  signupPrompt: { 
+    fontSize: 14,
+    fontFamily: FONTS.regular,  
+  },
   signupText: {
     fontWeight: '600',
     fontSize: 14,
+    fontFamily: FONTS.semiBold, 
   },
 });

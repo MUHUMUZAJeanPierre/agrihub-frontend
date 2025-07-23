@@ -22,6 +22,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 import { useTheme } from "../../contexts/ThemeContext";
 
+const FONTS = {
+  regular: "Poppins_400Regular",
+  semiBold: "Poppins_600SemiBold",
+  bold: "Poppins_700Bold",
+};
+
 // Color Scheme
 const LightColors = {
   primary: '#4A90E2',
@@ -422,12 +428,10 @@ export default function Farmerdash({ navigation }) {
         />
         <View style={styles.blogImageOverlay} />
 
-        {/* Severity Badge */}
         <View style={[styles.severityBadge, { backgroundColor: getSeverityColor(item.severity) }]}>
           <Text style={styles.severityText}>{item.severity}</Text>
         </View>
 
-        {/* Category Badge */}
         <View style={[styles.categoryBadge, { backgroundColor: Colors.cardBackground + 'E6' }]}>
           <Text style={[styles.categoryText, { color: Colors.textPrimary }]}>{item.category}</Text>
         </View>
@@ -618,9 +622,9 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   headerTitle: {
-    fontSize: 26,
-    fontWeight: "bold",
-    fontFamily: "Poppins_700Bold",
+    fontSize: 28,
+    fontWeight: "600",
+    fontFamily: FONTS.semiBold,
   },
   notificationButton: {
     position: "relative",
@@ -723,13 +727,13 @@ const styles = StyleSheet.create({
   },
   statTitle: {
     fontSize: 14,
-    fontFamily: "Poppins_500Medium",
+    fontFamily: FONTS.regular,
     marginBottom: 8,
   },
   statValue: {
-    fontSize: 32,
-    fontWeight: "bold",
-    fontFamily: "Poppins_700Bold",
+    fontSize: 30,
+    fontWeight: "300",
+    fontFamily: FONTS.bold,
   },
   quickActionsContainer: {
     paddingHorizontal: 20,
@@ -792,9 +796,9 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 22,
-    fontWeight: "bold",
+    fontWeight: "500",
     color: "#1F2937",
-    fontFamily: "Poppins_700Bold",
+    fontFamily: FONTS.regular,
     marginBottom: 2,
   },
   sectionTitleDark: {
@@ -803,10 +807,11 @@ const styles = StyleSheet.create({
   sectionSubtitle: {
     fontSize: 14,
     color: "#6B7280",
-    fontFamily: "Poppins_400Regular",
+    fontFamily: FONTS.regular,
   },
   sectionSubtitleDark: {
     color: "#9CA3AF",
+    fontFamily: FONTS.regular,
   },
   seeAllButton: {
     flexDirection: "row",
@@ -890,7 +895,8 @@ const styles = StyleSheet.create({
   severityText: {
     color: "white",
     fontSize: 12,
-    fontWeight: "600",
+    fontWeight: "500",
+    fontFamily: FONTS.regular,
   },
   
   categoryBadge: {
@@ -911,9 +917,11 @@ const styles = StyleSheet.create({
     color: "#1F2937",
     fontSize: 12,
     fontWeight: "500",
+    fontFamily: FONTS.regular,
   },
   categoryTextDark: {
     color: "#F9FAFB",
+    fontFamily: FONTS.regular,
   },
   imageLoader: {
     position: "absolute",
@@ -939,30 +947,31 @@ const styles = StyleSheet.create({
   blogDate: {
     fontSize: 13,
     color: "#9CA3AF",
-    fontFamily: "Poppins_400Regular",
+    fontFamily: FONTS.regular,
   },
   readTimeContainer: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
+    fontFamily: FONTS.regular,
   },
   readTime: {
     fontSize: 13,
     color: "#9CA3AF",
-    fontFamily: "Poppins_400Regular",
+    fontFamily: FONTS.regular,
   },
   blogTitle: {
     fontSize: 20,
-    fontWeight: "bold",
+    fontWeight: "500",
     color: "#1F2937",
-    fontFamily: "Poppins_600SemiBold",
+    fontFamily: FONTS.semiBold,
     lineHeight: 28,
     marginBottom: 12,
   },
   blogDescription: {
     fontSize: 15,
     color: "#6B7280",
-    fontFamily: "Poppins_400Regular",
+    fontFamily: FONTS.semiBold,
     lineHeight: 22,
     marginBottom: 20,
   },
@@ -979,7 +988,7 @@ const styles = StyleSheet.create({
   readMoreText: {
     fontSize: 15,
     color: "#10B981",
-    fontFamily: "Poppins_600SemiBold",
+    fontFamily: FONTS.semiBold,
   },
   actionButtons: {
     flexDirection: "row",

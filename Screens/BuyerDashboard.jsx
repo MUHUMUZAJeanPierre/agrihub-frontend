@@ -16,7 +16,7 @@ import {
   SafeAreaView,
   StatusBar
 } from 'react-native';
-// import {styles, Colors} from '../styles/BuyerDashboardStyles'
+import { useLanguage } from '../contexts/LanguageContext';
 import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -127,7 +127,7 @@ const CATEGORIES = [
 ];
 
 const BuyerDashboard = ({ navigation }) => {
-  const { theme } = useTheme();
+  const { theme, fontFamily  } = useTheme();
   const Colors = theme === 'dark' ? DarkColors : LightColors;
   const styles = useMemo(() => createStyles(Colors), [Colors]);
   const [products, setProducts] = useState([]);
@@ -190,11 +190,11 @@ const BuyerDashboard = ({ navigation }) => {
         },
       });
 
-      Alert.alert('✅ Order Placed', 'Your order has been successfully submitted.');
+      Alert.alert('Order Placed', 'Your order has been successfully submitted.');
       clearCart();
       setIsCartVisible(false);
 
-      console.log('🧾 Order response:', response.data);
+      console.log('Order response:', response.data);
     } catch (error) {
       console.error('❌ Failed to place order:', error);
       Alert.alert('Order Failed', 'Could not place order. Please try again.');
@@ -304,7 +304,7 @@ const BuyerDashboard = ({ navigation }) => {
         timeout: API_CONFIG.TIMEOUT,
       });
 
-      console.log('✅ Products fetched successfully:', response.data?.length || 0);
+      // console.log('✅ Products fetched successfully:', response.data?.length || 0);
 
       const transformedProducts = response.data.map(product => ({
         ...product,
@@ -376,7 +376,6 @@ const BuyerDashboard = ({ navigation }) => {
     return cartItems.reduce((total, item) => total + item.quantity, 0);
   }, [cartItems]);
 
-  // Initialize app and fetch data
   useEffect(() => {
     const initializeApp = async () => {
       console.log('🚀 Initializing app...');
@@ -387,10 +386,8 @@ const BuyerDashboard = ({ navigation }) => {
     initializeApp();
   }, [getAuthToken, fetchProducts]);
 
-  // Enhanced addToCart function with loading state
   const handleAddToCart = useCallback(async (product) => {
     try {
-      // Check authentication
       const token = authToken || await getAuthToken();
       if (!token) {
         Alert.alert(
@@ -501,7 +498,6 @@ const BuyerDashboard = ({ navigation }) => {
     >
       <View 
         style={[styles.imageContainer, { backgroundColor: Colors.surface }]}
-        // style={styles.imageContainer}
       >
         {item.img ? (
           <Image
@@ -539,7 +535,7 @@ const BuyerDashboard = ({ navigation }) => {
           {addingToCart === item._id ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Ionicons name="add" size={14} color="#10b981" />
+            <Ionicons name="add" size={14} color="#4CAF50" />
           )}
         </TouchableOpacity>
 
@@ -566,25 +562,21 @@ const BuyerDashboard = ({ navigation }) => {
         <Text style={styles.productTitle} numberOfLines={1}>{item.title}</Text>
         <View style={styles.priceContainer}>
           <Text 
-          // style={styles.productPrice}
           style={[styles.productTitle, { color: Colors.textPrimary }]}
           >
             {item.current_price || item.price}
             {item.pricePerKg && <Text 
-            // style={styles.priceUnit}
             style={[styles.priceUnit, { color: Colors.textSecondary }]}
             >/{item.pricePerKg}</Text>}
           </Text>
           {item.past_price && (
             <Text 
             style={[styles.oldPrice, { color: Colors.textSecondary }]}
-            // style={styles.oldPrice}
             >{item.past_price}</Text>
           )}
         </View>
         {item.region && (
           <Text 
-          // style={styles.productRegion} 
           style={[styles.productRegion, { color: Colors.textSecondary }]}
           numberOfLines={1}>
             📍 {item.region}
@@ -594,7 +586,6 @@ const BuyerDashboard = ({ navigation }) => {
     </TouchableOpacity>
   ));
 
-  // Category Card Component
   const CategoryCard = React.memo(({ item }) => (
     <TouchableOpacity
       // style={[
@@ -629,22 +620,18 @@ const BuyerDashboard = ({ navigation }) => {
     </TouchableOpacity>
   ));
 
-  // Cart Item Component
   const CartItemCard = React.memo(({ item }) => (
     <View 
-    // style={styles.cartItem}
     style={[styles.cartItem, { backgroundColor: Colors.cardBackground }]}
     >
       <Image source={{ uri: item.img }} style={styles.cartItemImage} />
       <View style={styles.cartItemInfo}>
         <Text 
-        // style={styles.cartItemTitle}
         style={[styles.cartItemTitle, { color: Colors.textPrimary }]}
         >{item.title}</Text>
         <Text style={styles.cartItemPrice}>{item.current_price || item.price}</Text>
         <View style={styles.quantityContainer}>
           <TouchableOpacity
-            // style={styles.quantityButton}
             style={[styles.quantityButton, { backgroundColor: Colors.surface }]}
             onPress={() => handleUpdateQuantity(item._id, item.quantity - 1)}
           >
@@ -652,10 +639,8 @@ const BuyerDashboard = ({ navigation }) => {
           </TouchableOpacity>
           <Text 
           style={[styles.quantityText, { color: Colors.textPrimary }]}
-          // style={styles.quantityText}
           >{item.quantity}</Text>
           <TouchableOpacity
-            // style={styles.quantityButton}
             style={[styles.quantityButton, { backgroundColor: Colors.surface }]}
             onPress={() => handleUpdateQuantity(item._id, item.quantity + 1)}
           >
@@ -672,36 +657,29 @@ const BuyerDashboard = ({ navigation }) => {
     </View>
   ));
 
-  // Loading screen
   if (loading) {
     return (
       <View 
       style={[styles.loadingContainer, { backgroundColor: Colors.background }]}
-      // style={styles.loadingContainer}
       >
         <ActivityIndicator size="large" color={"#2E7D31"} />
         <Text 
         style={[styles.loadingText, { color: Colors.textSecondary }]}
-        // style={styles.loadingText}
         >Loading products...</Text>
       </View>
     );
   }
 
-  // Error screen
   if (error && products.length === 0) {
     return (
       <View 
-      // style={styles.errorContainer}
       style={[styles.errorContainer, { backgroundColor: Colors.background }]}
       >
         <Ionicons name="alert-circle-outline" size={80} color={Colors.error} />
         <Text 
-        // style={styles.errorTitle}
         style={[styles.errorTitle, { color: Colors.textPrimary }]}
         >Oops! Something went wrong</Text>
         <Text 
-        // style={styles.errorText}
         style={[styles.errorText, { color: Colors.textSecondary }]}
         >{error}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={fetchProducts}>
@@ -738,7 +716,6 @@ const BuyerDashboard = ({ navigation }) => {
             </View>
             <TouchableOpacity style={styles.profileButton}>
               <View 
-              // style={styles.profileIcon}
               style={[styles.profileIcon, { backgroundColor: Colors.surface }]}
               >
                 <Ionicons name="person" size={20} color={Colors.primary} />
@@ -748,7 +725,6 @@ const BuyerDashboard = ({ navigation }) => {
 
           <View style={styles.searchContainer}>
             <View 
-            // style={styles.searchInputContainer}
             style={[styles.searchInputContainer, { backgroundColor: Colors.inputBackground }]}
             >
               <Ionicons name="search-outline" size={20} color={Colors.textSecondary} />
@@ -860,13 +836,10 @@ const BuyerDashboard = ({ navigation }) => {
             ))}
           </ScrollView>
         </View>
-
-        {/* Popular Fruits or Filtered Products */}
         {selectedCategory === 'all' && !searchQuery ? (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text 
-              // style={styles.sectionTitle}
               style={[styles.sectionTitle, { color: Colors.textPrimary }]}
               >Popular Fruits</Text>
               <TouchableOpacity onPress={() => handleCategorySelect('fruits')}>
@@ -886,7 +859,6 @@ const BuyerDashboard = ({ navigation }) => {
         ) : (
           <View style={styles.section}>
             <View 
-            // style={styles.sectionHeader}
             style={[styles.sectionTitle, { color: Colors.textPrimary }]}
             >
               <Text style={styles.sectionTitle}>
@@ -910,11 +882,9 @@ const BuyerDashboard = ({ navigation }) => {
               <View style={styles.emptyResults}>
                 <Ionicons name="search-outline" size={60} color={Colors.textSecondary} />
                 <Text 
-                // style={styles.emptyResultsTitle}
                    style={[styles.emptyResultsTitle, { color: Colors.textPrimary }]}
                 >No products found</Text>
                 <Text 
-                // style={styles.emptyResultsText}
                 style={[styles.emptyResultsText, { color: Colors.textSecondary }]}
                 >
                   {searchQuery ?
@@ -967,13 +937,11 @@ const BuyerDashboard = ({ navigation }) => {
 
       <Modal visible={isCartVisible} animationType="slide" presentationStyle="pageSheet">
         <SafeAreaView 
-        // style={styles.modalContainer}
         style={[styles.modalContainer, { backgroundColor: Colors.cardBackground }]}
         >
           <View style={styles.modalHeader}>
             <Text 
             style={[styles.modalTitle, { color: Colors.textPrimary }]}
-            // style={styles.modalTitle}
             >Shopping Cart ({cartItemCount})</Text>
             <TouchableOpacity
               onPress={() => setIsCartVisible(false)}
@@ -988,10 +956,8 @@ const BuyerDashboard = ({ navigation }) => {
               <Ionicons name="bag-outline" size={80} color={Colors.textSecondary} />
               <Text 
               style={[styles.emptyCartTitle, { color: Colors.textPrimary }]}
-              // style={styles.emptyCartTitle}
               >Your cart is empty</Text>
               <Text 
-              // style={styles.emptyCartSubtitle}
                style={[styles.emptyCartText, { color: Colors.textSecondary }]}
               >Add items to get started</Text>
               <TouchableOpacity
@@ -1011,21 +977,17 @@ const BuyerDashboard = ({ navigation }) => {
 
               <View 
                style={[styles.cartFooter, { backgroundColor: Colors.cardBackground, borderTopColor: Colors.borderColor }]}
-              // style={styles.cartFooter}
               >
                 <View style={styles.cartSummary}>
                   <View style={styles.cartTotal}>
                     <Text 
-                    // style={styles.cartTotalLabel}
                      style={[styles.totalLabel, { color: Colors.textSecondary }]}
                     >Total ({cartItemCount} items):</Text>
                     <Text 
-                    // style={styles.cartTotalAmount}
                     style={[styles.totalAmount, { color: Colors.textPrimary }]}
                     >RWF {cartTotal.toLocaleString()}</Text>
                   </View>
                   <TouchableOpacity
-                    // style={styles.clearCartButton}
                       style={[styles.clearCartButton, { backgroundColor: Colors.error }]}
                     onPress={() => {
                       Alert.alert(
@@ -1043,7 +1005,6 @@ const BuyerDashboard = ({ navigation }) => {
                     }}
                   >
                     <Text 
-                    // style={styles.clearCartText}
                      style={[styles.clearCartText, { color: Colors.textPrimary }]}
                     >Clear Cart</Text>
                   </TouchableOpacity>
@@ -1080,6 +1041,7 @@ const createStyles = (Colors) => StyleSheet.create({
   loadingText: {
     fontSize: 16,
     color: Colors.textSecondary,
+    fontFamily: 'Poppins_400Regular', 
   },
   errorContainer: {
     flex: 1,
@@ -1094,12 +1056,14 @@ const createStyles = (Colors) => StyleSheet.create({
     fontWeight: '600',
     color: Colors.textPrimary,
     textAlign: 'center',
+    fontFamily: 'Poppins_400Regular',
   },
   errorText: {
     fontSize: 14,
     color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
+    fontFamily: 'Poppins_400Regular',
   },
   retryButton: {
     backgroundColor: '#2E7D31',
@@ -1112,9 +1076,9 @@ const createStyles = (Colors) => StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'Poppins_400Regular',
   },
 
-  // Header
   header: {
     paddingHorizontal: 20,
     paddingTop: 20,
@@ -1130,14 +1094,13 @@ const createStyles = (Colors) => StyleSheet.create({
     fontSize: 16,
     color: Colors.textSecondary,
     marginBottom: 4,
+    fontFamily: 'Poppins_400Regular',
   },
-  // headerName: {
-  //   fontSize: 18,
-  //   fontWeight: '600',
   headerName: {
     fontSize: 18,
     fontWeight: '600',
     color: Colors.textPrimary,
+    fontFamily: 'Poppins_400Regular',
   },
   profileButton: {
     padding: 8,
@@ -1166,12 +1129,14 @@ const createStyles = (Colors) => StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     gap: 12,
+    fontFamily: 'Poppins_400Regular',
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
     color: Colors.textPrimary,
     padding: 0,
+    fontFamily: 'Poppins_400Regular', 
   },
   filterButton: {
     width: 44,
@@ -1200,6 +1165,7 @@ const createStyles = (Colors) => StyleSheet.create({
     fontWeight: '700',
     color: '#fff',
     marginBottom: 4,
+    fontFamily: 'Poppins_400Regular',
   },
   promotionText: {
     fontSize: 14,
@@ -1210,15 +1176,16 @@ const createStyles = (Colors) => StyleSheet.create({
   },
   orderNowButton: {
     backgroundColor: '#fff',
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
     paddingVertical: 8,
     borderRadius: 8,
     alignSelf: 'flex-start',
   },
   orderNowText: {
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: '600',
     color: Colors.secondary,
+    fontFamily: 'Poppins_400Regular', 
   },
   promotionImageContainer: {
     width: 80,
@@ -1246,11 +1213,13 @@ const createStyles = (Colors) => StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: Colors.textPrimary,
+    fontFamily: 'Poppins_400Regular', 
   },
   seeAllText: {
     fontSize: 14,
     color:'#2E7D31',
     fontWeight: '500',
+    fontFamily: 'Poppins_400Regular', 
   },
 
 
@@ -1276,12 +1245,14 @@ const createStyles = (Colors) => StyleSheet.create({
   },
   categoryName: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '600',
     color: Colors.textSecondary,
+    fontFamily: 'Poppins_400Regular', 
   },
   selectedCategoryName: {
     color: Colors.textPrimary,
     fontWeight: '600',
+    fontFamily: 'Poppins_400Regular', 
   },
 
   // Products
@@ -1306,19 +1277,7 @@ const createStyles = (Colors) => StyleSheet.create({
     borderTopRightRadius: 5,
     overflow: 'hidden',
   },
-  // productImage: {
-  //   width: '100%',
-  //   height: '100%',
-  //   resizeMode: 'cover',
-  // },
-  // placeholderImage: {
-  //   width: '100%',
-  //   height: '100%',
-  //   backgroundColor: Colors.surfaceLight,
-  //   justifyContent: 'center',
-  //   alignItems: 'center',
-  // },
-
+ 
   productImage: {
   width: '100%',
   height: '100%',
@@ -1362,7 +1321,8 @@ discountBadge: {
 discountText: {
   color: '#fff',
   fontSize: 10,
-  fontWeight: 'bold',
+  fontWeight: '600',
+  fontFamily: 'Poppins_400Regular'
 },
 
 addButton: {
@@ -1443,12 +1403,14 @@ favoriteButton: {
   },
   productInfo: {
     padding: 12,
+    fontFamily: 'Poppins_400Regular',
   },
   productTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: Colors.textPrimary,
     marginBottom: 2,
+    fontFamily: 'Poppins_400Regular',
   },
   priceContainer: {
     flexDirection: 'row',
@@ -1470,10 +1432,12 @@ favoriteButton: {
     fontSize: 12,
     color: Colors.textSecondary,
     textDecorationLine: 'line-through',
+    fontFamily: 'Poppins_400Regular',
   },
   productRegion: {
     fontSize: 12,
     color: Colors.textSecondary,
+    fontFamily: 'Poppins_400Regular',
   },
 
   emptyResults: {
@@ -1487,12 +1451,14 @@ favoriteButton: {
     color: Colors.textPrimary,
     marginTop: 16,
     marginBottom: 8,
+    fontFamily: 'Poppins_400Regular',
   },
   emptyResultsText: {
     fontSize: 14,
     color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
+    fontFamily: 'Poppins_400Regular',
   },
 
   // Floating Cart
@@ -1536,7 +1502,6 @@ favoriteButton: {
     color: '#fff',
   },
 
-  // Modal
   modalContainer: {
     flex: 1,
     backgroundColor: Colors.background,
@@ -1554,6 +1519,7 @@ favoriteButton: {
     fontSize: 18,
     fontWeight: '600',
     color: Colors.textPrimary,
+    fontFamily: 'Poppins_400Regular',
   },
   modalCloseButton: {
     padding: 4,
@@ -1571,6 +1537,13 @@ favoriteButton: {
     fontSize: 20,
     fontWeight: '600',
     color: Colors.textPrimary,
+    fontFamily: 'Poppins_400Regular',
+  },
+  emptyCartText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    fontFamily: 'Poppins_400Regular',
   },
   emptyCartSubtitle: {
     fontSize: 14,
@@ -1588,9 +1561,9 @@ favoriteButton: {
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
+    fontFamily: 'Poppins_400Regular',
   },
 
-  // Cart Content
   cartContent: {
     flex: 1,
   },
@@ -1628,12 +1601,14 @@ favoriteButton: {
     fontWeight: '600',
     color: Colors.textPrimary,
     marginBottom: 4,
+    fontFamily: 'Poppins_400Regular',
   },
   cartItemPrice: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#2E7D31',
     marginBottom: 8,
+    fontFamily: 'Poppins_400Regular', 
   },
   quantityContainer: {
     flexDirection: 'row',
@@ -1677,16 +1652,19 @@ favoriteButton: {
   },
   cartTotal: {
     flex: 1,
+    fontFamily: 'Poppins_400Regular'
   },
   cartTotalLabel: {
     fontSize: 14,
     color: Colors.textSecondary,
     marginBottom: 4,
+    fontFamily: 'Poppins_400Regular', 
   },
   cartTotalAmount: {
     fontSize: 20,
     fontWeight: '700',
     color: Colors.textPrimary,
+    fontFamily: 'Poppins_400Regular',
   },
   clearCartButton: {
     paddingHorizontal: 12,
@@ -1756,6 +1734,7 @@ favoriteButton: {
     fontWeight: '500',
     color: '#fff',
     letterSpacing: 0.5,
+    fontFamily: 'Poppins_400Regular',
   },
 
   promotionText: {
@@ -1765,6 +1744,7 @@ favoriteButton: {
     marginBottom: 20,
     lineHeight: 22,
     fontWeight: '500',
+    fontFamily: 'Poppins_400Regular',
   },
 
   orderNowButton: {
@@ -1784,6 +1764,7 @@ favoriteButton: {
     fontSize: 14,
     fontWeight: '600',
     color: '#fff',
+    fontFamily: 'Poppins_400Regular',
   },
 
   promotionImageContainer: {

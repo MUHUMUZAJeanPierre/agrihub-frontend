@@ -18,8 +18,8 @@ import { useTheme } from '../contexts/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
+const FONT_FAMILY = 'Poppins_400Regular'; 
 
-// Color Schemes
 const LightColors = {
   primary: '#4A90E2',
   primaryDark: '#2D5AA0',
@@ -111,87 +111,6 @@ const CartScreen = ({ navigation }) => {
     }
   };
 
-  // const handlePlaceOrder = async () => {
-  //   if (isPlacingOrder) return; 
-
-  //   try {
-  //     setIsPlacingOrder(true);
-
-  //     const token = await AsyncStorage.getItem(AUTH_KEYS.TOKEN);
-  //     if (!token) {
-  //       Alert.alert('Authentication Required', 'Please log in to place an order.');
-  //       navigation.navigate('Login');
-  //       return;
-  //     }
-
-  //     if (cartItems.length === 0) {
-  //       Alert.alert('Cart is Empty', 'Add items to cart before placing an order.');
-  //       return;
-  //     }
-
-  //     console.log('Cart Items:', cartItems);
-
-  //     const totalAmount = cartItems.reduce((sum, item) => {
-  //       const price = extractPrice(item.current_price || item.price);
-  //       return sum + price * item.quantity;
-  //     }, 0);
-
-  //     if (totalAmount <= 0) {
-  //       Alert.alert('Error', 'Total amount calculation failed.');
-  //       return;
-  //     }
-
-  //     const orderData = {
-  //       items: cartItems.map(item => ({
-  //         product: item._id,  
-  //         quantity: item.quantity,
-  //       })),
-  //       totalAmount: totalAmount,  
-  //     };
-
-  //     console.log("Sending order data:", JSON.stringify(orderData));
-
-  //     const response = await fetch(API_CONFIG.ORDER_URL, {
-  //       method: 'POST',
-  //       headers: {
-  //         'Authorization': `Bearer ${token}`,
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify(orderData),
-  //     });
-
-  //     const data = await response.json();
-  //     if (response.ok) {
-  //       Alert.alert(
-  //         '✅ Order Placed Successfully',
-  //         'Your order has been submitted and will be processed soon.',
-  //         [
-  //           {
-  //             text: 'Continue Shopping',
-  //             onPress: () => {
-  //               clearCart();
-  //               navigation.navigate('Home');
-  //             }
-  //           }
-  //         ]
-  //       );
-  //     } else {
-  //       console.error('❌ Order failed:', data);
-  //       Alert.alert(
-  //         '❌ Order Failed',
-  //         data?.message || data?.error || 'Unable to place order. Please try again.'
-  //       );
-  //     }
-  //   } catch (error) {
-  //     console.error('❌ Network/order error:', error);
-  //     Alert.alert(
-  //       'Network Error',
-  //       'Unable to place your order. Please check your connection and try again.'
-  //     );
-  //   } finally {
-  //     setIsPlacingOrder(false);
-  //   }
-  // };
 
   const handlePlaceOrder = async () => {
   if (isPlacingOrder) return;
@@ -637,10 +556,12 @@ const styles = StyleSheet.create({
   headerTitleContainer: {
     flex: 1,
     marginLeft: 8,
+    fontFamily: FONT_FAMILY, 
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 25,
+    fontWeight: '600',
+    fontFamily: FONT_FAMILY,
     color: '#212529',
     marginBottom: 2,
   },
@@ -651,6 +572,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6C757D',
     fontWeight: '500',
+    fontFamily: FONT_FAMILY,
   },
   itemCountDark: {
     color: '#9CA3AF',
@@ -676,6 +598,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#2E7D31',
     fontWeight: '600',
+    fontFamily: FONT_FAMILY, 
   },
 
   cartList: {
@@ -730,6 +653,7 @@ const styles = StyleSheet.create({
     color: '#212529',
     lineHeight: 22,
     marginRight: 8,
+    fontFamily: FONT_FAMILY,
   },
   itemNameDark: {
     color: '#F3F4F6',
@@ -749,6 +673,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6C757D',
     fontWeight: '500',
+     fontFamily: FONT_FAMILY,
   },
   unitPriceDark: {
     color: '#9CA3AF',
@@ -757,6 +682,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: '#2E7D31',
+    fontFamily: FONT_FAMILY, 
   },
 
   quantitySection: {
@@ -805,6 +731,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#212529',
+    fontFamily: FONT_FAMILY,
   },
   quantityTextDark: {
     color: '#F3F4F6',
@@ -818,10 +745,11 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#495057',
     marginBottom: 8,
     textAlign: 'center',
+    fontFamily: FONT_FAMILY,
   },
   emptyTitleDark: {
     color: '#E5E7EB',
@@ -832,6 +760,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 32,
     lineHeight: 24,
+    fontFamily: FONT_FAMILY, 
   },
   emptySubtitleDark: {
     color: '#9CA3AF',
@@ -840,7 +769,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#2E7D31',
     paddingVertical: 16,
     paddingHorizontal: 32,
-    borderRadius: 25,
+    borderRadius: 50,
     elevation: 2,
     shadowColor: '#bbf7d0',
     shadowOffset: { width: 0, height: 4 },
@@ -851,6 +780,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
+    fontFamily: FONT_FAMILY,
   },
 
   summaryContainer: {
@@ -879,6 +809,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#6C757D',
     fontWeight: '500',
+     fontFamily: FONT_FAMILY,
   },
   summaryLabelDark: {
     color: '#9CA3AF',
@@ -887,6 +818,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#212529',
     fontWeight: '600',
+    fontFamily: FONT_FAMILY,
   },
   summaryValueDark: {
     color: '#F3F4F6',
@@ -909,6 +841,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: '#212529',
+    fontFamily: FONT_FAMILY,
   },
   totalLabelDark: {
     color: '#F3F4F6',
@@ -917,6 +850,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '800',
     color: '#2E7D31',
+    fontFamily: FONT_FAMILY,
   },
   checkoutButton: {
     flexDirection: 'row',
@@ -942,6 +876,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
     marginRight: 8,
+     fontFamily: FONT_FAMILY, 
   },
 
   loadingOverlay: {
@@ -974,9 +909,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#212529',
+     fontFamily: FONT_FAMILY,
   },
   loadingTextDark: {
     color: '#F3F4F6',
+     fontFamily: FONT_FAMILY,
   },
 });
 
