@@ -690,7 +690,6 @@ const BuyerDashboard = ({ navigation }) => {
     </View>
   ));
 
-  // Custom loading spinner (copied from SearchScreen)
   const renderLoadingSpinner = (styles, Colors, isLoading) => (
     <View style={styles.loadingContainer}>
       <View style={styles.spinnerContainer}>
@@ -756,6 +755,7 @@ const BuyerDashboard = ({ navigation }) => {
           Colors={Colors}
           t={t}
           styles={styles}
+          navigation={navigation}
         />
         <View style={styles.searchContainer}>
           <View 
@@ -1063,7 +1063,7 @@ const BuyerDashboard = ({ navigation }) => {
 };
 
 // HeaderComponent copied from Agronomistdash.jsx
-const HeaderComponent = ({ username, theme, toggleTheme, language, changeLanguage, Colors, t, styles }) => {
+const HeaderComponent = ({ username, theme, toggleTheme, language, changeLanguage, Colors, t, styles, navigation }) => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   return (
     <View style={[styles.header, { backgroundColor: Colors.background, paddingTop: 20, paddingBottom: 4 }]}> 
@@ -1112,6 +1112,17 @@ const HeaderComponent = ({ username, theme, toggleTheme, language, changeLanguag
                   <Ionicons name="language-outline" size={24} color={Colors.textPrimary} />
                   <Text style={[styles.toggleButtonText, { color: Colors.textPrimary }]}> {language === 'en' ? t('changeToKinyarwanda') : t('changeToEnglish')} </Text>
                 </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.toggleButton, { backgroundColor: Colors.primary, borderColor: Colors.primary }]}
+                onPress={() => {
+                  setShowProfileModal(false);
+                  if (typeof navigation !== 'undefined' && navigation.navigate) {
+                    navigation.navigate('login');
+                  }
+                }}
+              >
+                <Text style={[styles.toggleButtonText, { color: 'white', textAlign: 'center' }]}>Login</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.closeButton, { backgroundColor: Colors.primary }]}
@@ -1184,15 +1195,15 @@ const createStyles = (Colors) => StyleSheet.create({
   },
 
   header: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 30,
     paddingTop: 20,
-    paddingBottom: 4, // Reduce space below header
+    paddingBottom: 4, 
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8, // Reduce space below headerTop
+    marginBottom: 8, 
   },
   headerGreeting: {
     fontSize: 16,

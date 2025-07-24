@@ -171,7 +171,7 @@ const Onboarding = ({ navigation }) => {
       ref.current?.scrollToOffset({ offset: nextSlideIndex * width });
       setCurrentSlideIndex(nextSlideIndex);
     } else {
-      navigation.replace("login"); 
+      navigation.replace("login");
     }
   };
 
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   title: {
-    fontFamily: FONTS.bold,
+    fontFamily: FONTS.semiBold,
     fontSize: 28,
     textAlign: "center",
     marginBottom: 10,

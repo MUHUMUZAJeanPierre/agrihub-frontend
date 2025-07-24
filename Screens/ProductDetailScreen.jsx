@@ -21,6 +21,7 @@ import {
 } from 'lucide-react-native';
 import { useCart } from '../contexts/CartContext';
 import { useTheme } from '../contexts/ThemeContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
@@ -72,8 +73,21 @@ export default function ProductDetailScreen({ navigation, route }) {
     return `${currency}${price.toFixed(2)}`;
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     setAddingToCart(true);
+    const token = await AsyncStorage.getItem('@auth_token');
+    if (!token) {
+      setAddingToCart(false);
+      Alert.alert(
+        'Login Required',
+        'You must be logged in to add items to your cart.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Login', onPress: () => navigation.navigate('login') },
+        ]
+      );
+      return;
+    }
     addToCart(product);
     setTimeout(() => {
       setAddingToCart(false);
@@ -310,7 +324,22 @@ export default function ProductDetailScreen({ navigation, route }) {
                       </Text>
                     </View>
                   </View>
-                  <TouchableOpacity style={styles.relatedAddButton}>
+                  <TouchableOpacity style={styles.relatedAddButton} onPress={async () => {
+                    const token = await AsyncStorage.getItem('@auth_token');
+                    if (!token) {
+                      Alert.alert(
+                        'Login Required',
+                        'You must be logged in to add items to your cart.',
+                        [
+                          { text: 'Cancel', style: 'cancel' },
+                          { text: 'Login', onPress: () => navigation.navigate('login') },
+                        ]
+                      );
+                      return;
+                    }
+                    addToCart(item);
+                    Alert.alert('Added to Cart', `${item.title} has been added to your cart.`);
+                  }}>
                     <Plus size={14} color={styles.accentLight} />
                   </TouchableOpacity>
                 </TouchableOpacity>
