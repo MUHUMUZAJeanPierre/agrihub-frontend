@@ -105,7 +105,7 @@ const Slide = ({ item, navigation, currentIndex, totalSlides, theme }) => {
       <View style={styles.headerContainer}>
         <TouchableOpacity
           style={[styles.skipButton, { backgroundColor: skipBackground }]}
-          onPress={() => navigation.navigate("login")}
+          onPress={() => navigation.navigate("BottomNav")}
         >
           <Text style={[styles.skipText, { color: skipTextColor }]}>Skip</Text>
         </TouchableOpacity>
@@ -171,7 +171,8 @@ const Onboarding = ({ navigation }) => {
       ref.current?.scrollToOffset({ offset: nextSlideIndex * width });
       setCurrentSlideIndex(nextSlideIndex);
     } else {
-      navigation.replace("login");
+      
+      navigation.replace("BottomNav");
     }
   };
 

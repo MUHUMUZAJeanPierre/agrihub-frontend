@@ -634,7 +634,7 @@ export default function Agronomistdash({ navigation }) {
       <View style={styles.headerContent}>
         <View style={styles.headerLeft}>
           <Text style={[styles.headerTitle, { color: Colors.text }]}>
-            {username ? `${username}'s ${t('dashboardTitle')}` : t('dashboardTitle')}
+            {username}
           </Text>
         </View>
 

@@ -67,15 +67,12 @@ const SearchScreen = () => {
   const { language, changeLanguage, t } = useLanguage();
   const Colors = theme === 'dark' ? DarkColors : LightColors;
   const styles = createStyles(Colors);
-
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
-  
-  // Animation values
   const fadeAnim = new Animated.Value(0);
   const slideAnim = new Animated.Value(50);
   const spinValue = new Animated.Value(0);

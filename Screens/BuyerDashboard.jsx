@@ -1089,7 +1089,6 @@ const HeaderComponent = ({ username, theme, toggleTheme, language, changeLanguag
           >
             <View style={[styles.profileModalContent, { backgroundColor: Colors.cardBackground, borderColor: Colors.borderColor || Colors.border }]}> 
               <Text style={[styles.modalTitle, { color: Colors.textPrimary }]}>{t('profileOptions')}</Text>
-              {/* Theme toggle */}
               <TouchableOpacity
                 style={[styles.toggleButton, { backgroundColor: Colors.surface, borderColor: Colors.borderColor || Colors.border }]}
                 onPress={toggleTheme}
@@ -1112,17 +1111,6 @@ const HeaderComponent = ({ username, theme, toggleTheme, language, changeLanguag
                   <Ionicons name="language-outline" size={24} color={Colors.textPrimary} />
                   <Text style={[styles.toggleButtonText, { color: Colors.textPrimary }]}> {language === 'en' ? t('changeToKinyarwanda') : t('changeToEnglish')} </Text>
                 </View>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.toggleButton, { backgroundColor: Colors.primary, borderColor: Colors.primary }]}
-                onPress={() => {
-                  setShowProfileModal(false);
-                  if (typeof navigation !== 'undefined' && navigation.navigate) {
-                    navigation.navigate('login');
-                  }
-                }}
-              >
-                <Text style={[styles.toggleButtonText, { color: 'white', textAlign: 'center' }]}>Login</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.closeButton, { backgroundColor: Colors.primary }]}

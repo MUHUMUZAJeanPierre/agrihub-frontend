@@ -17,7 +17,6 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
-
 const { width } = Dimensions.get('window');
 const FONT_FAMILY = 'Poppins_400Regular';
 const API_CONFIG = {
@@ -523,10 +522,8 @@ const fetchOrders = async () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Refreshed orders:', data); // Debug log
         if (Array.isArray(data)) {
           setOrders(data);
-          // Updated to only count pending orders for the pending count
           const pendingCount = data.filter(order => order.status?.toLowerCase() === 'pending').length;
           setPendingOrdersCount(pendingCount);
         } else {

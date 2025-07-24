@@ -46,7 +46,7 @@ export default function StackNavigation() {
   }
 
   return (
-    <NavigationContainer>
+    <>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {userRole ? (
           <>
@@ -76,10 +76,13 @@ export default function StackNavigation() {
             <Stack.Screen name="login" component={Login} />
             <Stack.Screen name="register" component={Register} />
             <Stack.Screen name="forgot" component={Forgot} />
+
+            <Stack.Screen name="BottomNav" component={BottomNav} />
+            <Stack.Screen name="ProductDetailScreen" component={ProductDetailScreen} />
           </>
         )}
         <Stack.Screen name="Security" component={Security} />
       </Stack.Navigator>
-    </NavigationContainer>
+    </>
   );
 }

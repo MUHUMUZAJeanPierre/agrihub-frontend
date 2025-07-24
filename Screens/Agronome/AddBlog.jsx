@@ -388,7 +388,7 @@ export default function AddBlog({ navigation }) {
               },
             ]}
           >
-            {/* Header */}
+
             <View style={styles.header}>
               <Text style={[styles.headerTitle, {  color: Colors.text, fontFamily: FONTS.semiBold }]}>
                 {t('createNewArticle')}
@@ -398,7 +398,6 @@ export default function AddBlog({ navigation }) {
               </Text>
             </View>
 
-            {/* Image Upload Section */}
             <View style={[styles.imageSection, { backgroundColor: Colors.cardBackground, borderColor: Colors.border }]}>
               <Text style={[styles.sectionTitle, { color: Colors.text,   fontFamily: FONTS.regular }]}>
                 {t('featuredImage')}
@@ -455,7 +454,6 @@ export default function AddBlog({ navigation }) {
               )}
             </View>
 
-            {/* Title Input */}
             <View style={styles.inputSection}>
               <Text style={[styles.sectionTitle, { color: Colors.text, fontFamily: FONTS.regular }]}>
                 {t('articleTitle')}
