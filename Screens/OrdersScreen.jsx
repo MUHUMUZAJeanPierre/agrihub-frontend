@@ -16,6 +16,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../contexts/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const { width } = Dimensions.get('window');
 const FONT_FAMILY = 'Poppins_400Regular';
@@ -32,6 +33,7 @@ const AUTH_KEYS = {
 
 const OrdersScreen = ({setPendingOrdersCount }) => {
   const { theme } = useTheme();
+  const { language, changeLanguage, t } = useLanguage();
   const [activeTab, setActiveTab] = useState('current');
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -46,7 +48,7 @@ const fetchOrders = async () => {
     const token = await AsyncStorage.getItem(AUTH_KEYS.TOKEN);  
 
     if (!token) {
-      Alert.alert('Authentication Required', 'Please log in to view orders.');
+      Alert.alert(t('authRequired'), t('loginToViewOrders'));
       setIsLoading(false);
       return;
     }
@@ -67,11 +69,11 @@ const fetchOrders = async () => {
     } else {
       const errorData = await response.json().catch(() => ({}));
       console.error('Error response:', errorData); 
-      Alert.alert('Error fetching orders', errorData.message || errorData.error || 'Something went wrong.');
+      Alert.alert(t('errorFetchingOrders'), errorData.message || errorData.error || t('somethingWentWrong'));
     }
   } catch (error) {
     console.error('Error fetching orders:', error);
-    Alert.alert('Network Error', 'Failed to fetch orders. Please try again.');
+    Alert.alert(t('networkError'), t('fetchOrdersFailed'));
   } finally {
     setIsLoading(false);
   }
@@ -84,7 +86,7 @@ const fetchOrders = async () => {
   try {
     const token = await AsyncStorage.getItem('@auth_token');
     if (!token) {
-      Alert.alert('Authentication required', 'Please log in to cancel the order.');
+      Alert.alert(t('authRequired'), t('loginToCancelOrder'));
       return;
     }
 
@@ -98,30 +100,30 @@ const fetchOrders = async () => {
 
     const data = await response.json();
     if (response.ok) {
-      Alert.alert('Success', 'Order canceled successfully');
+      Alert.alert(t('success'), t('orderCanceled'));
       setOrders((prevOrders) => prevOrders.filter(order => order._id !== orderId));
     } else {
       console.error('Error response:', data);  
-      Alert.alert('Error', data.message || 'Failed to cancel the order');
+      Alert.alert(t('error'), data.message || t('cancelOrderFailed'));
     }
   } catch (error) {
     console.error('Error cancelling order:', error);
-    Alert.alert('Network Error', 'Failed to cancel the order');
+    Alert.alert(t('networkError'), t('cancelOrderFailed'));
   }
 };
 
 
   const handleCancelOrder = (orderId, orderNumber) => {
     Alert.alert(
-      'Cancel Order',
-      `Are you sure you want to cancel Order #${orderNumber}? This action cannot be undone.`,
+      t('cancelOrder'),
+      t('cancelOrderConfirm', { orderNumber }),
       [
         {
-          text: 'No, Keep Order',
+          text: t('noKeepOrder'),
           style: 'cancel',
         },
         {
-          text: 'Yes, Cancel Order',
+          text: t('yesCancelOrder'),
           style: 'destructive',
           onPress: () => cancelOrder(orderId),
         },
@@ -375,19 +377,13 @@ const fetchOrders = async () => {
                     color="#2E7D31"
                   />
                 </View>
-                <Text style={[
-                  styles.itemsText,
-                  { color: isDark ? '#8E8E93' : '#8E8E93' }
-                ]}>
-                  {validItemsCount} item{validItemsCount > 1 ? 's' : ''}
+                <Text style={styles.itemsText}>
+                  {t('itemsCount', { count: validItemsCount })}
                 </Text>
               </View>
               <View style={styles.totalContainer}>
-                <Text style={[
-                  styles.totalLabel,
-                  { color: isDark ? '#8E8E93' : '#8E8E93' }
-                ]}>
-                  Total
+                <Text style={styles.totalLabel}>
+                  {t('total')}
                 </Text>
                 <Text style={styles.orderTotal}>
                   RWF {orderTotal.toLocaleString()}
@@ -396,11 +392,8 @@ const fetchOrders = async () => {
             </View>
 
             <View style={styles.itemsPreviewContainer}>
-              <Text style={[
-                styles.itemsPreviewLabel,
-                { color: isDark ? '#8E8E93' : '#8E8E93' }
-              ]}>
-                Items:
+              <Text style={styles.itemsPreviewLabel}>
+                {t('items')}
               </Text>
               <Text style={[
                 styles.itemsPreview,
@@ -409,7 +402,7 @@ const fetchOrders = async () => {
                 {item.items
                   .filter(i => i && i.product)
                   .map(i => `${getItemDisplayName(i)} (${i.quantity || 0})`)
-                  .join(' • ') || 'No valid items'}
+                  .join(' • ') || t('noValidItems')}
               </Text>
             </View>
           </View>
@@ -430,7 +423,7 @@ const fetchOrders = async () => {
                 onPress={() => console.log('Reorder pressed')}
               >
                 <Ionicons name="refresh-outline" size={18} color="#2E7D31" />
-                <Text style={styles.reorderButtonText}>Reorder</Text>
+                <Text style={styles.reorderButtonText}>{t('reorder')}</Text>
               </TouchableOpacity>
             )}
 
@@ -455,7 +448,7 @@ const fetchOrders = async () => {
                   <Ionicons name="close-circle-outline" size={18} color="#DC2626" />
                 )}
                 <Text style={[styles.cancelButtonText, { marginLeft: isCancelling ? 8 : 8 }]}>
-                  {isCancelling ? 'Cancelling...' : 'Cancel Order'}
+                  {isCancelling ? t('cancelling') : t('cancelOrder')}
                 </Text>
               </TouchableOpacity>
             )}
@@ -484,8 +477,8 @@ const fetchOrders = async () => {
                 styles.progressText,
                 { color: statusColors.text }
               ]}>
-                {item.status.toLowerCase() === 'pending' ? 'Order confirmed' :
-                  ['processing', 'processed'].includes(item.status.toLowerCase()) ? 'Being prepared' : 'On the way'}
+                {item.status.toLowerCase() === 'pending' ? t('orderConfirmed') :
+                  ['processing', 'processed'].includes(item.status.toLowerCase()) ? t('beingPrepared') : t('onTheWay')}
               </Text>
             </View>
           )}
@@ -515,7 +508,7 @@ const fetchOrders = async () => {
 
       if (!token) {
         console.error('Token not found');
-        Alert.alert('Authentication Required', 'Please log in to view orders.');
+        Alert.alert(t('authRequired'), t('loginToViewOrders'));
         return;
       }
 
@@ -542,11 +535,11 @@ const fetchOrders = async () => {
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error('Refresh error:', errorData);
-        Alert.alert('Error', 'Failed to refresh orders');
+        Alert.alert(t('error'), t('refreshOrdersFailed'));
       }
     } catch (error) {
       console.error('Error refreshing orders:', error);
-      Alert.alert('Network Error', 'Failed to refresh orders');
+      Alert.alert(t('networkError'), t('refreshOrdersFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -573,10 +566,36 @@ const fetchOrders = async () => {
     outputRange: [8, width / 2 + 4],
   });
 
-  const spinValue = refreshRotation.interpolate({
+  // Spinner animation hooks (must be at top level)
+  const spinValue = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(spinValue, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, [spinValue]);
+  const spin = spinValue.interpolate({
     inputRange: [0, 1],
     outputRange: ['0deg', '360deg'],
   });
+
+  const renderLoadingSpinner = (styles, isLoading) => (
+    <View style={styles.loadingContainer}>
+      <View style={styles.spinnerContainer}>
+        <Animated.View style={[styles.spinner, { transform: [{ rotate: spin }] }]}> 
+          <View style={styles.spinnerOuter}>
+            <View style={styles.spinnerInner} />
+          </View>
+        </Animated.View>
+        <Text style={styles.loadingText}>
+          {isLoading ? t('loadingOrders') : t('searching')}
+        </Text>
+      </View>
+    </View>
+  );
 
   return (
     <SafeAreaView style={[
@@ -599,7 +618,7 @@ const fetchOrders = async () => {
           styles.title,
           { color: isDark ? '#FFFFFF' : '#1C1C1E' }
         ]}>
-          My Orders
+          {t('myOrders')}
         </Text>
         <TouchableOpacity
           style={[
@@ -608,7 +627,7 @@ const fetchOrders = async () => {
           ]}
           onPress={refreshOrders}
         >
-          <Animated.View style={{ transform: [{ rotate: spinValue }] }}>
+          <Animated.View style={{ transform: [{ rotate: spin }] }}>
             <Ionicons name="refresh-outline" size={20} color="#2E7D31" />
           </Animated.View>
         </TouchableOpacity>
@@ -641,7 +660,7 @@ const fetchOrders = async () => {
               { color: isDark ? '#AEAEB2' : '#8E8E93' },
               activeTab === 'current' && styles.activeTabText
             ]}>
-              Current
+              {t('current')}
             </Text>
             {getCurrentOrdersCount() > 0 && (
               <View style={styles.tabBadge}>
@@ -659,7 +678,7 @@ const fetchOrders = async () => {
               { color: isDark ? '#AEAEB2' : '#8E8E93' },
               activeTab === 'history' && styles.activeTabText
             ]}>
-              History
+              {t('history')}
             </Text>
             {getHistoryOrdersCount() > 0 && (
               <View style={[styles.tabBadge, { backgroundColor: '#8E8E93' }]}>
@@ -672,17 +691,7 @@ const fetchOrders = async () => {
 
       <View style={styles.content}>
         {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <View style={styles.loadingSpinner}>
-              <ActivityIndicator size="large" color="#2E7D31" />
-            </View>
-            <Text style={[
-              styles.loadingText,
-              { color: isDark ? '#8E8E93' : '#8E8E93' }
-            ]}>
-              Loading your orders...
-            </Text>
-          </View>
+          renderLoadingSpinner(styles, isLoading)
         ) : filterOrders().length === 0 ? (
           <View style={styles.emptyState}>
             <Animated.View
@@ -701,22 +710,22 @@ const fetchOrders = async () => {
               styles.emptyText,
               { color: isDark ? '#FFFFFF' : '#1C1C1E' }
             ]}>
-              {activeTab === 'current' ? 'No Current Orders' : 'No Order History'}
+              {activeTab === 'current' ? t('noCurrentOrders') : t('noOrderHistory')}
             </Text>
             <Text style={[
               styles.emptySubtext,
               { color: isDark ? '#8E8E93' : '#8E8E93' }
             ]}>
               {activeTab === 'current'
-                ? 'Your pending orders will appear here'
-                : 'Your processed, shipped, delivered, and cancelled orders will appear here'}
+                ? t('pendingOrdersAppearHere')
+                : t('historyOrdersAppearHere')}
             </Text>
             <TouchableOpacity
               style={styles.emptyActionButton}
               activeOpacity={0.8}
               onPress={() => console.log('Browse products pressed')}
             >
-              <Text style={styles.emptyActionText}>Browse Products</Text>
+              <Text style={styles.emptyActionText}>{t('browseProducts')}</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -1027,6 +1036,32 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
     fontFamily: FONT_FAMILY, 
+  },
+  spinnerContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  spinner: {
+    width: 50,
+    height: 50,
+    marginBottom: 16,
+  },
+  spinnerOuter: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 3,
+    borderColor: '#E5E5EA',
+    borderTopColor: '#2E7D31',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  spinnerInner: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#2E7D31',
+    opacity: 0.6,
   },
 });
 

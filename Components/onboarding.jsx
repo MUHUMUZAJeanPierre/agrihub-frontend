@@ -11,6 +11,7 @@ import {
   Dimensions,
 } from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
+import { useLanguage } from '../contexts/LanguageContext';
 
 const { width, height } = Dimensions.get("window");
 
@@ -131,6 +132,7 @@ const Onboarding = ({ navigation }) => {
   const ref = React.useRef();
   const intervalRef = React.useRef();
   const { theme } = useTheme();
+  const { language, t } = useLanguage();
 
   React.useEffect(() => {
     const timer = setTimeout(() => {

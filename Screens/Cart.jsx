@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useCart } from '../contexts/CartContext';
 import { useTheme } from '../contexts/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const { width } = Dimensions.get('window');
 const FONT_FAMILY = 'Poppins_400Regular'; 
@@ -81,6 +82,7 @@ const CartScreen = ({ navigation }) => {
   const { cartItems, removeFromCart, updateQuantity, clearCart, refreshCart } = useCart();
   const { theme } = useTheme();
   const Colors = theme === 'dark' ? DarkColors : LightColors;
+  const { language, t } = useLanguage();
 
   useEffect(() => {
     loadAuthToken();
@@ -105,7 +107,7 @@ const CartScreen = ({ navigation }) => {
       }
     } catch (error) {
       console.error('Error refreshing cart:', error);
-      Alert.alert('Update Failed', 'Unable to refresh cart. Please try again.');
+      Alert.alert(t('updateFailed'), t('unableToRefreshCart'));
     } finally {
       setIsUpdating(false);
     }
@@ -120,13 +122,13 @@ const CartScreen = ({ navigation }) => {
 
     const token = await AsyncStorage.getItem(AUTH_KEYS.TOKEN);
     if (!token) {
-      Alert.alert('Authentication Required', 'Please log in to place an order.');
+      Alert.alert(t('authRequired'), t('loginToPlaceOrder'));
       navigation.navigate('Login');
       return;
     }
 
     if (cartItems.length === 0) {
-      Alert.alert('Cart is Empty', 'Add items to cart before placing an order.');
+      Alert.alert(t('cartIsEmpty'), t('addItemsToCart'));
       return;
     }
 
@@ -136,7 +138,7 @@ const CartScreen = ({ navigation }) => {
     }, 0);
 
     if (totalAmount <= 0) {
-      Alert.alert('Error', 'Total amount calculation failed.');
+      Alert.alert(t('error'), t('totalAmountCalculationFailed'));
       return;
     }
 
@@ -162,11 +164,11 @@ const CartScreen = ({ navigation }) => {
     const data = await response.json();
     if (response.ok) {
       Alert.alert(
-        '✅ Order Placed Successfully',
-        'Your order has been submitted and will be processed soon.',
+        t('orderPlacedTitle'),
+        t('orderPlacedMessage'),
         [
           {
-            text: 'Continue Shopping',
+            text: t('continueShopping'),
             onPress: () => {
               clearCart();
               navigation.navigate('Home');
@@ -177,15 +179,15 @@ const CartScreen = ({ navigation }) => {
     } else {
       console.error('❌ Order failed:', data);
       Alert.alert(
-        '❌ Order Failed',
-        data?.message || data?.error || 'Unable to place order. Please try again.'
+        t('orderFailedTitle'),
+        data?.message || data?.error || t('unableToPlaceOrder')
       );
     }
   } catch (error) {
     console.error('❌ Network/order error:', error);
     Alert.alert(
-      'Network Error',
-      'Unable to place your order. Please check your connection and try again.'
+      t('networkError'),
+      t('unableToPlaceOrderNetwork')
     );
   } finally {
     setIsPlacingOrder(false);
@@ -206,19 +208,19 @@ const CartScreen = ({ navigation }) => {
   const handleQuantityUpdate = (itemId, newQuantity) => {
     if (newQuantity <= 0) {
       Alert.alert(
-        'Remove Item',
-        'Do you want to remove this item from cart?',
+        t('removeItem'),
+        t('removeItemFromCart'),
         [
-          { text: 'Cancel', style: 'cancel' },
+          { text: t('cancel'), style: 'cancel' },
           { 
-            text: 'Remove', 
+            text: t('remove'), 
             style: 'destructive', 
             onPress: () => removeFromCart(itemId) 
           }
         ]
       );
     } else if (newQuantity > 99) {
-      Alert.alert('Quantity Limit', 'Maximum quantity per item is 99.');
+      Alert.alert(t('quantityLimit'), t('maxQuantityPerItem'));
     } else {
       updateQuantity(itemId, newQuantity);
     }
@@ -226,12 +228,12 @@ const CartScreen = ({ navigation }) => {
 
   const handleRemoveItem = (itemId, itemName) => {
     Alert.alert(
-      'Remove Item',
-      `Remove "${itemName}" from cart?`,
+      t('removeItem'),
+      t('removeItemFromCartNamed', { itemName }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('cancel'), style: 'cancel' },
         { 
-          text: 'Remove', 
+          text: t('remove'), 
           style: 'destructive', 
           onPress: () => removeFromCart(itemId) 
         }
@@ -241,12 +243,12 @@ const CartScreen = ({ navigation }) => {
 
   const handleClearCart = () => {
     Alert.alert(
-      'Clear Cart',
-      'Are you sure you want to remove all items from cart?',
+      t('clearCart'),
+      t('clearCartConfirm'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('cancel'), style: 'cancel' },
         { 
-          text: 'Clear All', 
+          text: t('clearAll'), 
           style: 'destructive', 
           onPress: clearCart 
         }
@@ -285,7 +287,7 @@ const CartScreen = ({ navigation }) => {
               style={styles.removeButton}
               onPress={() => handleRemoveItem(item._id, item.title || item.name)}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              accessibilityLabel="Remove item"
+              accessibilityLabel={t('removeItem')}
             >
               <Ionicons name="trash-outline" size={18} color={Colors.error} />
             </TouchableOpacity>
@@ -311,7 +313,7 @@ const CartScreen = ({ navigation }) => {
                 ]}
                 onPress={() => handleQuantityUpdate(item._id, item.quantity - 1)}
                 disabled={item.quantity <= 1}
-                accessibilityLabel="Decrease quantity"
+                accessibilityLabel={t('decreaseQuantity')}
               >
                 <Ionicons 
                   name="remove" 
@@ -333,7 +335,7 @@ const CartScreen = ({ navigation }) => {
                   { backgroundColor: Colors.surface }
                 ]}
                 onPress={() => handleQuantityUpdate(item._id, item.quantity + 1)}
-                accessibilityLabel="Increase quantity"
+                accessibilityLabel={t('increaseQuantity')}
               >
                 <Ionicons 
                   name="add" 
@@ -357,45 +359,45 @@ const CartScreen = ({ navigation }) => {
           color={Colors.textTertiary} 
         />
       </View>
-      <Text style={[styles.emptyTitle, { color: Colors.textPrimary }]}>
-        Your cart is empty
+      <Text style={[styles.emptyTitle, { color: Colors.textPrimary }]}> 
+        {t('cartIsEmpty')}
       </Text>
-      <Text style={[styles.emptySubtitle, { color: Colors.textSecondary }]}>
-        Add some products to get started
+      <Text style={[styles.emptySubtitle, { color: Colors.textSecondary }]}> 
+        {t('addSomeProducts')}
       </Text>
       <TouchableOpacity
         style={[styles.shopButton, { backgroundColor: Colors.success }]}
         onPress={() => navigation.navigate('Home')}
         activeOpacity={0.8}
       >
-        <Text style={styles.shopButtonText}>Start Shopping</Text>
+        <Text style={styles.shopButtonText}>{t('startShopping')}</Text>
       </TouchableOpacity>
     </View>
   );
 
   const LoadingOverlay = () => (
     <View style={styles.loadingOverlay}>
-      <View style={[styles.loadingContainer, { backgroundColor: Colors.cardBackground }]}>
+      <View style={[styles.loadingContainer, { backgroundColor: Colors.cardBackground }]}> 
         <ActivityIndicator size="large" color={Colors.success} />
-        <Text style={[styles.loadingText, { color: Colors.textPrimary }]}>
-          Placing your order...
+        <Text style={[styles.loadingText, { color: Colors.textPrimary }]}> 
+          {t('placingYourOrder')}
         </Text>
       </View>
     </View>
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: Colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: Colors.background }]}> 
       <StatusBar 
         barStyle={theme === 'dark' ? 'light-content' : 'dark-content'} 
         backgroundColor={Colors.background} 
       />
-      <View style={[styles.header, { backgroundColor: Colors.cardBackground, borderBottomColor: Colors.borderColor }]}>
+      <View style={[styles.header, { backgroundColor: Colors.cardBackground, borderBottomColor: Colors.borderColor }]}> 
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          accessibilityLabel="Go back"
+          accessibilityLabel={t('goBack')}
         >
           <Ionicons 
             name="arrow-back" 
@@ -403,25 +405,23 @@ const CartScreen = ({ navigation }) => {
             color={Colors.textPrimary} 
           />
         </TouchableOpacity>
-
         <View style={styles.headerTitleContainer}>
-          <Text style={[styles.headerTitle, { color: Colors.textPrimary }]}>
-            My Cart
+          <Text style={[styles.headerTitle, { color: Colors.textPrimary }]}> 
+            {t('myCart')}
           </Text>
           {cartItems.length > 0 && (
-            <Text style={[styles.itemCount, { color: Colors.textSecondary }]}>
-              {cartItems.length} item{cartItems.length !== 1 ? 's' : ''}
+            <Text style={[styles.itemCount, { color: Colors.textSecondary }]}> 
+              {t('itemCount', { count: cartItems.length })}
             </Text>
           )}
         </View>
-
         {cartItems.length > 0 && (
           <TouchableOpacity
             style={[styles.updateButton, { backgroundColor: Colors.surfaceLight }]}
             onPress={handleRefreshCart}
             disabled={isUpdating}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            accessibilityLabel="Refresh cart"
+            accessibilityLabel={t('refreshCart')}
           >
             {isUpdating ? (
               <ActivityIndicator size="small" color={Colors.success} />
@@ -430,20 +430,17 @@ const CartScreen = ({ navigation }) => {
             )}
           </TouchableOpacity>
         )}
-
         {cartItems.length > 0 && (
           <TouchableOpacity
             style={styles.clearButton}
             onPress={handleClearCart}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            accessibilityLabel="Clear cart"
+            accessibilityLabel={t('clearCart')}
           >
-            <Text style={[styles.clearButtonText, { color: Colors.success }]}>Clear</Text>
+            <Text style={[styles.clearButtonText, { color: Colors.success }]}>{t('clear')}</Text>
           </TouchableOpacity>
         )}
       </View>
-
-
       {cartItems.length === 0 ? (
         <EmptyCart />
       ) : (
@@ -460,35 +457,30 @@ const CartScreen = ({ navigation }) => {
             maxToRenderPerBatch={10}
             windowSize={10}
           />
-
-          <View style={[styles.summaryContainer, { backgroundColor: Colors.cardBackground }]}>
+          <View style={[styles.summaryContainer, { backgroundColor: Colors.cardBackground }]}> 
             <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: Colors.textSecondary }]}>
-                Subtotal ({cartItems.length} item{cartItems.length !== 1 ? 's' : ''})
+              <Text style={[styles.summaryLabel, { color: Colors.textSecondary }]}> 
+                {t('subtotal', { count: cartItems.length })}
               </Text>
-              <Text style={[styles.summaryValue, { color: Colors.textPrimary }]}>
+              <Text style={[styles.summaryValue, { color: Colors.textPrimary }]}> 
                 ${total.toFixed(2)}
               </Text>
             </View>
-
             <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: Colors.textSecondary }]}>
-                Delivery Fee
+              <Text style={[styles.summaryLabel, { color: Colors.textSecondary }]}> 
+                {t('deliveryFee')}
               </Text>
-              <Text style={[styles.summaryValue, { color: Colors.textPrimary }]}>
-                FREE
+              <Text style={[styles.summaryValue, { color: Colors.textPrimary }]}> 
+                {t('free')}
               </Text>
             </View>
-
             <View style={[styles.divider, { backgroundColor: Colors.borderColor }]} />
-
             <View style={styles.totalRow}>
-              <Text style={[styles.totalLabel, { color: Colors.textPrimary }]}>
-                Total
+              <Text style={[styles.totalLabel, { color: Colors.textPrimary }]}> 
+                {t('total')}
               </Text>
               <Text style={[styles.totalValue, { color: Colors.success }]}>${total.toFixed(2)}</Text>
             </View>
-
             <TouchableOpacity
               style={[
                 styles.checkoutButton, 
@@ -502,11 +494,11 @@ const CartScreen = ({ navigation }) => {
               {isPlacingOrder ? (
                 <>
                   <ActivityIndicator size="small" color="#FFFFFF" />
-                  <Text style={styles.checkoutButtonText}>Processing...</Text>
+                  <Text style={styles.checkoutButtonText}>{t('processing')}</Text>
                 </>
               ) : (
                 <>
-                  <Text style={styles.checkoutButtonText}>Place Order • ${total.toFixed(2)}</Text>
+                  <Text style={styles.checkoutButtonText}>{t('placeOrderWithTotal', { total: total.toFixed(2) })}</Text>
                   <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
                 </>
               )}

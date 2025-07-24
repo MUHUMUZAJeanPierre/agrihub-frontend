@@ -13,6 +13,7 @@ import Button from "../Components/Button";
 import { showMessage } from "react-native-flash-message";
 import Dropdown from "../Components/Dropdown";
 import { useTheme } from "../contexts/ThemeContext";
+import { useLanguage } from '../contexts/LanguageContext';
 
  
 const registerUser = async (name, email, password, role) => {
@@ -44,6 +45,7 @@ bold: "Poppins_700Bold",
 export default function Register({ navigation }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const { language, t } = useLanguage();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");

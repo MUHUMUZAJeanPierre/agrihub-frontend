@@ -1,3 +1,4 @@
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -11,8 +12,9 @@ import {
   StatusBar,
   Platform,
   Alert,
+  Modal,
+  Animated,
 } from "react-native";
-import React, { useState, useEffect } from "react";
 import { moderateScale } from "react-native-size-matters";
 import AntDesign from "react-native-vector-icons/AntDesign";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
@@ -21,6 +23,7 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 import { useTheme } from "../../contexts/ThemeContext";
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const FONTS = {
   regular: "Poppins_400Regular",
@@ -114,9 +117,109 @@ const QuickActionButton = ({ icon, label, onPress, color = "#10B981", Colors }) 
   </TouchableOpacity>
 );
 
+const HeaderComponent = ({ username, theme, toggleTheme, language, changeLanguage, Colors, t, styles, navigation }) => {
+  const [showProfileModal, setShowProfileModal] = useState(false);
+
+  const handleLogout = async () => {
+    Alert.alert(t('logout'), t('logoutConfirm'), [
+      { text: t('cancel'), style: 'cancel' },
+      {
+        text: t('logout'),
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await AsyncStorage.multiRemove([
+              '@auth_token',
+              '@user_id',
+              '@user_data',
+            ]);
+            setShowProfileModal(false);
+            if (navigation && navigation.reset) {
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'login' }],
+              });
+            }
+          } catch (err) {
+            console.error('Logout error:', err);
+          }
+        },
+      },
+    ]);
+  };
+
+  return (
+    <View style={[styles.header, { backgroundColor: Colors.background, paddingTop: 20, paddingBottom: 4, shadowColor: 'transparent', borderRadius: 0 }]}> 
+      <View style={styles.headerTop}>
+        <View>
+          <Text style={[styles.headerName, { color: Colors.textPrimary }]}>{username}</Text>
+        </View>
+        <TouchableOpacity style={styles.profileButton} onPress={() => setShowProfileModal(true)}>
+          <View style={[styles.profileIcon, { backgroundColor: Colors.surface }]}> 
+            <Ionicons name="person-circle-outline" size={28} color={Colors.textPrimary} />
+          </View>
+        </TouchableOpacity>
+        <Modal
+          visible={showProfileModal}
+          animationType="fade"
+          transparent
+          onRequestClose={() => setShowProfileModal(false)}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            style={[styles.modalOverlay, { backgroundColor: Colors.overlay || 'rgba(0,0,0,0.6)' }]}
+            onPressOut={() => setShowProfileModal(false)}
+          >
+            <View style={[styles.profileModalContent, { backgroundColor: Colors.cardBackground, borderColor: Colors.borderColor || Colors.border }]}> 
+              <Text style={[styles.modalTitle, { color: Colors.textPrimary }]}>{t('profileOptions')}</Text>
+              {/* Theme toggle */}
+              <TouchableOpacity
+                style={[styles.toggleButton, { backgroundColor: Colors.surface, borderColor: Colors.borderColor || Colors.border }]}
+                onPress={toggleTheme}
+              >
+                <View style={styles.toggleButtonContent}>
+                  <Ionicons 
+                    name={theme === 'light' ? 'moon-outline' : 'sunny-outline'} 
+                    size={24} 
+                    color={Colors.textPrimary} 
+                  />
+                  <Text style={[styles.toggleButtonText, { color: Colors.textPrimary }]}> {theme === 'light' ? t('switchToDark') : t('switchToLight')} </Text>
+                </View>
+              </TouchableOpacity>
+              {/* Language toggle */}
+              <TouchableOpacity
+                style={[styles.toggleButton, { backgroundColor: Colors.surface, borderColor: Colors.borderColor || Colors.border }]}
+                onPress={() => changeLanguage(language === 'en' ? 'rw' : 'en')}
+              >
+                <View style={styles.toggleButtonContent}>
+                  <Ionicons name="language-outline" size={24} color={Colors.textPrimary} />
+                  <Text style={[styles.toggleButtonText, { color: Colors.textPrimary }]}> {language === 'en' ? t('changeToKinyarwanda') : t('changeToEnglish')} </Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.closeButton, { backgroundColor: Colors.primary }]}
+                onPress={() => setShowProfileModal(false)}
+              >
+                <Text style={styles.closeButtonText}>{t('close')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.closeButton, { backgroundColor: Colors.error, marginTop: 10 }]}
+                onPress={handleLogout}
+              >
+                <Text style={styles.closeButtonText}>{t('logout')}</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      </View>
+    </View>
+  );
+};
+
 export default function Farmerdash({ navigation }) {
   const { theme } = useTheme();
   const Colors = theme === 'dark' ? DarkColors : LightColors;
+  const { language, changeLanguage, t } = useLanguage();
 
   const [originalblogs, setOriginalBlogs] = useState([]);
   const [search, setSearch] = useState("");
@@ -166,9 +269,7 @@ export default function Farmerdash({ navigation }) {
 
   const fetchBlogsFromAPI = async () => {
     try {
-      // Get authentication token
-      const token = await AsyncStorage.getItem('@auth_token');
-      
+      const token = await AsyncStorage.getItem('@auth_token');      
       const response = await fetch(API_ENDPOINTS.FARMERS, {
         method: 'GET',
         headers: { 
@@ -209,7 +310,6 @@ export default function Farmerdash({ navigation }) {
     try {
       setOrdersLoading(true);
       
-      // Get authentication token
       const token = await AsyncStorage.getItem('@auth_token');
       
       const response = await fetch(API_ENDPOINTS.ORDERS, {
@@ -258,9 +358,7 @@ export default function Farmerdash({ navigation }) {
 
   const fetchProductsFromAPI = async () => {
     try {
-      setProductsLoading(true);
-      
-      // Get authentication token
+      setProductsLoading(true);      
       const token = await AsyncStorage.getItem('@auth_token');
       
       const response = await fetch(API_ENDPOINTS.PRODUCTS, {
@@ -368,44 +466,25 @@ export default function Farmerdash({ navigation }) {
     }
   };
 
-  const StatCard = ({ title, value, icon, onPress, gradient, trend, trendValue, isLoading }) => (
-    <TouchableOpacity onPress={onPress} style={[
-      styles.statCard, 
-      gradient && styles.gradientCard,
-      { backgroundColor: gradient ? Colors.success : Colors.cardBackground }
-    ]}>
-      <View style={styles.statCardHeader}>
-        <View style={[
-          styles.iconContainer, 
-          { backgroundColor: gradient ? 'rgba(255,255,255,0.2)' : Colors.surfaceLight }
-        ]}>
-          {icon}
-        </View>
-        {trend && !isLoading && (
-          <View style={[
-            styles.trendContainer, 
-            { backgroundColor: trend === 'up' ? Colors.surfaceLight : Colors.surfaceLight }
-          ]}>
-            <Feather
-              name={trend === 'up' ? 'trending-up' : 'trending-down'}
-              size={12}
-              color={trend === 'up' ? Colors.success : Colors.error}
-            />
-            <Text style={[styles.trendText, { color: trend === 'up' ? Colors.success : Colors.error }]}>
-              {trendValue}
-            </Text>
-          </View>
-        )}
-      </View>
+  const StatCard = ({ title, value, onPress, gradient, isLoading }) => (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.85}
+      style={[
+        styles.statCard,
+        gradient && styles.gradientCard,
+        { backgroundColor: gradient ? Colors.success : Colors.cardBackground }
+      ]}
+    >
       <Text style={[
-        styles.statTitle, 
-        { color: gradient ? 'rgba(255,255,255,0.8)' : Colors.textSecondary }
+        styles.statTitle,
+        { color: gradient ? 'rgba(255,255,255,0.85)' : Colors.textSecondary }
       ]}>{title}</Text>
       {isLoading ? (
         <ActivityIndicator size="small" color={gradient ? "white" : Colors.success} />
       ) : (
         <Text style={[
-          styles.statValue, 
+          styles.statValue,
           { color: gradient ? "white" : Colors.success }
         ]}>{value}</Text>
       )}
@@ -479,57 +558,76 @@ export default function Farmerdash({ navigation }) {
     return hasEmoji ? user.name : `${user.name} `;
   };
 
+  const HORIZONTAL_PADDING = 20;
+  const spinValue = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(spinValue, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, [spinValue]);
+  const spin = spinValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
   return (
-    <View style={[styles.container, { backgroundColor: Colors.background }]}>
+    <View style={[styles.container, { backgroundColor: Colors.background }]}> 
       <StatusBar 
         barStyle={theme === 'dark' ? "light-content" : "dark-content"} 
         backgroundColor={Colors.background} 
       />
-
-      <View style={[styles.header, { backgroundColor: Colors.cardBackground }]}>
-        <View style={styles.headerTop}>
-          <View style={styles.headerLeft}>
-            <Text style={[styles.headerTitle, { color: Colors.textPrimary }]}>{getDisplayName()}</Text>
-          </View>
-
-          <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.notificationButton}>
-              <Ionicons name="notifications-outline" size={24} color={Colors.textSecondary} />
-              <View style={styles.notificationBadge} />
+      <View style={{ paddingHorizontal: HORIZONTAL_PADDING }}>
+        <HeaderComponent
+          username={getDisplayName()}
+          theme={theme}
+          toggleTheme={() => {}}
+          language={language}
+          changeLanguage={changeLanguage}
+          Colors={Colors}
+          t={t}
+          styles={styles}
+          navigation={navigation}
+        />
+        {/* Add search bar below header, with reduced top margin */}
+        <View style={[styles.searchWrapper, { marginTop: 4 }]}> 
+          <View style={[styles.searchContainer, { backgroundColor: Colors.inputBackground }]}> 
+            <View style={[styles.searchInputContainer, { backgroundColor: Colors.inputBackground }]}> 
+              <Ionicons name="search-outline" size={20} color={Colors.textSecondary} />
+              <TextInput
+                style={[styles.searchInput, { color: Colors.textPrimary }]}
+                placeholder={t('searchPlaceholder') || "Search crop diseases & solutions..."}
+                placeholderTextColor={Colors.textSecondary}
+                value={search}
+                onChangeText={(text) => {
+                  setSearch(text);
+                  searchFilter(text);
+                }}
+                returnKeyType="search"
+              />
+            </View>
+            <TouchableOpacity 
+              style={[styles.filterButton, { backgroundColor: Colors.inputBackground }]}
+            >
+              <Ionicons name="options-outline" size={20} color={Colors.textSecondary} />
             </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => handleNavigation("Add")} style={styles.addButton}>
-              <AntDesign name="plus" size={24} color="white" />
-            </TouchableOpacity>
           </View>
-        </View>
-
-        <View style={styles.searchWrapper}>
-          <SearchTextInput
-            value={search}
-            onChangeText={(text) => {
-              setSearch(text);
-              searchFilter(text);
-            }}
-            placeholder="Search crop diseases & solutions..."
-            Colors={Colors}
-          />
         </View>
       </View>
-
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingHorizontal: HORIZONTAL_PADDING }]}
         style={styles.scrollView}
       >
-        <View style={styles.statsContainer}>
+        <View style={[styles.statsContainer, { paddingHorizontal: 0 }]}> {/* Remove extra padding here */}
           <StatCard
             title="Products Listed"
             value={totalProducts.toString()}
-            // icon={<MaterialIcons name="inventory" size={24} color="#10B981" />}
             onPress={() => handleNavigation("farmerblog")}
-            // trend="up"
-            // trendValue="+12%"
+            gradient={false}
+            isLoading={ordersLoading}
           />
           <StatCard
             title="Orders Received"
@@ -546,8 +644,12 @@ export default function Farmerdash({ navigation }) {
         <View style={styles.contentSection}>
           <View style={styles.sectionHeader}>
             <View>
-              <Text style={[styles.sectionTitle, { color: Colors.textPrimary }]}>Disease Alerts & Prevention</Text>
-              <Text style={[styles.sectionSubtitle, { color: Colors.textSecondary }]}>Stay ahead of crop diseases</Text>
+              <Text style={[styles.sectionTitle, { color: Colors.textPrimary }]}>
+                Disease Alerts & Prevention
+              </Text>
+              <Text style={[styles.sectionSubtitle, { color: Colors.textSecondary }]}>
+                Stay ahead of crop diseases
+              </Text>
             </View>
             <TouchableOpacity style={styles.seeAllButton}>
               <Text style={[styles.seeAllText, { color: Colors.success }]}>See all</Text>
@@ -557,11 +659,16 @@ export default function Farmerdash({ navigation }) {
 
           {blogsLoading ? (
             <View style={styles.loadingContainer}>
-              <View style={styles.loadingAnimation}>
-                <ActivityIndicator size="large" color={Colors.success} />
+              <View style={styles.spinnerContainer}>
+                <Animated.View style={[styles.spinner, { transform: [{ rotate: spin }] }]}> 
+                  <View style={styles.spinnerOuter}>
+                    <View style={styles.spinnerInner} />
+                  </View>
+                </Animated.View>
+                <Text style={styles.loadingText}>
+                  {t('loadingBlogs')}
+                </Text>
               </View>
-              <Text style={[styles.loadingText, { color: Colors.textSecondary }]}>Loading latest disease alerts...</Text>
-              <Text style={[styles.loadingSubtext, { color: Colors.textTertiary }]}>Analyzing crop conditions</Text>
             </View>
           ) : blogs.length === 0 ? (
             <View style={styles.loadingContainer}>
@@ -569,7 +676,7 @@ export default function Farmerdash({ navigation }) {
               <Text style={[styles.loadingSubtext, { color: Colors.textTertiary }]}>Check back later for updates</Text>
             </View>
           ) : (
-            <View style={styles.blogList}>
+            <View style={[styles.blogList, { paddingHorizontal: 0 }]}> {/* Remove extra padding here */}
               {blogs.map((item) => (
                 <BlogCard
                   key={item.id}
@@ -590,22 +697,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingTop: Platform.OS === 'ios' ? 50 : 30,
-    paddingBottom: 25,
     paddingHorizontal: 20,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 8,
+    paddingTop: 20,
+    paddingBottom: 4, // Reduce space below header
   },
   headerTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 25,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8, // Reduce space below headerTop
   },
   headerLeft: {
     flex: 1,
@@ -653,28 +753,37 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   searchWrapper: {
-    marginTop: 5,
+    marginTop: 4,
   },
   searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     borderRadius: 16,
-    paddingHorizontal: 16,
+    paddingHorizontal: 0,
     height: 54,
-    borderWidth: 1,
-  },
-  searchIconContainer: {
-    marginRight: 12,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    fontFamily: "Poppins_400Regular",
-  },
-  filterButton: {
-    padding: 8,
-    marginLeft: 8,
-  },
+    marginBottom: 8,
+},
+searchInputContainer: {
+  flex: 1,
+  flexDirection: 'row',
+  alignItems: 'center',
+  borderRadius: 16,
+  paddingHorizontal: 16,
+  height: 44,
+},
+searchInput: {
+  flex: 1,
+  fontSize: 16,
+  fontFamily: 'Poppins_400Regular',
+  marginLeft: 8,
+},
+filterButton: {
+  marginLeft: 8,
+  borderRadius: 12,
+  padding: 10,
+  justifyContent: 'center',
+  alignItems: 'center',
+},
   scrollView: {
     flex: 1,
   },
@@ -683,58 +792,71 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     flexDirection: "row",
-    paddingHorizontal: 20,
+    // paddingHorizontal: 20, // Remove this line
     paddingTop: 25,
     gap: 16,
   },
   statCard: {
     flex: 1,
-    borderRadius: 24,
-    padding: 20,
-    shadowColor: "#000",
+    borderRadius: 10,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    marginHorizontal: 4,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 6,
-  },
-  gradientCard: {
-    backgroundColor: "#4CAF50",
-  },
-  statCardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 16,
-  },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  trendContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
-  },
-  trendText: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  statTitle: {
-    fontSize: 14,
-    fontFamily: FONTS.regular,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 120,
+    minHeight: 80,
     marginBottom: 8,
-  },
-  statValue: {
-    fontSize: 30,
-    fontWeight: "300",
-    fontFamily: FONTS.bold,
-  },
+},
+gradientCard: {
+  backgroundColor: '#4CAF50',
+},
+statCardHeader: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  width: '100%',
+  marginBottom: 18,
+},
+iconContainer: {
+  width: 54,
+  height: 54,
+  borderRadius: 27,
+  backgroundColor: '#F0F0F0',
+  alignItems: 'center',
+  justifyContent: 'center',
+  marginRight: 10,
+},
+statTitle: {
+  fontSize: 15,
+  fontWeight: '500',
+  fontFamily: FONTS.semiBold,
+  marginBottom: 6,
+  textAlign: 'center',
+},
+statValue: {
+  fontSize: 32,
+  fontWeight: '700',
+  fontFamily: FONTS.bold,
+  textAlign: 'center',
+  marginTop: 2,
+},
+trendContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginLeft: 8,
+},
+trendText: {
+  fontSize: 14,
+  fontWeight: '600',
+  marginLeft: 4,
+},
   quickActionsContainer: {
     paddingHorizontal: 20,
     paddingTop: 30,
@@ -791,11 +913,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
+    // paddingHorizontal: 20, // Remove this line
     marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: "500",
     color: "#1F2937",
     fontFamily: FONTS.regular,
@@ -850,7 +972,7 @@ const styles = StyleSheet.create({
     color: "#9CA3AF",
   },
   blogList: {
-    paddingHorizontal: 20,
+    // paddingHorizontal: 20, // Remove this line
     gap: 20,
   },
   blogCard: {
@@ -996,5 +1118,109 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     padding: 8,
+  },
+  profileButton: {
+    padding: 8,
+  },
+  profileIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  profileModalContent: {
+    width: "80%",
+    borderRadius: 20,
+    padding: 25,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    marginBottom: 20,
+    fontFamily: FONTS.semiBold,
+  },
+  toggleButton: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 15,
+    borderColor: "#E0E0E0",
+  },
+  toggleButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  toggleButtonText: {
+    fontSize: 16,
+    fontWeight: "500",
+    fontFamily: FONTS.semiBold,
+  },
+  closeButton: {
+    width: "100%",
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  closeButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
+    fontFamily: FONTS.semiBold,
+  },
+  headerName: {
+    fontSize: 18,
+    fontWeight: '600',
+    fontFamily: 'Poppins_400Regular',
+  },
+  spinnerContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  spinner: {
+    width: 50,
+    height: 50,
+    marginBottom: 16,
+  },
+  spinnerOuter: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 3,
+    borderColor: '#E5E5EA',
+    borderTopColor: '#4CAF50',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  spinnerInner: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#4CAF50',
+    opacity: 0.6,
+  },
+  loadingText: {
+    fontSize: 16,
+    textAlign: 'center',
+    fontFamily: FONTS.regular,
   },
 });

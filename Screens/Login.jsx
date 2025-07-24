@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../contexts/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import StandardTextInput from '../Components/StandardTextInput';
 import Button from '../Components/Button';
 import FlashMessage, { showMessage } from 'react-native-flash-message';
@@ -31,6 +32,7 @@ const FONTS = {
 export default function Login({ navigation }) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const { language, t } = useLanguage();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

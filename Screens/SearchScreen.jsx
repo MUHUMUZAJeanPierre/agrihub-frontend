@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../contexts/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
@@ -63,6 +64,7 @@ const DarkColors = {
 
 const SearchScreen = () => {
   const { theme } = useTheme();
+  const { language, changeLanguage, t } = useLanguage();
   const Colors = theme === 'dark' ? DarkColors : LightColors;
   const styles = createStyles(Colors);
 
@@ -271,19 +273,19 @@ const SearchScreen = () => {
         color={Colors.textTertiary} 
       />
       <Text style={styles.emptyTitle}>
-        {searchQuery.length === 0 ? 'Start Your Search' : 'No Products Found'}
+        {searchQuery.length === 0 ? t('startSearch') : t('noProductsFound')}
       </Text>
       <Text style={styles.emptySubtitle}>
         {searchQuery.length === 0
-          ? 'Discover amazing products by typing in the search bar'
-          : `We couldn't find any products matching "${searchQuery}"`}
+          ? t('discoverProducts')
+          : t('noProductsFoundSubtitle', { query: searchQuery })}
       </Text>
     </View>
   );
 
   const renderSearchSuggestions = () => (
     <View style={styles.categoriesContainer}>
-      <Text style={styles.categoriesTitle}>Browse Categories</Text>
+      <Text style={styles.categoriesTitle}>{t('browseCategories')}</Text>
       <FlatList
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -322,7 +324,7 @@ const SearchScreen = () => {
           </View>
         </Animated.View>
         <Text style={styles.loadingText}>
-          {isLoading ? 'Loading products...' : 'Searching...'}
+          {isLoading ? t('loadingProducts') : t('searching')}
         </Text>
       </View>
     </View>
@@ -357,7 +359,7 @@ const SearchScreen = () => {
           <Ionicons name="search-outline" size={20} color={Colors.textTertiary} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search for products..."
+            placeholder={t('searchPlaceholder')}
             placeholderTextColor={Colors.textTertiary}
             value={searchQuery}
             onChangeText={handleSearch}
@@ -381,7 +383,7 @@ const SearchScreen = () => {
         ) : (
           <View style={styles.resultsContainer}>
             <Text style={styles.resultsCount}>
-              {displayedProducts.length} result{displayedProducts.length !== 1 ? 's' : ''} found
+              {t('resultsFound', { count: displayedProducts.length })}
             </Text>
             <FlatList
               data={displayedProducts}

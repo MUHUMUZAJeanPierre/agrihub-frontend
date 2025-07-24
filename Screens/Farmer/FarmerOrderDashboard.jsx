@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, 
   Text, 
   FlatList, 
   TouchableOpacity, 
   Alert, 
-  ActivityIndicator,
   StyleSheet,
   Dimensions,
   RefreshControl,
-  StatusBar
+  StatusBar,
+  Animated,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from "../../contexts/ThemeContext";
@@ -71,6 +71,21 @@ const FarmerOrderDashboard = () => {
   const { theme } = useTheme();
   const Colors = theme === 'dark' ? DarkColors : LightColors;
   const styles = createStyles(Colors);
+
+  const spinValue = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(spinValue, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, [spinValue]);
+  const spin = spinValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
 
   // Fetch orders when the screen loads
   const fetchOrders = async (isRefresh = false) => {
@@ -290,8 +305,16 @@ const FarmerOrderDashboard = () => {
       {/* Content */}
       {isLoading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>Loading orders...</Text>
+          <View style={styles.spinnerContainer}>
+            <Animated.View style={[styles.spinner, { transform: [{ rotate: spin }] }]}> 
+              <View style={styles.spinnerOuter}>
+                <View style={styles.spinnerInner} />
+              </View>
+            </Animated.View>
+            <Text style={styles.loadingText}>
+              Loading orders...
+            </Text>
+          </View>
         </View>
       ) : (
         <FlatList
@@ -502,6 +525,32 @@ const createStyles = (Colors) => StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  spinnerContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  spinner: {
+    width: 50,
+    height: 50,
+    marginBottom: 16,
+  },
+  spinnerOuter: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 3,
+    borderColor: '#E5E5EA',
+    borderTopColor: '#4CAF50',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  spinnerInner: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#4CAF50',
+    opacity: 0.6,
   },
 });
 

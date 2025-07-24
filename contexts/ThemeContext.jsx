@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Appearance } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import i18n from 'i18next';
 
 const ThemeContext = createContext();
 
@@ -56,7 +57,7 @@ export const ThemeProvider = ({ children }) => {
   }, [loadStoredPreferences]);
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, fontFamily, toggleFont }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, fontFamily, toggleFont, t: i18n.t }}>
       {children}
     </ThemeContext.Provider>
   );

@@ -17,6 +17,8 @@ import {
 import Feather from "react-native-vector-icons/Feather";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { io } from "socket.io-client";
+import { useTheme } from '../../contexts/ThemeContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const SOCKET_URL = "https://agrihub-backend-4z99.onrender.com";
 const API_URL = "https://agrihub-backend-4z99.onrender.com/api/chats";
@@ -266,6 +268,9 @@ export default function Chat({ agroId, receiverId, recipientId, route, navigatio
   const pollingIntervalRef = useRef(null);
   const routeRecipientId = route?.params?.agroId  ||  route?.params?.receiverId || route?.params?.recipientId;
   const actualRecipientId = agroId || receiverId || recipientId || routeRecipientId || selectedRecipient?.id;
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const { language, t } = useLanguage();
 
 
   useEffect(() => {

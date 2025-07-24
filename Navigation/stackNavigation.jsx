@@ -12,6 +12,7 @@ import Detail from '../Screens/Farmer/description';
 import Chat from '../Screens/Farmer/Chat';
 import ProductDetailScreen from '../Screens/ProductDetailScreen';
 import AgroDetail from '../Screens/Agronome/AgroDetail';
+import Security from '../Screens/Security';
 
 const Stack = createNativeStackNavigator();
 
@@ -77,6 +78,7 @@ export default function StackNavigation() {
             <Stack.Screen name="forgot" component={Forgot} />
           </>
         )}
+        <Stack.Screen name="Security" component={Security} />
       </Stack.Navigator>
     </NavigationContainer>
   );

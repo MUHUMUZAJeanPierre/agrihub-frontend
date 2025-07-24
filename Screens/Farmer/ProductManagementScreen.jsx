@@ -28,6 +28,7 @@ import { Picker } from '@react-native-picker/picker';
 import { jwtDecode } from 'jwt-decode';
 import UploadTextInput from '../../Components/uploadtextInpu';
 import Button from '../../Components/Button';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const { width, height } = Dimensions.get('window');
 const FONTS = {
@@ -81,11 +82,13 @@ const ProductManagementScreen = () => {
   const { theme } = useTheme();
   const colors = useMemo(() => THEME_COLORS[theme] || THEME_COLORS.light, [theme]);
   const navigation = useNavigation();
+  const { language, t } = useLanguage();
 
   // Animation refs
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
+  const spinValue = useRef(new Animated.Value(0)).current;
 
   // State management
   const [products, setProducts] = useState([]);
@@ -157,6 +160,20 @@ const ProductManagementScreen = () => {
 
     initAnimations.start();
   }, [fadeAnim, slideAnim, scaleAnim]);
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(spinValue, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, [spinValue]);
+  const spin = spinValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
 
   // Load user data
   useEffect(() => {
@@ -299,45 +316,45 @@ const ProductManagementScreen = () => {
     const newErrors = {};
     
     if (!productData.title.trim()) {
-      newErrors.title = 'Product title is required';
+      newErrors.title = t('productTitleRequired');
     } else if (productData.title.length < 3) {
-      newErrors.title = 'Title must be at least 3 characters';
+      newErrors.title = t('titleMustBeAtLeast3Chars');
     }
 
     if (!productData.description.trim()) {
-      newErrors.description = 'Product description is required';
+      newErrors.description = t('productDescriptionRequired');
     } else if (productData.description.length < 20) {
-      newErrors.description = 'Description must be at least 20 characters';
+      newErrors.description = t('descriptionMustBeAtLeast20Chars');
     }
 
     if (!productData.price.trim()) {
-      newErrors.price = 'Current price is required';
+      newErrors.price = t('currentPriceRequired');
     } else {
       const priceValue = parseInt(productData.price.replace(/[^0-9]/g, ''));
       if (isNaN(priceValue) || priceValue <= 0) {
-        newErrors.price = 'Current price must be a valid positive number';
+        newErrors.price = t('currentPriceMustBeValidPositiveNumber');
       }
     }
 
     if (!productData.pastPrice.trim()) {
-      newErrors.pastPrice = 'Past price is required';
+      newErrors.pastPrice = t('pastPriceRequired');
     } else {
       const pastPriceValue = parseInt(productData.pastPrice.replace(/[^0-9]/g, ''));
       if (isNaN(pastPriceValue) || pastPriceValue <= 0) {
-        newErrors.pastPrice = 'Past price must be a valid positive number';
+        newErrors.pastPrice = t('pastPriceMustBeValidPositiveNumber');
       }
     }
 
     if (!productData.category) {
-      newErrors.category = 'Category is required';
+      newErrors.category = t('categoryRequired');
     }
 
     if (!productData.region) {
-      newErrors.region = 'Region is required';
+      newErrors.region = t('regionRequired');
     }
 
     if (!productData.picurl) {
-      newErrors.picurl = 'Product image is required';
+      newErrors.picurl = t('productImageRequired');
     }
 
     setErrors(newErrors);
@@ -356,7 +373,7 @@ const ProductManagementScreen = () => {
   // Add/Update product
   const handleSubmitProduct = async () => {
     if (!validateForm()) {
-      Alert.alert('Validation Error', 'Please fix the errors below.');
+      Alert.alert('Validation Error', t('pleaseFixErrors'));
       return;
     }
 
@@ -412,11 +429,11 @@ const ProductManagementScreen = () => {
       }
 
       Alert.alert(
-        'Success!',
-        editingProduct ? 'Product updated successfully!' : 'Product added successfully!',
+        t('success'),
+        editingProduct ? t('productUpdated') : t('productAdded'),
         [
           {
-            text: 'OK',
+            text: t('ok'),
             onPress: () => {
               resetForm();
               setShowAddModal(false);
@@ -428,8 +445,8 @@ const ProductManagementScreen = () => {
     } catch (error) {
       console.error('Submit product failed:', error.response?.data || error.message);
       Alert.alert(
-        'Error',
-        error.response?.data?.message || error.message || 'Failed to submit product'
+        t('error'),
+        error.response?.data?.message || error.message || t('failedToSubmitProduct')
       );
     } finally {
       setIsSubmitting(false);
@@ -515,7 +532,7 @@ const ProductManagementScreen = () => {
             style={[styles.actionButton, { backgroundColor: colors.secondary }]}
           >
             <Ionicons name="create-outline" size={18} color="white" />
-            <Text style={styles.actionButtonText}>Edit</Text>
+            <Text style={styles.actionButtonText}>{t('edit')}</Text>
           </TouchableOpacity>
           
           <TouchableOpacity
@@ -523,7 +540,7 @@ const ProductManagementScreen = () => {
             style={[styles.actionButton, { backgroundColor: colors.error }]}
           >
             <Ionicons name="trash-outline" size={18} color="white" />
-            <Text style={styles.actionButtonText}>Delete</Text>
+            <Text style={styles.actionButtonText}>{t('delete')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -534,11 +551,11 @@ const ProductManagementScreen = () => {
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
       <Ionicons name="basket-outline" size={80} color={colors.textMuted} />
-      <Text style={[styles.emptyStateTitle, { color: colors.text }]}>No Products Found</Text>
+      <Text style={[styles.emptyStateTitle, { color: colors.text }]}>{t('noProductsFound')}</Text>
       <Text style={[styles.emptyStateSubtitle, { color: colors.textSecondary }]}>
         {searchQuery || selectedCategory !== 'all' 
-          ? 'Try adjusting your search or filter'
-          : 'Start by adding your first product'}
+          ? t('tryAdjustingSearch')
+          : t('startByAddingProduct')}
       </Text>
     </View>
   );
@@ -572,7 +589,7 @@ const ProductManagementScreen = () => {
           </TouchableOpacity>
           
           <Text style={[styles.modalTitle, { color: colors.text }]}>
-            {editingProduct ? 'Edit Product' : 'Add New Product'}
+            {editingProduct ? t('editProduct') : t('addNewProduct')}
           </Text>
           
           <View style={styles.placeholder} />
@@ -589,7 +606,7 @@ const ProductManagementScreen = () => {
           >
             {/* Image Upload Section */}
             <View style={styles.imageSection}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Product Image</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('productImage')}</Text>
               
               <TouchableOpacity
                 style={[
@@ -606,7 +623,7 @@ const ProductManagementScreen = () => {
                   <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color={colors.primary} />
                     <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-                      Processing image...
+                      {t('processingImage')}
                     </Text>
                   </View>
                 ) : productData.picurl ? (
@@ -618,14 +635,14 @@ const ProductManagementScreen = () => {
                     />
                     <View style={styles.imageOverlay}>
                       <Ionicons name="camera" size={24} color="white" />
-                      <Text style={styles.changeImageText}>Tap to change</Text>
+                      <Text style={styles.changeImageText}>{t('tapToChange')}</Text>
                     </View>
                   </View>
                 ) : (
                   <View style={styles.uploadPlaceholder}>
                     <Ionicons name="image-outline" size={48} color={colors.primary} />
                     <Text style={[styles.uploadText, { color: colors.textSecondary }]}>
-                      Tap to select image
+                      {t('tapToSelectImage')}
                     </Text>
                   </View>
                 )}
@@ -642,7 +659,7 @@ const ProductManagementScreen = () => {
             <View style={styles.formFields}>
               {/* Title */}
               <View style={styles.inputGroup}>
-                <Text style={[styles.fieldLabel, { color: colors.text }]}>Product Title *</Text>
+                <Text style={[styles.fieldLabel, { color: colors.text }]}>{t('productTitleLabel')}</Text>
                 <TextInput
                   style={[
                     styles.textInput,
@@ -652,7 +669,7 @@ const ProductManagementScreen = () => {
                       color: colors.text,
                     }
                   ]}
-                  placeholder="Enter product title"
+                  placeholder={t('enterProductTitle')}
                   placeholderTextColor={colors.placeholder}
                   value={productData.title}
                   onChangeText={(text) => updateProductData('title', text)}
@@ -667,7 +684,7 @@ const ProductManagementScreen = () => {
 
               {/* Description */}
               <View style={styles.inputGroup}>
-                <Text style={[styles.fieldLabel, { color: colors.text }]}>Description *</Text>
+                <Text style={[styles.fieldLabel, { color: colors.text }]}>{t('descriptionLabel')}</Text>
                 <TextInput
                   style={[
                     styles.textInput,
@@ -678,7 +695,7 @@ const ProductManagementScreen = () => {
                       color: colors.text,
                     }
                   ]}
-                  placeholder="Enter product description"
+                  placeholder={t('enterProductDescription')}
                   placeholderTextColor={colors.placeholder}
                   value={productData.description}
                   onChangeText={(text) => updateProductData('description', text)}
@@ -696,7 +713,7 @@ const ProductManagementScreen = () => {
               {/* Price Row */}
               <View style={styles.priceRow}>
                 <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-                  <Text style={[styles.fieldLabel, { color: colors.text }]}>Current Price *</Text>
+                  <Text style={[styles.fieldLabel, { color: colors.text }]}>{t('currentPriceLabel')}</Text>
                   <TextInput
                     style={[
                       styles.textInput,
@@ -720,7 +737,7 @@ const ProductManagementScreen = () => {
                 </View>
 
                 <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
-                  <Text style={[styles.fieldLabel, { color: colors.text }]}>Past Price *</Text>
+                  <Text style={[styles.fieldLabel, { color: colors.text }]}>{t('pastPriceLabel')}</Text>
                   <TextInput
                     style={[
                       styles.textInput,
@@ -746,7 +763,7 @@ const ProductManagementScreen = () => {
 
               {/* Category */}
               <View style={styles.inputGroup}>
-                <Text style={[styles.fieldLabel, { color: colors.text }]}>Category *</Text>
+                <Text style={[styles.fieldLabel, { color: colors.text }]}>{t('categoryLabel')}</Text>
                 <View style={[
                   styles.pickerWrapper,
                   {
@@ -773,7 +790,7 @@ const ProductManagementScreen = () => {
 
               {/* Region */}
               <View style={styles.inputGroup}>
-                <Text style={[styles.fieldLabel, { color: colors.text }]}>Region *</Text>
+                <Text style={[styles.fieldLabel, { color: colors.text }]}>{t('regionLabel')}</Text>
                 <View style={[
                   styles.pickerWrapper,
                   {
@@ -814,7 +831,7 @@ const ProductManagementScreen = () => {
                 <ActivityIndicator size="small" color="white" />
               ) : (
                 <Text style={styles.submitButtonText}>
-                  {editingProduct ? 'Update Product' : 'Add Product'}
+                  {editingProduct ? t('updateProduct') : t('addProduct')}
                 </Text>
               )}
             </TouchableOpacity>
@@ -826,9 +843,17 @@ const ProductManagementScreen = () => {
 
   if (loading) {
     return (
-      <View style={[styles.loadingScreen, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.text }]}>Loading your products...</Text>
+      <View style={[styles.loadingScreen, { backgroundColor: colors.background }]}> 
+        <View style={styles.spinnerContainer}>
+          <Animated.View style={[styles.spinner, { transform: [{ rotate: spin }] }]}> 
+            <View style={styles.spinnerOuter}>
+              <View style={styles.spinnerInner} />
+            </View>
+          </Animated.View>
+          <Text style={styles.loadingText}>
+            {t('loadingProducts')}
+          </Text>
+        </View>
       </View>
     );
   }
@@ -855,9 +880,9 @@ const ProductManagementScreen = () => {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={[styles.headerTitle, { color: colors.text }]}>My Products</Text>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>{t('myProducts')}</Text>
             <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
-              {products.length} product{products.length !== 1 ? 's' : ''}
+              {products.length} {t('product', { count: products.length })}
             </Text>
           </View>
           
@@ -875,7 +900,7 @@ const ProductManagementScreen = () => {
             <Ionicons name="search" size={20} color={colors.textMuted} />
             <TextInput
               style={[styles.searchInput, { color: colors.text }]}
-              placeholder="Search products..."
+              placeholder={t('searchProductsPlaceholder')}
               placeholderTextColor={colors.placeholder}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -1229,6 +1254,32 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     fontFamily: FONTS.regular,
+  },
+  spinnerContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  spinner: {
+    width: 50,
+    height: 50,
+    marginBottom: 16,
+  },
+  spinnerOuter: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 3,
+    borderColor: '#E5E5EA',
+    borderTopColor: '#10B981',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  spinnerInner: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#10B981',
+    opacity: 0.6,
   },
 });
 

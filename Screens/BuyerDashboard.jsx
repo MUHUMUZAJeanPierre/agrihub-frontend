@@ -14,7 +14,8 @@ import {
   RefreshControl,
   ActivityIndicator,
   SafeAreaView,
-  StatusBar
+  StatusBar,
+  Animated
 } from 'react-native';
 import { useLanguage } from '../contexts/LanguageContext';
 import axios from 'axios';
@@ -127,9 +128,25 @@ const CATEGORIES = [
 ];
 
 const BuyerDashboard = ({ navigation }) => {
-  const { theme, fontFamily  } = useTheme();
+  const { language, changeLanguage, t } = useLanguage();
+  const { theme, toggleTheme, fontFamily } = useTheme();
   const Colors = theme === 'dark' ? DarkColors : LightColors;
   const styles = useMemo(() => createStyles(Colors), [Colors]);
+  const [username, setUsername] = useState('');
+  useEffect(() => {
+    const loadUserName = async () => {
+      try {
+        const userData = await AsyncStorage.getItem('@user_data');
+        if (userData) {
+          const parsed = JSON.parse(userData);
+          setUsername(parsed.name || 'User');
+        }
+      } catch (error) {
+        console.error('Failed to load user data:', error);
+      }
+    };
+    loadUserName();
+  }, []);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState(CATEGORIES);
   const [favorites, setFavorites] = useState([]);
@@ -146,6 +163,22 @@ const BuyerDashboard = ({ navigation }) => {
   const { width, height } = Dimensions.get('window');
   const [currentSlide, setCurrentSlide] = useState(0);
   const promoScrollRef = useRef(null);
+
+  // Spinner animation hooks (must be at top level)
+  const spinValue = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(spinValue, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, [spinValue]);
+  const spin = spinValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
 
 
   const promotions = [
@@ -180,7 +213,7 @@ const BuyerDashboard = ({ navigation }) => {
   const handlePlaceOrder = async () => {
     try {
       if (!authToken) {
-        Alert.alert('Authentication Required', 'Please log in to place your order.');
+        Alert.alert(t('authRequired'), t('loginToOrder'));
         return;
       }
 
@@ -190,14 +223,14 @@ const BuyerDashboard = ({ navigation }) => {
         },
       });
 
-      Alert.alert('Order Placed', 'Your order has been successfully submitted.');
+      Alert.alert(t('orderPlaced'), t('orderSuccess'));
       clearCart();
       setIsCartVisible(false);
 
       console.log('Order response:', response.data);
     } catch (error) {
       console.error('❌ Failed to place order:', error);
-      Alert.alert('Order Failed', 'Could not place order. Please try again.');
+      Alert.alert(t('orderFailed'), t('orderFailedMsg'));
     }
   };
 
@@ -319,11 +352,11 @@ const BuyerDashboard = ({ navigation }) => {
       setError(err.message || 'Failed to load products');
 
       Alert.alert(
-        'Error Loading Products',
-        'Unable to load products. Please check your connection and try again.',
+        t('errorLoadingProducts'),
+        t('unableToLoadProducts'),
         [
-          { text: 'Retry', onPress: fetchProducts },
-          { text: 'Cancel', style: 'cancel' }
+          { text: t('retry'), onPress: fetchProducts },
+          { text: t('cancel'), style: 'cancel' }
         ]
       );
     } finally {
@@ -391,12 +424,12 @@ const BuyerDashboard = ({ navigation }) => {
       const token = authToken || await getAuthToken();
       if (!token) {
         Alert.alert(
-          'Login Required',
-          'You must be logged in to add items to your cart.',
+          t('loginRequired'),
+          t('loginToAddCart'),
           [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Login', onPress: () => navigation.navigate('login') },
-            { text: "Register", onPress: () => navigation.navigate('register') },
+            { text: t('cancel'), style: 'cancel' },
+            { text: t('login'), onPress: () => navigation.navigate('login') },
+            { text: t('register'), onPress: () => navigation.navigate('register') },
           ]
         );
         return;
@@ -405,19 +438,19 @@ const BuyerDashboard = ({ navigation }) => {
       // Use CartContext addToCart
       addToCart(product);
       Alert.alert(
-        '✅ Added to Cart',
-        `${product.title} has been added to your cart.`,
+        t('addedToCart'),
+        t('addedToCartMsg', { product: product.title }),
         [
-          { text: 'Continue Shopping', style: 'cancel' },
+          { text: t('continueShopping'), style: 'cancel' },
           {
-            text: 'View Cart',
+            text: t('viewCart'),
             onPress: () => setIsCartVisible(true)
           }
         ]
       );
     } catch (err) {
       console.error('❌ Add to cart error:', err);
-      Alert.alert('Error', 'Failed to add item to cart. Please try again.');
+      Alert.alert(t('error'), t('addToCartFailed'));
     } finally {
       setAddingToCart(null);
     }
@@ -426,12 +459,12 @@ const BuyerDashboard = ({ navigation }) => {
   // Remove item from cart
   const handleRemoveFromCart = useCallback((productId) => {
     Alert.alert(
-      'Remove Item',
-      'Are you sure you want to remove this item from your cart?',
+      t('removeItem'),
+      t('removeItemConfirm'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('cancel'), style: 'cancel' },
         {
-          text: 'Remove',
+          text: t('remove'),
           style: 'destructive',
           onPress: () => removeFromCart(productId)
         }
@@ -657,17 +690,24 @@ const BuyerDashboard = ({ navigation }) => {
     </View>
   ));
 
-  if (loading) {
-    return (
-      <View 
-      style={[styles.loadingContainer, { backgroundColor: Colors.background }]}
-      >
-        <ActivityIndicator size="large" color={"#2E7D31"} />
-        <Text 
-        style={[styles.loadingText, { color: Colors.textSecondary }]}
-        >Loading products...</Text>
+  // Custom loading spinner (copied from SearchScreen)
+  const renderLoadingSpinner = (styles, Colors, isLoading) => (
+    <View style={styles.loadingContainer}>
+      <View style={styles.spinnerContainer}>
+        <Animated.View style={[styles.spinner, { transform: [{ rotate: spin }] }]}> 
+          <View style={styles.spinnerOuter}>
+            <View style={styles.spinnerInner} />
+          </View>
+        </Animated.View>
+        <Text style={styles.loadingText}>
+          {isLoading ? t('loadingProducts') : t('searching')}
+        </Text>
       </View>
-    );
+    </View>
+  );
+
+  if (loading) {
+    return renderLoadingSpinner(styles, Colors, loading);
   }
 
   if (error && products.length === 0) {
@@ -707,44 +747,35 @@ const BuyerDashboard = ({ navigation }) => {
           />
         }
       >
-        <View style={styles.header}>
-          <View style={styles.headerTop}>
-            <View>
-              <Text 
-                style={[styles.headerName, { color: Colors.textPrimary }]}
-              >Aminur tahmid</Text>
-            </View>
-            <TouchableOpacity style={styles.profileButton}>
-              <View 
-              style={[styles.profileIcon, { backgroundColor: Colors.surface }]}
-              >
-                <Ionicons name="person" size={20} color={Colors.primary} />
-              </View>
-            </TouchableOpacity>
+        <HeaderComponent
+          username={username}
+          theme={theme}
+          toggleTheme={toggleTheme}
+          language={language}
+          changeLanguage={changeLanguage}
+          Colors={Colors}
+          t={t}
+          styles={styles}
+        />
+        <View style={styles.searchContainer}>
+          <View 
+          style={[styles.searchInputContainer, { backgroundColor: Colors.inputBackground }]}
+          >
+            <Ionicons name="search-outline" size={20} color={Colors.textSecondary} />
+            <TextInput
+              style={[styles.searchInput, { color: Colors.textPrimary }]}
+              placeholder={t('searchPlaceholder')}
+              placeholderTextColor={Colors.textSecondary}
+              value={searchQuery}
+              onChangeText={handleSearch}
+              returnKeyType="search"
+            />
           </View>
-
-          <View style={styles.searchContainer}>
-            <View 
-            style={[styles.searchInputContainer, { backgroundColor: Colors.inputBackground }]}
-            >
-              <Ionicons name="search-outline" size={20} color={Colors.textSecondary} />
-              <TextInput
-                // style={styles.searchInput}
-                style={[styles.searchInput, { color: Colors.textPrimary }]}
-                placeholder="Search what do you want?"
-                placeholderTextColor={Colors.textSecondary}
-                value={searchQuery}
-                onChangeText={handleSearch}
-                returnKeyType="search"
-              />
-            </View>
-            <TouchableOpacity 
-            // style={styles.filterButton}
+          <TouchableOpacity 
             style={[styles.filterButton, { backgroundColor: Colors.inputBackground }]}
-            >
-              <Ionicons name="options-outline" size={20} color={Colors.textSecondary} />
-            </TouchableOpacity>
-          </View>
+          >
+            <Ionicons name="options-outline" size={20} color={Colors.textSecondary} />
+          </TouchableOpacity>
         </View>
 
         {/* Promotion Banner */}
@@ -808,10 +839,18 @@ const BuyerDashboard = ({ navigation }) => {
                 key={index}
                 style={[
                   styles.indicator,
-                  {
-                    backgroundColor: index === currentSlide ? '#2E7D31' : 'rgba(255, 255, 255, 0.4)',
-                    width: index === currentSlide ? 24 : 8,
-                  }
+                  index === currentSlide
+                    ? {
+                        backgroundColor: Colors.primary,
+                        width: 24,
+                        borderColor: Colors.primary,
+                        shadowColor: Colors.primary,
+                        shadowOffset: { width: 0, height: 1 },
+                        shadowOpacity: 0.15,
+                        shadowRadius: 2,
+                        elevation: 2,
+                      }
+                    : { width: 8 },
                 ]}
                 onPress={() => {
                   setCurrentSlide(index);
@@ -841,9 +880,9 @@ const BuyerDashboard = ({ navigation }) => {
             <View style={styles.sectionHeader}>
               <Text 
               style={[styles.sectionTitle, { color: Colors.textPrimary }]}
-              >Popular Fruits</Text>
+              >{t('popularFruits')}</Text>
               <TouchableOpacity onPress={() => handleCategorySelect('fruits')}>
-                <Text style={styles.seeAllText}>See All</Text>
+                <Text style={styles.seeAllText}>{t('seeAll')}</Text>
               </TouchableOpacity>
             </View>
             <ScrollView
@@ -862,9 +901,9 @@ const BuyerDashboard = ({ navigation }) => {
             style={[styles.sectionTitle, { color: Colors.textPrimary }]}
             >
               <Text style={styles.sectionTitle}>
-                {searchQuery ? `Search Results (${filteredProducts.length})` :
-                  selectedCategory === 'all' ? 'All Products' :
-                    categories.find(c => c.id === selectedCategory)?.name || 'Products'}
+                {searchQuery ? t('searchResults', { count: filteredProducts.length }) :
+                  selectedCategory === 'all' ? t('allProducts') :
+                    categories.find(c => c.id === selectedCategory)?.name || t('products')}
               </Text>
             </View>
 
@@ -883,13 +922,13 @@ const BuyerDashboard = ({ navigation }) => {
                 <Ionicons name="search-outline" size={60} color={Colors.textSecondary} />
                 <Text 
                    style={[styles.emptyResultsTitle, { color: Colors.textPrimary }]}
-                >No products found</Text>
+                >{t('noProductsFound')}</Text>
                 <Text 
                 style={[styles.emptyResultsText, { color: Colors.textSecondary }]}
                 >
                   {searchQuery ?
-                    `No results for "${searchQuery}"` :
-                    `No products in ${categories.find(c => c.id === selectedCategory)?.name || 'this category'}`
+                    t('noResultsFor', { query: searchQuery }) :
+                    t('noProductsInCategory', { category: categories.find(c => c.id === selectedCategory)?.name || t('thisCategory') })
                   }
                 </Text>
               </View>
@@ -903,7 +942,7 @@ const BuyerDashboard = ({ navigation }) => {
               <Text 
                style={[styles.sectionTitle, { color: Colors.textPrimary }]}
               // style={styles.sectionTitle}
-              >All Products</Text>
+              >{t('allProducts')}</Text>
             </View>
             <ScrollView
               horizontal
@@ -942,7 +981,7 @@ const BuyerDashboard = ({ navigation }) => {
           <View style={styles.modalHeader}>
             <Text 
             style={[styles.modalTitle, { color: Colors.textPrimary }]}
-            >Shopping Cart ({cartItemCount})</Text>
+            >{t('shoppingCart', { count: cartItemCount })}</Text>
             <TouchableOpacity
               onPress={() => setIsCartVisible(false)}
               style={styles.modalCloseButton}
@@ -956,15 +995,15 @@ const BuyerDashboard = ({ navigation }) => {
               <Ionicons name="bag-outline" size={80} color={Colors.textSecondary} />
               <Text 
               style={[styles.emptyCartTitle, { color: Colors.textPrimary }]}
-              >Your cart is empty</Text>
+              >{t('cartEmpty')}</Text>
               <Text 
                style={[styles.emptyCartText, { color: Colors.textSecondary }]}
-              >Add items to get started</Text>
+              >{t('addItemsToGetStarted')}</Text>
               <TouchableOpacity
                 style={styles.shopNowBtn}
                 onPress={() => setIsCartVisible(false)}
               >
-                <Text style={styles.shopNowBtnText}>Continue Shopping</Text>
+                <Text style={styles.shopNowBtnText}>{t('continueShopping')}</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -982,21 +1021,21 @@ const BuyerDashboard = ({ navigation }) => {
                   <View style={styles.cartTotal}>
                     <Text 
                      style={[styles.totalLabel, { color: Colors.textSecondary }]}
-                    >Total ({cartItemCount} items):</Text>
+                    >{t('totalItems', { count: cartItemCount })}</Text>
                     <Text 
                     style={[styles.totalAmount, { color: Colors.textPrimary }]}
-                    >RWF {cartTotal.toLocaleString()}</Text>
+                    >{t('rwfAmount', { amount: cartTotal.toLocaleString() })}</Text>
                   </View>
                   <TouchableOpacity
                       style={[styles.clearCartButton, { backgroundColor: Colors.error }]}
                     onPress={() => {
                       Alert.alert(
-                        'Clear Cart',
-                        'Are you sure you want to remove all items from your cart?',
+                        t('clearCart'),
+                        t('clearCartConfirm'),
                         [
-                          { text: 'Cancel', style: 'cancel' },
+                          { text: t('cancel'), style: 'cancel' },
                           {
-                            text: 'Clear',
+                            text: t('clear'),
                             style: 'destructive',
                             onPress: clearCart
                           }
@@ -1006,13 +1045,13 @@ const BuyerDashboard = ({ navigation }) => {
                   >
                     <Text 
                      style={[styles.clearCartText, { color: Colors.textPrimary }]}
-                    >Clear Cart</Text>
+                    >{t('clearCart')}</Text>
                   </TouchableOpacity>
                 </View>
                 <TouchableOpacity style={styles.checkoutBtn}>
                   <Text 
                   style={styles.checkoutBtnText}
-                  >Order Now</Text>
+                  >{t('orderNow')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -1020,6 +1059,71 @@ const BuyerDashboard = ({ navigation }) => {
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
+  );
+};
+
+// HeaderComponent copied from Agronomistdash.jsx
+const HeaderComponent = ({ username, theme, toggleTheme, language, changeLanguage, Colors, t, styles }) => {
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  return (
+    <View style={[styles.header, { backgroundColor: Colors.background, paddingTop: 20, paddingBottom: 4 }]}> 
+      <View style={styles.headerTop}>
+        <View>
+          <Text style={[styles.headerName, { color: Colors.textPrimary }]}> {username ? `${username}'s ${t('dashboardTitle')}` : t('dashboardTitle')} </Text>
+        </View>
+        <TouchableOpacity style={styles.profileButton} onPress={() => setShowProfileModal(true)}>
+          <View style={[styles.profileIcon, { backgroundColor: Colors.surface }]}> 
+            <Ionicons name="person-circle-outline" size={28} color={Colors.textPrimary} />
+          </View>
+        </TouchableOpacity>
+        <Modal
+          visible={showProfileModal}
+          animationType="fade"
+          transparent
+          onRequestClose={() => setShowProfileModal(false)}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            style={[styles.modalOverlay, { backgroundColor: Colors.overlay || 'rgba(0,0,0,0.6)' }]}
+            onPressOut={() => setShowProfileModal(false)}
+          >
+            <View style={[styles.profileModalContent, { backgroundColor: Colors.cardBackground, borderColor: Colors.borderColor || Colors.border }]}> 
+              <Text style={[styles.modalTitle, { color: Colors.textPrimary }]}>{t('profileOptions')}</Text>
+              {/* Theme toggle */}
+              <TouchableOpacity
+                style={[styles.toggleButton, { backgroundColor: Colors.surface, borderColor: Colors.borderColor || Colors.border }]}
+                onPress={toggleTheme}
+              >
+                <View style={styles.toggleButtonContent}>
+                  <Ionicons 
+                    name={theme === 'light' ? 'moon-outline' : 'sunny-outline'} 
+                    size={24} 
+                    color={Colors.textPrimary} 
+                  />
+                  <Text style={[styles.toggleButtonText, { color: Colors.textPrimary }]}> {theme === 'light' ? t('switchToDark') : t('switchToLight')} </Text>
+                </View>
+              </TouchableOpacity>
+              {/* Language toggle */}
+              <TouchableOpacity
+                style={[styles.toggleButton, { backgroundColor: Colors.surface, borderColor: Colors.borderColor || Colors.border }]}
+                onPress={() => changeLanguage(language === 'en' ? 'rw' : 'en')}
+              >
+                <View style={styles.toggleButtonContent}>
+                  <Ionicons name="language-outline" size={24} color={Colors.textPrimary} />
+                  <Text style={[styles.toggleButtonText, { color: Colors.textPrimary }]}> {language === 'en' ? t('changeToKinyarwanda') : t('changeToEnglish')} </Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.closeButton, { backgroundColor: Colors.primary }]}
+                onPress={() => setShowProfileModal(false)}
+              >
+                <Text style={styles.closeButtonText}>{t('close')}</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      </View>
+    </View>
   );
 };
 
@@ -1082,13 +1186,13 @@ const createStyles = (Colors) => StyleSheet.create({
   header: {
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 16,
+    paddingBottom: 4, // Reduce space below header
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 8, // Reduce space below headerTop
   },
   headerGreeting: {
     fontSize: 16,
@@ -1119,6 +1223,9 @@ const createStyles = (Colors) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    paddingHorizontal: 20,
+    marginBottom: 12, // Add space below search bar
+    marginTop: 0, // Ensure no extra space above
   },
   searchInputContainer: {
     flex: 1,
@@ -1797,11 +1904,102 @@ favoriteButton: {
     paddingHorizontal: 20,
     gap: 8,
   },
-
   indicator: {
     height: 8,
     borderRadius: 4,
     transition: 'all 0.3s ease',
+    backgroundColor: '#E0E0E0', // subtle gray for inactive
+    borderWidth: 1,
+    borderColor: '#D1D5DB', // light border for visibility
+    marginHorizontal: 2,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileModalContent: {
+    width: '80%',
+    borderRadius: 15,
+    padding: 20,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  toggleButton: {
+    width: '100%',
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  toggleButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  toggleButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    fontFamily: 'Poppins_400Regular',
+  },
+  closeButton: {
+    width: '100%',
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  closeButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+    fontFamily: 'Poppins_400Regular',
+  },
+  // Loading spinner styles
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.background,
+  },
+  spinnerContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  spinner: {
+    width: 50,
+    height: 50,
+    marginBottom: 16,
+  },
+  spinnerOuter: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 3,
+    borderColor: Colors.borderColor,
+    borderTopColor: Colors.success,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  spinnerInner: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: Colors.success,
+    opacity: 0.6,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+    fontWeight: '500',
+    fontFamily: 'Poppins_400Regular',
   },
 });
 

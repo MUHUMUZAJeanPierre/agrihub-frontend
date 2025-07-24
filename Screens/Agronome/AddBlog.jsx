@@ -17,6 +17,7 @@ import { TextInput } from "react-native-paper";
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useLanguage } from "../../contexts/LanguageContext";
 import UploadTextInput from "../../Components/uploadtextInpu";
 import Button from "../../Components/Button";
 import AsyncStorage from '@react-native-async-storage/async-storage'; 
@@ -97,6 +98,7 @@ const FONTS = {
 
 export default function AddBlog({ navigation }) {
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const Colors = useMemo(() => THEME_COLORS[theme] || THEME_COLORS.light, [theme]);
   
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -147,8 +149,8 @@ export default function AddBlog({ navigation }) {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert(
-          'Permission Required',
-          'Please grant camera roll permissions to upload images.'
+          t('permissionRequired'),
+          t('uploadImagePermission')
         );
         return;
       }
@@ -170,7 +172,7 @@ export default function AddBlog({ navigation }) {
       }
     } catch (error) {
       console.error('Image picker error:', error);
-      Alert.alert('Error', 'Failed to pick image. Please try again.');
+      Alert.alert(t('error'), t('pickImageError'));
     } finally {
       setIsLoading(false);
     }
@@ -181,23 +183,23 @@ export default function AddBlog({ navigation }) {
     const newErrors = {};
     
     if (!blogData.blogTitle.trim()) {
-      newErrors.blogTitle = 'Blog title is required';
+      newErrors.blogTitle = t('blogTitleRequired');
     } else if (blogData.blogTitle.length < 10) {
-      newErrors.blogTitle = 'Title must be at least 10 characters';
+      newErrors.blogTitle = t('blogTitleMin');
     } else if (blogData.blogTitle.length > 100) {
-      newErrors.blogTitle = 'Title must be less than 100 characters';
+      newErrors.blogTitle = t('blogTitleMax');
     }
 
     if (!blogData.description.trim()) {
-      newErrors.description = 'Blog description is required';
+      newErrors.description = t('blogDescriptionRequired');
     } else if (blogData.description.length < 50) {
-      newErrors.description = 'Description must be at least 50 characters';
+      newErrors.description = t('blogDescriptionMin');
     } else if (blogData.description.length > 1000) {
-      newErrors.description = 'Description must be less than 1000 characters';
+      newErrors.description = t('blogDescriptionMax');
     }
 
     if (!blogData.blogurl) {
-      newErrors.blogurl = 'Blog image is required';
+      newErrors.blogurl = t('blogImageRequired');
     }
 
     setErrors(newErrors);
@@ -206,7 +208,7 @@ export default function AddBlog({ navigation }) {
 
   const handleAddBlogs = async () => {
   if (!validateForm()) {
-    Alert.alert('Validation Error', 'Please fix the errors below.');
+    Alert.alert(t('validationError'), t('fixErrorsBelow'));
     return;
   }
 
@@ -240,11 +242,11 @@ export default function AddBlog({ navigation }) {
 
     if (response.ok) {
       Alert.alert(
-        'Success!',
-        'Your blog has been published successfully.',
+        t('success'),
+        t('blogPublished'),
         [
-          { text: 'Add Another', onPress: resetForm },
-          { text: 'View Blogs', onPress: () => navigation.goBack() },
+          { text: t('addAnother'), onPress: resetForm },
+          { text: t('viewBlogs'), onPress: () => navigation.goBack() },
         ]
       );
     } else {
@@ -253,11 +255,11 @@ export default function AddBlog({ navigation }) {
   } catch (error) {
     console.error('Blog submission error:', error);
     Alert.alert(
-      'Upload Failed',
-      'There was an error publishing your blog. Please try again.',
+      t('uploadFailed'),
+      t('blogPublishError'),
       [
-        { text: 'Retry', onPress: handleAddBlogs },
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('retry'), onPress: handleAddBlogs },
+        { text: t('cancel'), style: 'cancel' },
       ]
     );
   } finally {
@@ -290,7 +292,7 @@ export default function AddBlog({ navigation }) {
   const CategorySelector = () => (
     <View style={styles.selectorContainer}>
       <Text style={[styles.selectorLabel, { color: Colors.text }]}>
-        Category
+        {t('category')}
       </Text>
       <ScrollView 
         horizontal 
@@ -328,7 +330,7 @@ export default function AddBlog({ navigation }) {
   const SeveritySelector = () => (
     <View style={styles.selectorContainer}>
       <Text style={[styles.selectorLabel, { color: Colors.text,  fontFamily: FONTS.regular }]}>
-        Priority Level
+        {t('priorityLevel')}
       </Text>
       <View style={styles.severityContainer}>
         {SEVERITY_LEVELS.map((level) => (
@@ -389,17 +391,17 @@ export default function AddBlog({ navigation }) {
             {/* Header */}
             <View style={styles.header}>
               <Text style={[styles.headerTitle, {  color: Colors.text, fontFamily: FONTS.semiBold }]}>
-                Create New Article
+                {t('createNewArticle')}
               </Text>
               <Text style={[styles.headerSubtitle, { color: Colors.textSecondary, fontFamily: FONTS.regular }]}>
-                Share your agricultural expertise
+                {t('shareExpertise')}
               </Text>
             </View>
 
             {/* Image Upload Section */}
             <View style={[styles.imageSection, { backgroundColor: Colors.cardBackground, borderColor: Colors.border }]}>
               <Text style={[styles.sectionTitle, { color: Colors.text,   fontFamily: FONTS.regular }]}>
-                Featured Image
+                {t('featuredImage')}
               </Text>
               
               <TouchableOpacity
@@ -417,7 +419,7 @@ export default function AddBlog({ navigation }) {
                   <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color={Colors.primary} />
                     <Text style={[styles.loadingText, { color: Colors.textSecondary, fontFamily: FONTS.regular }]}>
-                      Processing image...
+                      {t('processingImage')}
                     </Text>
                   </View>
                 ) : blogData.blogurl ? (
@@ -429,7 +431,7 @@ export default function AddBlog({ navigation }) {
                     />
                     <View style={styles.imageOverlay}>
                      <Text style={[styles.changeImageText, { fontFamily: FONTS.regular }]}>
-                        Tap to change
+                        {t('tapToChange')}
                       </Text>
                     </View>
                   </View>
@@ -437,10 +439,10 @@ export default function AddBlog({ navigation }) {
                   <View style={styles.uploadPlaceholder}>
                     <Text style={[styles.uploadIcon, { color: Colors.primary, fontFamily: FONTS.regular  }]}>📸</Text>
                     <Text style={[styles.uploadText, { color: Colors.textSecondary, fontFamily: FONTS.regular }]}>
-                      Tap to select image
+                      {t('tapToSelectImage')}
                     </Text>
                     <Text style={[styles.uploadSubtext, { color: Colors.textMuted,  fontFamily: FONTS.regular }]}>
-                      Recommended: 16:9 aspect ratio
+                      {t('recommendedAspectRatio')}
                     </Text>
                   </View>
                 )}
@@ -456,10 +458,10 @@ export default function AddBlog({ navigation }) {
             {/* Title Input */}
             <View style={styles.inputSection}>
               <Text style={[styles.sectionTitle, { color: Colors.text, fontFamily: FONTS.regular }]}>
-                Article Title
+                {t('articleTitle')}
               </Text>
               <UploadTextInput
-                placeholder="Enter a compelling title..."
+                placeholder={t('enterTitle')}
                 value={blogData.blogTitle}
                 onChangeText={(text) => updateBlogData('blogTitle', text)}
                 style={[
@@ -488,10 +490,10 @@ export default function AddBlog({ navigation }) {
 
             <View style={styles.inputSection}>
               <Text style={[styles.sectionTitle, { color: Colors.text, fontFamily: FONTS.regular }]}>
-                Article Content
+                {t('articleContent')}
               </Text>
               <TextInput
-                placeholder="Write your detailed article content here..."
+                placeholder={t('writeArticleContent')}
                 value={blogData.description}
                 onChangeText={(text) => updateBlogData('description', text)}
                 multiline
@@ -530,10 +532,10 @@ export default function AddBlog({ navigation }) {
             </View>
             <View style={styles.inputSection}>
               <Text style={[styles.sectionTitle, { color: Colors.text, fontFamily: FONTS.regular }]}>
-                Estimated Read Time
+                {t('estimatedReadTime')}
               </Text>
               <UploadTextInput
-                placeholder="e.g., 5 min read"
+                placeholder={t('egReadTime')}
                 value={blogData.readTime}
                 onChangeText={(text) => updateBlogData('readTime', text)}
                 style={[styles.readTimeInput, { borderColor: Colors.border }]}
@@ -542,7 +544,7 @@ export default function AddBlog({ navigation }) {
 
             <View style={styles.buttonContainer}>
               <Button
-                title={isSubmitting ? "Publishing..." : "PUBLISH ARTICLE"}
+                title={isSubmitting ? t('publishing') : t('publishArticle')}
                 onPress={handleAddBlogs}
                 disabled={isSubmitting}
                 style={[
@@ -559,7 +561,7 @@ export default function AddBlog({ navigation }) {
                 disabled={isSubmitting}
               >
                 <Text style={[styles.resetButtonText, { color: Colors.textSecondary, fontFamily: FONTS.regular }]}>
-                  Clear Form
+                  {t('clearForm')}
                 </Text>
               </TouchableOpacity>
             </View>

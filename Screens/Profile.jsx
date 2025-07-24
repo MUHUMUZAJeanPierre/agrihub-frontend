@@ -204,7 +204,7 @@ const ProfileScreen = () => {
       title: t.privacy,
       icon: 'shield-checkmark-outline',
       iconColor: Colors.success,
-      onPress: () => Alert.alert(t.privacy, 'Coming soon!')
+      onPress: () => navigation.navigate('Security')
     },
     {
       id: '3',
@@ -270,12 +270,12 @@ const ProfileScreen = () => {
       <ScrollView showsVerticalScrollIndicator={false} bounces={true}>
         {/* Enhanced Header with Background */}
         <View
-          style={[styles.headerBackground, { backgroundColor: Colors.primary }]}
+          style={[styles.headerBackground, { backgroundColor: Colors.background }]}
         >
           <View style={styles.headerContent}>
-            <Text style={styles.headerTitle}>{t.profile}</Text>
+            <Text style={[styles.headerTitle, { color: Colors.textPrimary }]}>{t.profile}</Text>
             <TouchableOpacity style={styles.settingsButton} onPress={() => Alert.alert(t.settings, 'Coming soon!')}>
-              <Ionicons name="settings-outline" size={24} color="#fff" />
+              <Ionicons name="settings-outline" size={24} color={Colors.textPrimary} />
             </TouchableOpacity>
           </View>
         </View>
@@ -283,7 +283,7 @@ const ProfileScreen = () => {
         {/* Enhanced Profile Section */}
         <View style={styles.profileSection}>
           <View
-            style={[styles.profileCard, { backgroundColor: Colors.primary }]}
+            style={[styles.profileCard, { backgroundColor: Colors.cardBackground }]}
           >
             <View style={styles.avatarContainer}>
               <Image 
@@ -291,31 +291,31 @@ const ProfileScreen = () => {
                 style={styles.avatar}
               />
               <TouchableOpacity style={styles.editAvatarButton}>
-                <Ionicons name="camera" size={16} color="#fff" />
+                <Ionicons name="camera" size={16} color={Colors.textPrimary} />
               </TouchableOpacity>
             </View>
 
             <View style={styles.userInfo}>
-              <Text style={styles.userName}>{user.name}</Text>
-              <Text style={styles.userEmail}>{user.email}</Text>
-              <Text style={styles.userPhone}>{user.phone}</Text>
+              <Text style={[styles.userName, { color: Colors.textPrimary }]}>{user.name}</Text>
+              <Text style={[styles.userEmail, { color: Colors.textSecondary }]}>{user.email}</Text>
+              <Text style={[styles.userPhone, { color: Colors.textTertiary }]}>{user.phone}</Text>
             </View>
 
             {/* User Stats */}
-            <View style={styles.userStats}>
+            <View style={[styles.userStats, { backgroundColor: Colors.surfaceLight }]}> 
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>12</Text>
-                <Text style={styles.statLabel}>{t.joinedDate}</Text>
+                <Text style={[styles.statValue, { color: Colors.textPrimary }]}>12</Text>
+                <Text style={[styles.statLabel, { color: Colors.textTertiary }]}>{t.joinedDate}</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>245</Text>
-                <Text style={styles.statLabel}>Active</Text>
+                <Text style={[styles.statValue, { color: Colors.textPrimary }]}>245</Text>
+                <Text style={[styles.statLabel, { color: Colors.textTertiary }]}>Active</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>98%</Text>
-                <Text style={styles.statLabel}>Score</Text>
+                <Text style={[styles.statValue, { color: Colors.textPrimary }]}>98%</Text>
+                <Text style={[styles.statLabel, { color: Colors.textTertiary }]}>Score</Text>
               </View>
             </View>
           </View>
@@ -379,21 +379,23 @@ const ProfileScreen = () => {
           </View>
         </View>
 
-        {/* Enhanced Logout Section */}
         <View style={styles.logoutSection}>
           <TouchableOpacity
-            style={[styles.logoutButton, { backgroundColor: Colors.error + '15' }]}
+            style={[
+              styles.logoutButton,
+              {
+                borderColor: Colors.error,
+                backgroundColor: theme === 'dark' ? Colors.cardBackground : '#fff',
+              },
+            ]}
             onPress={handleLogout}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
           >
-            <View style={styles.logoutContent}>
-              <Ionicons name="log-out-outline" size={24} color={Colors.error} />
-              <Text style={[styles.logoutText, { color: Colors.error }]}>{t.logout}</Text>
-            </View>
+            <Ionicons name="log-out-outline" size={22} color={Colors.error} style={{ marginRight: 8 }} />
+            <Text style={[styles.logoutText, { color: Colors.error }]}>{t.logout}</Text>
           </TouchableOpacity>
         </View>
         
-        {/* Bottom Spacing */}
         <View style={{ height: 30 }} />
       </ScrollView>
     </SafeAreaView>
@@ -660,18 +662,19 @@ const styles = StyleSheet.create({
   logoutButton: {
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  logoutContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 18,
+    borderWidth: 1,
+    marginTop: 10,
+    marginBottom: 10,
+    paddingVertical: 14,
     paddingHorizontal: 20,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   logoutText: {
     fontSize: 16,

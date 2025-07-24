@@ -15,6 +15,8 @@ import {
 import Feather from "react-native-vector-icons/Feather";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { io } from "socket.io-client";
+import { useTheme } from '../../contexts/ThemeContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const SOCKET_URL = "https://agrihub-backend-4z99.onrender.com";
 const API_URL = "https://agrihub-backend-4z99.onrender.com/api/chats";
@@ -28,6 +30,27 @@ export default function AgronomeChat({ navigation, route }) {
   const [recipientId, setRecipientId] = useState(null);
   const [socket, setSocket] = useState(null);
   const flatListRef = useRef(null);
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const { language, t } = useLanguage();
+
+  // Define theme-based colors
+  const colors = {
+    background: isDark ? '#181A20' : '#FFFFFF',
+    headerBackground: isDark ? '#23262F' : '#FFFFFF',
+    border: isDark ? '#23262F' : '#E5E5EA',
+    text: isDark ? '#F3F4F6' : '#000000',
+    subText: isDark ? '#B0B0B0' : '#8E8E93',
+    messageLeftBg: isDark ? '#23262F' : '#F2F2F7',
+    messageRightBg: isDark ? '#4CAF50' : '#4CAF50',
+    messageTextLeft: isDark ? '#F3F4F6' : '#000000',
+    messageTextRight: '#FFFFFF',
+    inputBg: isDark ? '#23262F' : '#F2F2F7',
+    inputText: isDark ? '#F3F4F6' : '#000000',
+    sendButton: '#4CAF50',
+    sendButtonDisabled: isDark ? '#444' : '#8E8E93',
+    loadingText: isDark ? '#B0B0B0' : '#8E8E93',
+  };
 
   // Get recipient ID from route params
   useEffect(() => {
@@ -179,61 +202,77 @@ export default function AgronomeChat({ navigation, route }) {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4CAF50" />
-        <Text style={styles.loadingText}>Loading messages...</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}> 
+        <ActivityIndicator size="large" color={colors.sendButton} />
+        <Text style={[styles.loadingText, { color: colors.loadingText }]}>{t('loading_messages')}</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <StatusBar backgroundColor="#fff" barStyle="dark-content" />
-      
+    <View style={[styles.container, { backgroundColor: colors.background }]}> 
+      <StatusBar backgroundColor={colors.headerBackground} barStyle={isDark ? 'light-content' : 'dark-content'} />
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Feather name="arrow-left" size={24} color="#4CAF50" />
-          </TouchableOpacity>
-        <Text style={styles.headerTitle}>Agronome Chat</Text>
+      <View style={[styles.header, { backgroundColor: colors.headerBackground, borderBottomColor: colors.border }]}> 
+        <TouchableOpacity onPress={() => navigation.goBack()} accessibilityLabel={t('back_button')}>
+          <Feather name="arrow-left" size={24} color={colors.sendButton} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>{t('agronome_chat')}</Text>
         <View style={{ width: 24 }} />
       </View>
-
       {/* Messages */}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.chatContainer}
       >
-          <FlatList
-            ref={flatListRef}
-            data={messages}
-            renderItem={renderMessage}
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          renderItem={({ item }) => {
+            const isUser = item.sender === userId;
+            return (
+              <View style={[
+                styles.messageContainer,
+                isUser
+                  ? { ...styles.messageRight, backgroundColor: colors.messageRightBg }
+                  : { ...styles.messageLeft, backgroundColor: colors.messageLeftBg }
+              ]}>
+                <Text style={[styles.messageText, { color: isUser ? colors.messageTextRight : colors.messageTextLeft }]}>
+                  {item.message}
+                </Text>
+                <Text style={[styles.messageTime, { color: isUser ? 'rgba(255,255,255,0.7)' : colors.subText }]}> 
+                  {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </Text>
+              </View>
+            );
+          }}
           keyExtractor={(item, index) => item._id || `msg-${index}`}
-            contentContainerStyle={styles.messagesList}
-            showsVerticalScrollIndicator={false}
-            onContentSizeChange={() => {
-              setTimeout(() => {
-                flatListRef.current?.scrollToEnd({ animated: true });
-              }, 100);
-            }}
-          />
-
+          contentContainerStyle={styles.messagesList}
+          showsVerticalScrollIndicator={false}
+          onContentSizeChange={() => {
+            setTimeout(() => {
+              flatListRef.current?.scrollToEnd({ animated: true });
+            }, 100);
+          }}
+        />
         {/* Input */}
-        <View style={styles.inputContainer}>
-          <View style={styles.inputWrapper}>
+        <View style={[styles.inputContainer, { backgroundColor: colors.headerBackground, borderTopColor: colors.border }]}> 
+          <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg }]}> 
             <TextInput
-              placeholder="Type a message..."
+              placeholder={t('type_message')}
               value={inputText}
               onChangeText={setInputText}
-              style={styles.textInput}
+              style={[styles.textInput, { color: colors.inputText }]}
+              placeholderTextColor={colors.subText}
               multiline
               maxLength={1000}
               editable={!sending}
             />
             <TouchableOpacity
               onPress={sendMessage}
-              style={[styles.sendButton, (!inputText.trim() || sending) && styles.sendButtonDisabled]}
+              style={[styles.sendButton, (!inputText.trim() || sending) && { backgroundColor: colors.sendButtonDisabled }]}
               disabled={!inputText.trim() || sending}
+              accessibilityLabel={t('send_message')}
             >
               {sending ? (
                 <ActivityIndicator size="small" color="#fff" />
