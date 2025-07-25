@@ -880,7 +880,7 @@ const ProductManagementScreen = () => {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={[styles.headerTitle, { color: colors.text }]}>{t('myProducts')}</Text>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>{t('My Products')}</Text>
             <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
               {products.length} {t('product', { count: products.length })}
             </Text>

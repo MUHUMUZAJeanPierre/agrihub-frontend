@@ -140,6 +140,7 @@ const BuyerDashboard = ({ navigation }) => {
         if (userData) {
           const parsed = JSON.parse(userData);
           setUsername(parsed.name || 'User');
+          console.log(parsed, parse.name)
         }
       } catch (error) {
         console.error('Failed to load user data:', error);
@@ -205,7 +206,7 @@ const BuyerDashboard = ({ navigation }) => {
       const nextIndex = (currentSlide + 1) % promotions.length;
       setCurrentSlide(nextIndex);
       promoScrollRef.current?.scrollTo({ x: nextIndex * width, animated: true });
-    }, 4000); // 4 seconds
+    }, 4000); 
 
     return () => clearInterval(interval);
   }, [currentSlide]);
@@ -730,7 +731,6 @@ const BuyerDashboard = ({ navigation }) => {
 
   return (
     <SafeAreaView 
-    // style={styles.container}
     style={[styles.container, { backgroundColor: Colors.background }]}
     >
       <StatusBar barStyle={theme === 'dark' ? "light-content" : "dark-content"} backgroundColor={theme === 'dark' ? '#121212' : '#4CAF50'} />
@@ -1062,14 +1062,16 @@ const BuyerDashboard = ({ navigation }) => {
   );
 };
 
-// HeaderComponent copied from Agronomistdash.jsx
+
 const HeaderComponent = ({ username, theme, toggleTheme, language, changeLanguage, Colors, t, styles, navigation }) => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   return (
     <View style={[styles.header, { backgroundColor: Colors.background, paddingTop: 20, paddingBottom: 4 }]}> 
       <View style={styles.headerTop}>
         <View>
-          <Text style={[styles.headerName, { color: Colors.textPrimary }]}> {username ? `${username}'s ${t('dashboardTitle')}` : t('dashboardTitle')} </Text>
+          <Text style={[styles.headerName, { color: Colors.textPrimary }]}>
+            {username ? username : t('dashboardTitle')}
+          </Text>
         </View>
         <TouchableOpacity style={styles.profileButton} onPress={() => setShowProfileModal(true)}>
           <View style={[styles.profileIcon, { backgroundColor: Colors.surface }]}> 
@@ -1102,7 +1104,6 @@ const HeaderComponent = ({ username, theme, toggleTheme, language, changeLanguag
                   <Text style={[styles.toggleButtonText, { color: Colors.textPrimary }]}> {theme === 'light' ? t('switchToDark') : t('switchToLight')} </Text>
                 </View>
               </TouchableOpacity>
-              {/* Language toggle */}
               <TouchableOpacity
                 style={[styles.toggleButton, { backgroundColor: Colors.surface, borderColor: Colors.borderColor || Colors.border }]}
                 onPress={() => changeLanguage(language === 'en' ? 'rw' : 'en')}

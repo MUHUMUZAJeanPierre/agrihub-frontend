@@ -20,52 +20,53 @@ import { useCart } from '../contexts/CartContext';
 import { useTheme } from '../contexts/ThemeContext';
 import Animated from 'react-native-reanimated';
 import Icon from 'react-native-vector-icons/Ionicons';
-
+import FarmerOrderDashboard from '../Screens/Farmer/FarmerOrderDashboard';
+import ProductManagementScreen from '../Screens/Farmer/ProductManagementScreen';
 const AnimatedIcon = Animated.createAnimatedComponent(Icon);
 
 const Tab = createBottomTabNavigator();
 
 // Color Schemes
 const LightColors = {
-  primary: '#4A90E2',
-  primaryDark: '#2D5AA0',
-  secondary: '#FF6B35',
-  accent: '#FFA726',
-  background: '#FFFFFF',
-  surface: '#F8F9FA',
-  surfaceLight: '#F0F0F0',
-  textPrimary: '#000000',
-  textSecondary: '#666666',
-  textTertiary: '#999999',
-  success: '#4CAF50',
-  warning: '#FF9800',
-  error: '#F44336',
-  cardBackground: '#FFFFFF',
-  inputBackground: '#F5F5F5',
-  borderColor: '#E0E0E0',
-  gradient: ['#4A90E2', '#357ABD'],
-  orangeGradient: ['#FF6B35', '#FF8A50'],
+    primary: '#4A90E2',
+    primaryDark: '#2D5AA0',
+    secondary: '#FF6B35',
+    accent: '#FFA726',
+    background: '#FFFFFF',
+    surface: '#F8F9FA',
+    surfaceLight: '#F0F0F0',
+    textPrimary: '#000000',
+    textSecondary: '#666666',
+    textTertiary: '#999999',
+    success: '#4CAF50',
+    warning: '#FF9800',
+    error: '#F44336',
+    cardBackground: '#FFFFFF',
+    inputBackground: '#F5F5F5',
+    borderColor: '#E0E0E0',
+    gradient: ['#4A90E2', '#357ABD'],
+    orangeGradient: ['#FF6B35', '#FF8A50'],
 };
 
 const DarkColors = {
-  primary: '#4A90E2',
-  primaryDark: '#2D5AA0',
-  secondary: '#FF6B35',
-  accent: '#FFA726',
-  background: '#121212',
-  surface: '#1E1E1E',
-  surfaceLight: '#2C2C2C',
-  textPrimary: '#FFFFFF',
-  textSecondary: '#B0B0B0',
-  textTertiary: '#808080',
-  success: '#4CAF50',
-  warning: '#FF9800',
-  error: '#F44336',
-  cardBackground: '#1A1A1A',
-  inputBackground: '#2C2C2C',
-  borderColor: '#3A3A3A',
-  gradient: ['#4A90E2', '#357ABD'],
-  orangeGradient: ['#FF6B35', '#FF8A50'],
+    primary: '#4A90E2',
+    primaryDark: '#2D5AA0',
+    secondary: '#FF6B35',
+    accent: '#FFA726',
+    background: '#121212',
+    surface: '#1E1E1E',
+    surfaceLight: '#2C2C2C',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#B0B0B0',
+    textTertiary: '#808080',
+    success: '#4CAF50',
+    warning: '#FF9800',
+    error: '#F44336',
+    cardBackground: '#1A1A1A',
+    inputBackground: '#2C2C2C',
+    borderColor: '#3A3A3A',
+    gradient: ['#4A90E2', '#357ABD'],
+    orangeGradient: ['#FF6B35', '#FF8A50'],
 };
 
 // Custom Cart Icon with Badge Component
@@ -77,10 +78,10 @@ const CartIconWithBadge = ({ focused, size = 24, theme }) => {
 
     return (
         <View style={styles.iconContainer}>
-            <Ionicons 
-                name="cart-outline" 
-                size={size} 
-                color={focused ? Colors.success : Colors.textTertiary} 
+            <Ionicons
+                name="cart-outline"
+                size={size}
+                color={focused ? Colors.success : Colors.textTertiary}
             />
             {itemCount > 0 && (
                 <View style={styles.badge}>
@@ -97,13 +98,13 @@ const CartIconWithBadge = ({ focused, size = 24, theme }) => {
 const OrdersIconWithBadge = ({ focused, size = 24, pendingOrdersCount = 0, theme }) => {
     const Colors = theme === 'dark' ? DarkColors : LightColors;
     const styles = getStyles(Colors);
-    
+
     return (
         <View style={styles.iconContainer}>
-            <AnimatedIcon 
-                name="receipt-outline" 
-                size={size} 
-                color={focused ? Colors.success : Colors.textTertiary} 
+            <AnimatedIcon
+                name="receipt-outline"
+                size={size}
+                color={focused ? Colors.success : Colors.textTertiary}
             />
             {pendingOrdersCount > 0 && (
                 <View style={[styles.badge, styles.ordersBadge]}>
@@ -121,13 +122,13 @@ const TabBarIcon = ({ iconName, iconType = 'Ionicons', focused, size = 24, theme
     const Colors = theme === 'dark' ? DarkColors : LightColors;
     const styles = getStyles(Colors);
     const IconComponent = iconType === 'MaterialIcons' ? MaterialIcons : Ionicons;
-    
+
     return (
         <View style={styles.iconContainer}>
-            <IconComponent 
-                name={iconName} 
-                size={size} 
-                color={focused ? Colors.success : Colors.textTertiary} 
+            <IconComponent
+                name={iconName}
+                size={size}
+                color={focused ? Colors.success : Colors.textTertiary}
             />
         </View>
     );
@@ -160,7 +161,7 @@ export default function BottomNav() {
                 // const response = await fetch('your-api-endpoint/pending-orders');
                 // const data = await response.json();
                 // setPendingOrdersCount(data.count || 0);
-                
+
                 // For now, using mock data - remove this when implementing real API
                 setPendingOrdersCount(0);
             } catch (error) {
@@ -180,8 +181,8 @@ export default function BottomNav() {
             screenOptions={{
                 tabBarStyle: styles.tabBarStyle,
                 tabBarLabelStyle: styles.tabBarLabelStyle,
-                        tabBarActiveTintColor: Colors.success,
-        tabBarInactiveTintColor: Colors.textTertiary,
+                tabBarActiveTintColor: Colors.success,
+                tabBarInactiveTintColor: Colors.textTertiary,
                 headerShown: false,
                 initialRouteName: userRole === 'farmer' ? 'Home' : 'BuyerDashboard',
                 tabBarBackground: () => (
@@ -196,9 +197,9 @@ export default function BottomNav() {
                         component={Farmerdash}
                         options={{
                             tabBarIcon: ({ focused }) => (
-                                <TabBarIcon 
-                                    iconName="home-outline" 
-                                    focused={focused} 
+                                <TabBarIcon
+                                    iconName="home-outline"
+                                    focused={focused}
                                     theme={theme}
                                 />
                             ),
@@ -209,9 +210,9 @@ export default function BottomNav() {
                         component={Chat}
                         options={{
                             tabBarIcon: ({ focused }) => (
-                                <TabBarIcon 
-                                    iconName="chatbox-outline" 
-                                    focused={focused} 
+                                <TabBarIcon
+                                    iconName="chatbox-outline"
+                                    focused={focused}
                                     theme={theme}
                                 />
                             ),
@@ -222,10 +223,38 @@ export default function BottomNav() {
                         component={Addproduct}
                         options={{
                             tabBarIcon: ({ focused }) => (
-                                <TabBarIcon 
-                                    iconName="add-to-photos" 
+                                <TabBarIcon
+                                    iconName="add-to-photos"
                                     iconType="MaterialIcons"
-                                    focused={focused} 
+                                    focused={focused}
+                                    theme={theme}
+                                />
+                            ),
+                        }}
+                    />
+                       <Tab.Screen
+                        name="Orders"
+                        component={FarmerOrderDashboard}
+                        options={{
+                            tabBarIcon: ({ focused }) => (
+                                <TabBarIcon
+                                    iconName="receipt"
+                                    iconType="MaterialIcons"
+                                    focused={focused}
+                                    theme={theme}
+                                />
+                            ),
+                        }}
+                    />
+                       <Tab.Screen
+                        name="Product Detail"
+                        component={ProductManagementScreen}
+                        options={{
+                            tabBarIcon: ({ focused }) => (
+                                <TabBarIcon
+                                    iconName="inventory"
+                                    iconType="MaterialIcons"
+                                    focused={focused}
                                     theme={theme}
                                 />
                             ),
@@ -236,10 +265,10 @@ export default function BottomNav() {
                         component={ProfileScreen}
                         options={{
                             tabBarIcon: ({ focused }) => (
-                                <TabBarIcon 
-                                    iconName="person-outline" 
+                                <TabBarIcon
+                                    iconName="person-outline"
                                     iconType="MaterialIcons"
-                                    focused={focused} 
+                                    focused={focused}
                                     theme={theme}
                                 />
                             ),
@@ -255,23 +284,23 @@ export default function BottomNav() {
                         component={Agronomistdash}
                         options={{
                             tabBarIcon: ({ focused }) => (
-                                <TabBarIcon 
-                                    iconName="home-outline" 
-                                    focused={focused} 
+                                <TabBarIcon
+                                    iconName="home-outline"
+                                    focused={focused}
                                     theme={theme}
                                 />
                             ),
                         }}
                     />
-                 
+
                     <Tab.Screen
                         name="Chat"
                         component={AgroChat}
                         options={{
                             tabBarIcon: ({ focused }) => (
-                                <TabBarIcon 
-                                    iconName="chatbox-outline" 
-                                    focused={focused} 
+                                <TabBarIcon
+                                    iconName="chatbox-outline"
+                                    focused={focused}
                                     theme={theme}
                                 />
                             ),
@@ -282,10 +311,10 @@ export default function BottomNav() {
                         component={AddBlog}
                         options={{
                             tabBarIcon: ({ focused }) => (
-                                <TabBarIcon 
-                                    iconName="add-to-photos" 
+                                <TabBarIcon
+                                    iconName="add-to-photos"
                                     iconType="MaterialIcons"
-                                    focused={focused} 
+                                    focused={focused}
                                     theme={theme}
                                 />
                             ),
@@ -296,10 +325,10 @@ export default function BottomNav() {
                         component={ProfileScreen}
                         options={{
                             tabBarIcon: ({ focused }) => (
-                                <TabBarIcon 
-                                    iconName="person-outline" 
+                                <TabBarIcon
+                                    iconName="person-outline"
                                     iconType="MaterialIcons"
-                                    focused={focused} 
+                                    focused={focused}
                                     theme={theme}
                                 />
                             ),
@@ -308,16 +337,16 @@ export default function BottomNav() {
                 </>
             )}
 
-            {(userRole === 'buyer' || !userRole ) && (
+            {(userRole === 'buyer' || !userRole) && (
                 <>
                     <Tab.Screen
                         name="Home"
                         component={BuyerDashboard}
                         options={{
                             tabBarIcon: ({ focused }) => (
-                                <TabBarIcon 
-                                    iconName="home-outline" 
-                                    focused={focused} 
+                                <TabBarIcon
+                                    iconName="home-outline"
+                                    focused={focused}
                                     theme={theme}
                                 />
                             ),
@@ -328,9 +357,9 @@ export default function BottomNav() {
                         component={SearchScreen}
                         options={{
                             tabBarIcon: ({ focused }) => (
-                                <TabBarIcon 
-                                    iconName="search-outline" 
-                                    focused={focused} 
+                                <TabBarIcon
+                                    iconName="search-outline"
+                                    focused={focused}
                                     theme={theme}
                                 />
                             ),
@@ -341,8 +370,8 @@ export default function BottomNav() {
                         component={OrdersScreen}
                         options={{
                             tabBarIcon: ({ focused }) => (
-                                <OrdersIconWithBadge 
-                                    focused={focused} 
+                                <OrdersIconWithBadge
+                                    focused={focused}
                                     pendingOrdersCount={pendingOrdersCount}
                                     theme={theme}
                                 />
@@ -354,8 +383,8 @@ export default function BottomNav() {
                         component={Cart}
                         options={{
                             tabBarIcon: ({ focused }) => (
-                                <CartIconWithBadge 
-                                    focused={focused} 
+                                <CartIconWithBadge
+                                    focused={focused}
                                     theme={theme}
                                 />
                             ),
@@ -366,10 +395,10 @@ export default function BottomNav() {
                         component={ProfileScreen}
                         options={{
                             tabBarIcon: ({ focused }) => (
-                                <TabBarIcon 
-                                    iconName="person-outline" 
+                                <TabBarIcon
+                                    iconName="person-outline"
                                     iconType="MaterialIcons"
-                                    focused={focused} 
+                                    focused={focused}
                                     theme={theme}
                                 />
                             ),
@@ -457,7 +486,6 @@ const getStyles = (Colors) => {
         },
     });
 };
-
 
 // import React, { useEffect, useState } from 'react';
 // import { View, Text, StyleSheet, Platform } from 'react-native';

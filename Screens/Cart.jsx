@@ -150,7 +150,7 @@ const CartScreen = ({ navigation }) => {
       totalAmount: totalAmount,  
     };
 
-    console.log("Sending order data:", JSON.stringify(orderData));
+    // console.log("Sending order data:", JSON.stringify(orderData));
 
     const response = await fetch(API_CONFIG.ORDER_URL, {
       method: 'POST',

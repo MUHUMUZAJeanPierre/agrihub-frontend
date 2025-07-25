@@ -87,7 +87,6 @@ const FarmerOrderDashboard = () => {
     outputRange: ['0deg', '360deg'],
   });
 
-  // Fetch orders when the screen loads
   const fetchOrders = async (isRefresh = false) => {
     try {
       if (isRefresh) setRefreshing(true);

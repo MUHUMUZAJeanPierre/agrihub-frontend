@@ -84,7 +84,6 @@ const DarkColors = {
   orangeGradient: ['#FF6B35', '#FF8A50'],
 };
 
-// API Configuration
 const API_BASE_URL = 'https://agrihub-backend-4z99.onrender.com';
 const API_ENDPOINTS = {
   FARMERS: `${API_BASE_URL}/api/farmers`,
@@ -110,7 +109,7 @@ const SearchTextInput = ({ value, onChangeText, placeholder, Colors }) => (
   </View>
 );
 
-const QuickActionButton = ({ icon, label, onPress, color = "#10B981", Colors }) => (
+const QuickActionButton = ({ icon, label, onPress, color = "#4CAF50", Colors }) => (
   <TouchableOpacity onPress={onPress} style={[styles.quickActionButton, { backgroundColor: Colors.cardBackground }]}>
     <View style={[styles.quickActionIcon, { backgroundColor: `${color}15` }]}>{icon}</View>
     <Text style={[styles.quickActionLabel, { color: Colors.textSecondary }]}>{label}</Text>
@@ -149,13 +148,13 @@ const HeaderComponent = ({ username, theme, toggleTheme, language, changeLanguag
   };
 
   return (
-    <View style={[styles.header, { backgroundColor: Colors.background, paddingTop: 20, paddingBottom: 4, shadowColor: 'transparent', borderRadius: 0 }]}> 
+    <View style={[styles.header, { backgroundColor: Colors.background, paddingTop: 20, paddingBottom: 4, shadowColor: 'transparent', borderRadius: 0 }]}>
       <View style={styles.headerTop}>
         <View>
           <Text style={[styles.headerName, { color: Colors.textPrimary }]}>{username}</Text>
         </View>
         <TouchableOpacity style={styles.profileButton} onPress={() => setShowProfileModal(true)}>
-          <View style={[styles.profileIcon, { backgroundColor: Colors.surface }]}> 
+          <View style={[styles.profileIcon, { backgroundColor: Colors.surface }]}>
             <Ionicons name="person-circle-outline" size={28} color={Colors.textPrimary} />
           </View>
         </TouchableOpacity>
@@ -170,7 +169,7 @@ const HeaderComponent = ({ username, theme, toggleTheme, language, changeLanguag
             style={[styles.modalOverlay, { backgroundColor: Colors.overlay || 'rgba(0,0,0,0.6)' }]}
             onPressOut={() => setShowProfileModal(false)}
           >
-            <View style={[styles.profileModalContent, { backgroundColor: Colors.cardBackground, borderColor: Colors.borderColor || Colors.border }]}> 
+            <View style={[styles.profileModalContent, { backgroundColor: Colors.cardBackground, borderColor: Colors.borderColor || Colors.border }]}>
               <Text style={[styles.modalTitle, { color: Colors.textPrimary }]}>{t('profileOptions')}</Text>
               {/* Theme toggle */}
               <TouchableOpacity
@@ -178,10 +177,10 @@ const HeaderComponent = ({ username, theme, toggleTheme, language, changeLanguag
                 onPress={toggleTheme}
               >
                 <View style={styles.toggleButtonContent}>
-                  <Ionicons 
-                    name={theme === 'light' ? 'moon-outline' : 'sunny-outline'} 
-                    size={24} 
-                    color={Colors.textPrimary} 
+                  <Ionicons
+                    name={theme === 'light' ? 'moon-outline' : 'sunny-outline'}
+                    size={24}
+                    color={Colors.textPrimary}
                   />
                   <Text style={[styles.toggleButtonText, { color: Colors.textPrimary }]}> {theme === 'light' ? t('switchToDark') : t('switchToLight')} </Text>
                 </View>
@@ -269,10 +268,10 @@ export default function Farmerdash({ navigation }) {
 
   const fetchBlogsFromAPI = async () => {
     try {
-      const token = await AsyncStorage.getItem('@auth_token');      
+      const token = await AsyncStorage.getItem('@auth_token');
       const response = await fetch(API_ENDPOINTS.FARMERS, {
         method: 'GET',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           ...(token && { 'Authorization': `Bearer ${token}` })
         },
@@ -286,7 +285,7 @@ export default function Farmerdash({ navigation }) {
         }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const result = await response.json();
       if (result.status === 'success' && result.data) {
         setBlogs(result.data);
@@ -306,17 +305,25 @@ export default function Farmerdash({ navigation }) {
     }
   };
 
-  const fetchOrdersFromAPI = async () => {
+  const fetchOrdersFromAPI = async (isRefresh = false) => {
     try {
+      if (isRefresh) setRefreshing(true); // optional: for pull-to-refresh UI
+
       setOrdersLoading(true);
-      
+
       const token = await AsyncStorage.getItem('@auth_token');
-      
+
+      if (!token) {
+        Alert.alert('Authentication required', 'Please log in to view orders.');
+        setOrders([]);
+        return;
+      }
+
       const response = await fetch(API_ENDPOINTS.ORDERS, {
         method: 'GET',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          ...(token && { 'Authorization': `Bearer ${token}` })
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -328,42 +335,41 @@ export default function Farmerdash({ navigation }) {
         }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const result = await response.json();
 
       if (Array.isArray(result)) {
         setOrders(result);
-      }
-      else if (result.status === 'success' && Array.isArray(result.data)) {
+      } else if (result.status === 'success' && Array.isArray(result.data)) {
         setOrders(result.data);
-      }
-      else {
+      } else {
         console.warn('Unexpected structure from orders API:', result);
         setOrders([]);
       }
+
     } catch (error) {
       console.error('Error fetching orders from API:', error);
-      if (!error.message.includes('401')) {
-        Alert.alert(
-          'Network Error',
-          'Failed to load orders. Please check your internet connection and try again.',
-          [{ text: 'OK' }]
-        );
-      }
+      Alert.alert(
+        'Network Error',
+        'Failed to fetch orders. Please check your internet connection and try again.',
+        [{ text: 'OK' }]
+      );
       setOrders([]);
     } finally {
       setOrdersLoading(false);
+      if (isRefresh) setRefreshing(false);
     }
   };
 
+
   const fetchProductsFromAPI = async () => {
     try {
-      setProductsLoading(true);      
+      setProductsLoading(true);
       const token = await AsyncStorage.getItem('@auth_token');
-      
+
       const response = await fetch(API_ENDPOINTS.PRODUCTS, {
         method: 'GET',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           ...(token && { 'Authorization': `Bearer ${token}` })
         },
@@ -378,7 +384,7 @@ export default function Farmerdash({ navigation }) {
         }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const result = await response.json();
 
       if (Array.isArray(result)) {
@@ -426,7 +432,8 @@ export default function Farmerdash({ navigation }) {
     fetchDatas();
   }, []);
 
-  const totalOrders = orders.length;
+
+  // const totalOrders = orders.length > 0 ? `${orders.length} order(s)` : 'not found';
   const totalProducts = products.length;
 
   const searchFilter = (text) => {
@@ -461,7 +468,7 @@ export default function Farmerdash({ navigation }) {
     switch (severity) {
       case 'High': return '#EF4444';
       case 'Medium': return '#F59E0B';
-      case 'Low': return '#10B981';
+      case 'Low': return '#4CAF50';
       default: return '#6B7280';
     }
   };
@@ -573,17 +580,19 @@ export default function Farmerdash({ navigation }) {
     inputRange: [0, 1],
     outputRange: ['0deg', '360deg'],
   });
+
+
   return (
-    <View style={[styles.container, { backgroundColor: Colors.background }]}> 
-      <StatusBar 
-        barStyle={theme === 'dark' ? "light-content" : "dark-content"} 
-        backgroundColor={Colors.background} 
+    <View style={[styles.container, { backgroundColor: Colors.background }]}>
+      <StatusBar
+        barStyle={theme === 'dark' ? "light-content" : "dark-content"}
+        backgroundColor={Colors.background}
       />
       <View style={{ paddingHorizontal: HORIZONTAL_PADDING }}>
         <HeaderComponent
           username={getDisplayName()}
           theme={theme}
-          toggleTheme={() => {}}
+          toggleTheme={() => { }}
           language={language}
           changeLanguage={changeLanguage}
           Colors={Colors}
@@ -592,9 +601,9 @@ export default function Farmerdash({ navigation }) {
           navigation={navigation}
         />
         {/* Add search bar below header, with reduced top margin */}
-        <View style={[styles.searchWrapper, { marginTop: 4 }]}> 
-          <View style={[styles.searchContainer, { backgroundColor: Colors.inputBackground }]}> 
-            <View style={[styles.searchInputContainer, { backgroundColor: Colors.inputBackground }]}> 
+        <View style={[styles.searchWrapper, { marginTop: 4 }]}>
+          <View style={[styles.searchContainer, { backgroundColor: Colors.inputBackground }]}>
+            <View style={[styles.searchInputContainer, { backgroundColor: Colors.inputBackground }]}>
               <Ionicons name="search-outline" size={20} color={Colors.textSecondary} />
               <TextInput
                 style={[styles.searchInput, { color: Colors.textPrimary }]}
@@ -608,7 +617,7 @@ export default function Farmerdash({ navigation }) {
                 returnKeyType="search"
               />
             </View>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.filterButton, { backgroundColor: Colors.inputBackground }]}
             >
               <Ionicons name="options-outline" size={20} color={Colors.textSecondary} />
@@ -631,14 +640,14 @@ export default function Farmerdash({ navigation }) {
           />
           <StatCard
             title="Orders Received"
-            value={totalOrders.toString()}
-            // icon={<MaterialIcons name="shopping-cart" size={24} color="white" />}
+            value={
+              orders.length > 0 ? `${orders.length} order(s)` : '0'
+            }
             onPress={() => handleNavigation("farmerblog")}
             gradient={true}
-            // trend="up"
-            // trendValue="+23%"
             isLoading={ordersLoading}
           />
+
         </View>
 
         <View style={styles.contentSection}>
@@ -660,7 +669,7 @@ export default function Farmerdash({ navigation }) {
           {blogsLoading ? (
             <View style={styles.loadingContainer}>
               <View style={styles.spinnerContainer}>
-                <Animated.View style={[styles.spinner, { transform: [{ rotate: spin }] }]}> 
+                <Animated.View style={[styles.spinner, { transform: [{ rotate: spin }] }]}>
                   <View style={styles.spinnerOuter}>
                     <View style={styles.spinnerInner} />
                   </View>
@@ -762,28 +771,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
     height: 54,
     marginBottom: 8,
-},
-searchInputContainer: {
-  flex: 1,
-  flexDirection: 'row',
-  alignItems: 'center',
-  borderRadius: 16,
-  paddingHorizontal: 16,
-  height: 44,
-},
-searchInput: {
-  flex: 1,
-  fontSize: 16,
-  fontFamily: 'Poppins_400Regular',
-  marginLeft: 8,
-},
-filterButton: {
-  marginLeft: 8,
-  borderRadius: 12,
-  padding: 10,
-  justifyContent: 'center',
-  alignItems: 'center',
-},
+  },
+  searchInputContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    height: 44,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: 'Poppins_400Regular',
+    marginLeft: 8,
+  },
+  filterButton: {
+    marginLeft: 8,
+    borderRadius: 12,
+    padding: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   scrollView: {
     flex: 1,
   },
@@ -813,50 +822,50 @@ filterButton: {
     minWidth: 120,
     minHeight: 80,
     marginBottom: 8,
-},
-gradientCard: {
-  backgroundColor: '#4CAF50',
-},
-statCardHeader: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  width: '100%',
-  marginBottom: 18,
-},
-iconContainer: {
-  width: 54,
-  height: 54,
-  borderRadius: 27,
-  backgroundColor: '#F0F0F0',
-  alignItems: 'center',
-  justifyContent: 'center',
-  marginRight: 10,
-},
-statTitle: {
-  fontSize: 15,
-  fontWeight: '500',
-  fontFamily: FONTS.semiBold,
-  marginBottom: 6,
-  textAlign: 'center',
-},
-statValue: {
-  fontSize: 32,
-  fontWeight: '700',
-  fontFamily: FONTS.bold,
-  textAlign: 'center',
-  marginTop: 2,
-},
-trendContainer: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  marginLeft: 8,
-},
-trendText: {
-  fontSize: 14,
-  fontWeight: '600',
-  marginLeft: 4,
-},
+  },
+  gradientCard: {
+    backgroundColor: '#4CAF50',
+  },
+  statCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 18,
+  },
+  iconContainer: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#F0F0F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  statTitle: {
+    fontSize: 15,
+    fontWeight: '500',
+    fontFamily: FONTS.semiBold,
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  statValue: {
+    fontSize: 32,
+    fontWeight: '700',
+    fontFamily: FONTS.bold,
+    textAlign: 'center',
+    marginTop: 2,
+  },
+  trendContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  trendText: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
   quickActionsContainer: {
     paddingHorizontal: 20,
     paddingTop: 30,
@@ -1050,7 +1059,7 @@ trendText: {
     fontWeight: "500",
     fontFamily: FONTS.regular,
   },
-  
+
   categoryBadge: {
     position: "absolute",
     top: 16,
