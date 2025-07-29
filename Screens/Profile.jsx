@@ -16,6 +16,9 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth  } from '../contexts/AuthContext';
+import { wp, hp, fontSize, padding, margin, borderRadius, iconSize, fontSizes, spacing } from '../utils/responsive';
+
 const LightColors = {
   primary: '#48BB78',
   primaryDark: '#48BB78',
@@ -136,11 +139,19 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState({
+    name: 'User',
+    email: 'user@example.com',
+    avatar: 'https://via.placeholder.com/150',
+    phone: 'N/A',
+    joinDate: '2024-01-01',
+    lastActive: 'Today',
+  });
   const { theme, toggleTheme } = useTheme();
   const { language, changeLanguage } = useLanguage();
   const Colors = theme === 'dark' ? DarkColors : LightColors;
   const t = translations[language] || translations.en;
+  const { logout } = useAuth();
 
   const loadUserData = async () => {
     try {
@@ -148,8 +159,8 @@ const ProfileScreen = () => {
       if (userData) {
         const parsedUser = JSON.parse(userData);
         setUser({
-          name: parsedUser.name,
-          email: parsedUser.email,
+          name: parsedUser.name || 'User',
+          email: parsedUser.email || 'user@example.com',
           avatar: parsedUser.avatar || 'https://via.placeholder.com/150',
           phone: parsedUser.phone || t.notAvailable,
           joinDate: parsedUser.joinDate || '2024-01-01',
@@ -161,29 +172,8 @@ const ProfileScreen = () => {
     }
   };
 
-  const handleLogout = async () => {
-    Alert.alert(t.logout, t.logoutConfirm, [
-      { text: t.cancel, style: 'cancel' },
-      {
-        text: t.logout,
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await AsyncStorage.multiRemove([
-              AUTH_KEYS.TOKEN,
-              AUTH_KEYS.USER_ID,
-              AUTH_KEYS.USER_DATA,
-            ]);
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'login' }],
-            });
-          } catch (err) {
-            console.error('Logout error:', err);
-          }
-        },
-      },
-    ]);
+  const handleLogout = () => {
+    logout(navigation);
   };
 
   useEffect(() => {
@@ -247,22 +237,6 @@ const ProfileScreen = () => {
       <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />
     </TouchableOpacity>
   );
-
-  if (!user) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: Colors.background }]}>
-        <StatusBar backgroundColor={Colors.background} barStyle={theme === 'dark' ? 'light-content' : 'dark-content'} />
-        <View style={styles.loadingContainer}>
-          <View
-            style={[styles.loadingIcon, { backgroundColor: Colors.primary }]}
-          >
-            <Ionicons name="person-circle-outline" size={50} color="#fff" />
-          </View>
-          <Text style={[styles.loadingText, { color: Colors.textSecondary }]}>{t.loading}</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: Colors.background }]}>
@@ -412,65 +386,65 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: wp(80),
+    height: wp(80),
+    borderRadius: wp(40),
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: spacing[5],
   },
   loadingText: {
-    fontSize: 16,
+    fontSize: fontSizes.base,
     fontFamily: 'Poppins_400Regular',
   },
   headerBackground: {
-    paddingTop: 10,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
+    paddingTop: spacing[2],
+    paddingBottom: spacing[5],
+    paddingHorizontal: spacing[5],
   },
   headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 10,
+    paddingTop: spacing[2],
   },
   headerTitle: {
-    fontSize: 32,
+    fontSize: fontSizes['4xl'],
     fontWeight: 'bold',
     color: '#fff',
     fontFamily: 'Poppins_700Bold',
   },
   settingsButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: wp(44),
+    height: wp(44),
+    borderRadius: wp(22),
     backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   profileSection: {
-    paddingHorizontal: 20,
-    marginTop: -10,
-    marginBottom: 30,
+    paddingHorizontal: spacing[5],
+    marginTop: -spacing[2],
+    marginBottom: spacing[8],
   },
   profileCard: {
-    borderRadius: 24,
-    padding: 30,
+    borderRadius: borderRadius.xl,
+    padding: spacing[8],
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
+    shadowOffset: { width: 0, height: spacing[2] },
     shadowOpacity: 0.15,
-    shadowRadius: 20,
+    shadowRadius: spacing[5],
     elevation: 8,
   },
   avatarContainer: {
     position: 'relative',
-    marginBottom: 20,
+    marginBottom: spacing[5],
   },
   avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: wp(120),
+    height: wp(120),
+    borderRadius: wp(60),
     borderWidth: 4,
     borderColor: '#fff',
   },
@@ -478,9 +452,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: wp(36),
+    height: wp(36),
+    borderRadius: wp(18),
     backgroundColor: '#FF6B35',
     justifyContent: 'center',
     alignItems: 'center',
@@ -494,23 +468,23 @@ const styles = StyleSheet.create({
   },
   userInfo: {
     alignItems: 'center',
-    marginBottom: 25,
+    marginBottom: spacing[6],
   },
   userName: {
-    fontSize: 28,
+    fontSize: fontSizes['4xl'],
     fontWeight: 'bold',
     color: '#fff',
     fontFamily: 'Poppins_700Bold',
-    marginBottom: 6,
+    marginBottom: spacing[1],
   },
   userEmail: {
-    fontSize: 16,
+    fontSize: fontSizes.base,
     color: 'rgba(255,255,255,0.9)',
     fontFamily: 'Poppins_400Regular',
-    marginBottom: 4,
+    marginBottom: spacing[1],
   },
   userPhone: {
-    fontSize: 14,
+    fontSize: fontSizes.sm,
     color: 'rgba(255,255,255,0.7)',
     fontFamily: 'Poppins_400Regular',
   },
@@ -518,9 +492,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 16,
-    paddingVertical: 15,
-    paddingHorizontal: 20,
+    borderRadius: borderRadius.md,
+    paddingVertical: spacing[4],
+    paddingHorizontal: spacing[5],
     width: '100%',
   },
   statItem: {
@@ -528,38 +502,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 20,
+    fontSize: fontSizes['2xl'],
     fontWeight: 'bold',
     color: '#fff',
     fontFamily: 'Poppins_700Bold',
   },
   statLabel: {
-    fontSize: 11,
+    fontSize: fontSizes.xs,
     color: 'rgba(255,255,255,0.8)',
     fontFamily: 'Poppins_400Regular',
-    marginTop: 2,
+    marginTop: spacing[0.5],
   },
   statDivider: {
     width: 1,
-    height: 30,
+    height: wp(30),
     backgroundColor: 'rgba(255,255,255,0.3)',
-    marginHorizontal: 15,
+    marginHorizontal: spacing[4],
   },
   section: {
-    paddingHorizontal: 20,
-    marginBottom: 25,
+    paddingHorizontal: spacing[5],
+    marginBottom: spacing[6],
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: fontSizes['2xl'],
     fontWeight: '600',
     fontFamily: 'Poppins_600SemiBold',
-    marginBottom: 15,
+    marginBottom: spacing[4],
   },
   languageCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 18,
-    borderRadius: 16,
+    padding: spacing[4],
+    borderRadius: borderRadius.md,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -567,31 +541,31 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   languageIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: wp(44),
+    height: wp(44),
+    borderRadius: wp(22),
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: spacing[4],
   },
   languageContent: {
     flex: 1,
   },
   languageTitle: {
-    fontSize: 16,
+    fontSize: fontSizes.base,
     fontWeight: '600',
     fontFamily: 'Poppins_600SemiBold',
   },
   languageSubtitle: {
-    fontSize: 13,
+    fontSize: fontSizes.sm,
     fontFamily: 'Poppins_400Regular',
-    marginTop: 2,
+    marginTop: spacing[0.5],
   },
   themeCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 18,
-    borderRadius: 16,
+    padding: spacing[4],
+    borderRadius: borderRadius.md,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -599,28 +573,28 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   themeIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: wp(44),
+    height: wp(44),
+    borderRadius: wp(22),
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: spacing[4],
   },
   themeContent: {
     flex: 1,
   },
   themeTitle: {
-    fontSize: 16,
+    fontSize: fontSizes.base,
     fontWeight: '600',
     fontFamily: 'Poppins_600SemiBold',
   },
   themeSubtitle: {
-    fontSize: 13,
+    fontSize: fontSizes.sm,
     fontFamily: 'Poppins_400Regular',
-    marginTop: 2,
+    marginTop: spacing[0.5],
   },
   menuContainer: {
-    borderRadius: 16,
+    borderRadius: borderRadius.md,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -632,8 +606,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 18,
-    paddingHorizontal: 18,
+    paddingVertical: spacing[4],
+    paddingHorizontal: spacing[4],
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0,0,0,0.05)',
   },
@@ -643,30 +617,30 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   iconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: wp(44),
+    height: wp(44),
+    borderRadius: wp(22),
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: spacing[4],
   },
   menuItemText: {
-    fontSize: 16,
+    fontSize: fontSizes.base,
     fontWeight: '500',
     fontFamily: 'Poppins_500Medium',
   },
   logoutSection: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingHorizontal: spacing[5],
+    paddingTop: spacing[2],
   },
   logoutButton: {
-    borderRadius: 16,
+    borderRadius: borderRadius.md,
     overflow: 'hidden',
     borderWidth: 1,
-    marginTop: 10,
-    marginBottom: 10,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
+    marginTop: spacing[2],
+    marginBottom: spacing[2],
+    paddingVertical: spacing[3],
+    paddingHorizontal: spacing[5],
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
@@ -677,10 +651,10 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   logoutText: {
-    fontSize: 16,
+    fontSize: fontSizes.base,
     fontWeight: '600',
     fontFamily: 'Poppins_600SemiBold',
-    marginLeft: 12,
+    marginLeft: spacing[3],
   },
 });
 

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { StatusBar, View, StyleSheet, ActivityIndicator } from 'react-native';
 import StackNavigation from './Navigation/stackNavigation';
@@ -14,7 +13,13 @@ import {
   Poppins_700Bold,
   Poppins_800ExtraBold
 } from '@expo-google-fonts/poppins';
+import { AuthProvider } from './contexts/AuthContext';
 
+
+
+import { LogBox } from "react-native";
+
+LogBox.ignoreAllLogs(true);
 export default function App() {
   let [fontsLoaded] = useFonts({
     Poppins_400Regular,
@@ -33,6 +38,7 @@ export default function App() {
 
   return (
     <NavigationContainer>
+    <AuthProvider>
       <LanguageProvider>
         <ThemeProvider>
           <CartProvider>
@@ -43,6 +49,7 @@ export default function App() {
           </CartProvider>
         </ThemeProvider>
       </LanguageProvider>
+      </AuthProvider>
     </NavigationContainer>   
   );
 }

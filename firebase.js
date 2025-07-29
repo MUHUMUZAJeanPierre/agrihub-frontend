@@ -1,33 +1,25 @@
 import { initializeApp } from "firebase/app";
-import {getAuth, initializeAuth, getReactNativePersistence} from  'firebase/auth'
-import {getFirestore} from 'firebase/firestore'
-import { getStorage } from "firebase/storage";
-import AsyncStorage from '@react-native-async-storage/async-storage'; 
-
-
+import {getReactNativePersistence, initializeAuth} from 'firebase/auth';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {getFirestore, collection} from 'firebase/firestore'
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDXL8XPCge4zFIbGyk5hHK0GONtV9gxiio",
-  authDomain: "agrihub-2f69e.firebaseapp.com",
-  projectId: "agrihub-2f69e",
-  storageBucket: "agrihub-2f69e.firebasestorage.app",
-  messagingSenderId: "1077386709419",
-  appId: "1:1077386709419:web:719b045206860768b46aee",
-  measurementId: "G-8L08Y43T3X"
+  apiKey: "AIzaSyC8Ap2S3e5GGCx40I-_hgfhS0qLabxEoxs",
+  authDomain: "agrihubsystem.firebaseapp.com",
+  projectId: "agrihubsystem",
+  storageBucket: "agrihubsystem.firebasestorage.app",
+  messagingSenderId: "954748591033",
+  appId: "1:954748591033:web:e0be13c87cf777941fb468",
+  measurementId: "G-7W3MLRLG0Z"
 };
 
-// Initialize Firebase
-export const FIREBASE_APP = initializeApp(firebaseConfig);
-// const analytics = getAnalytics(app);
-// export const FIREBASE_AUTH = getAuth(FIREBASE_APP,{
-//   persistence: getReactNativePersistence(AsyncStorage),
-// })
+const app = initializeApp(firebaseConfig);
 
+export const auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage)
+});
 
-// export const FIREBASE_AUTH = initializeAuth(FIREBASE_APP, {
-//   persistence: getReactNativePersistence(ReactNativeAsyncStorage),
-// });
+export const db = getFirestore(app);
 
-export const FIREBASE_AUTH = getAuth(FIREBASE_APP)
-export const FIREBASE_DB = getFirestore(FIREBASE_APP)
-export const FIREBASE_storage = getStorage(FIREBASE_APP);
+export const usersRef = collection(db, 'users');
+export const roomRef = collection(db, 'rooms');

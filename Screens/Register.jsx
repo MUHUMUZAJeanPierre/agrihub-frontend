@@ -1,4 +1,4 @@
-import React, { useState } from "react"; 
+import React, { useState } from "react";
 import {
   Text,
   View,
@@ -7,212 +7,154 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   StyleSheet,
+  Platform,
 } from "react-native";
 import StandardTextInput from "../Components/StandardTextInput";
 import Button from "../Components/Button";
-import { showMessage } from "react-native-flash-message";
 import Dropdown from "../Components/Dropdown";
+import { showMessage } from "react-native-flash-message";
 import { useTheme } from "../contexts/ThemeContext";
-import { useLanguage } from '../contexts/LanguageContext';
-
- 
-const registerUser = async (name, email, password, role) => {
-  
-  const response = await fetch("https://agrihub-backend-4z99.onrender.com/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, email, password, role }),
-  });
-
-  const data = await response.json();
-
-
-
-
-  if (!response.ok) {
-    const message = data?.message || data?.error || "Registration failed. Please try again.";
-    throw new Error(message);
-  }
-
-  return data;
-};
+import { useLanguage } from "../contexts/LanguageContext";
+import { useAuth } from "../contexts/AuthContext";
 
 const FONTS = {
-regular: "Poppins_400Regular",
-semiBold: "Poppins_600SemiBold",
-bold: "Poppins_700Bold",
+  regular: "Poppins_400Regular",
+  semiBold: "Poppins_600SemiBold",
+  bold: "Poppins_700Bold",
 };
+
+const ROLES = [
+  { label: "Farmer", value: "farmer" },
+  { label: "Buyer", value: "buyer" },
+  { label: "Plant Pathologist", value: "plant pathologist" },
+];
+
 export default function Register({ navigation }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const { language, t } = useLanguage();
+  const { register, loading } = useAuth();
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState("");
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "",
+  });
+  const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-
-  const roles = ["farmer", "buyer", "plant pathologist"];
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
-  const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
-  const handleValidation = () => {
-    let valid = true;
-
-    if (!name.trim()) {
-      showMessage({
-        message: "Name Required",
-        description: "Please enter your full name.",
-        type: "warning",
-        icon: "warning",
-      });
-      valid = false;
-    }
-
-    if (!email.trim()) {
-      setEmailError("Email is required");
-      valid = false;
-    } else if (!isValidEmail(email)) {
-      setEmailError("Invalid email format");
-      valid = false;
-    } else {
-      setEmailError("");
-    }
-
-    if (!password.trim()) {
-      setPasswordError("Password is required");
-      valid = false;
-    } else if (password.length < 6) {
-      setPasswordError("Password must be at least 6 characters");
-      valid = false;
-    } else {
-      setPasswordError("");
-    }
-
-    if (!role) {
-      showMessage({
-        message: "Role Required",
-        description: "Please select a role (farmer, buyer, or plant pathologist).",
-        type: "warning",
-        icon: "warning",
-      });
-      valid = false;
-    }
-
-    return valid;
+  const updateFormData = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: null }));
   };
 
-  const handleRegister = async () => {
-    if (!handleValidation()) return;
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.name.trim()) newErrors.name = "Full name is required";
+    else if (formData.name.trim().length < 2) newErrors.name = "Name must be at least 2 characters";
 
-    try {
-      setLoading(true);
-      await registerUser(name, email, password, role);
-      showMessage({ message: "Registration Successful", type: "success", icon: "success" });
-      navigation.navigate("login");
-    } catch (error) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email.trim()) newErrors.email = "Email is required";
+    else if (!emailRegex.test(formData.email.trim())) newErrors.email = "Enter a valid email address";
+
+    if (!formData.password.trim()) newErrors.password = "Password is required";
+    else if (formData.password.length < 6) newErrors.password = "Password must be at least 6 characters";
+    else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password))
+      newErrors.password = "Password must contain uppercase, lowercase, and number";
+
+    if (!formData.role) newErrors.role = "Please select a role";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleRegister = () => {
+    if (!validateForm()) {
       showMessage({
-        message: "Registration Error",
-        description: error.message || "Something went wrong",
-        type: "danger",
-        icon: "danger",
-        duration: 5000,
+        message: "Validation Error",
+        description: "Please fix the errors below",
+        type: "warning",
+        icon: "warning",
       });
-    } finally {
-      setLoading(false);
-      setName("");
-      setEmail("");
-      setPassword("");
-      setRole("");
+      return;
     }
+    register(formData, () => navigation.navigate("login"));
   };
 
   return (
-    <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View
-          style={[
-            styles.container,
-            { backgroundColor: isDark ? "#121212" : "#ffffff" },
-          ]}
-        >
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <View style={styles.imageContainer}>
-              <Image
-                source={require("../assets/logo.png")}
-                style={styles.image}
-              />
-              <Text style={[styles.title, { color: isDark ? "#ffffff" : "#1a1a1a" }]}>
-                Sign Up
-              </Text>
-              <Text style={{ color: isDark ? "#999" : "#b0abab", textAlign: "center", fontFamily: FONTS.regular, }}>
-                Create an account to continue
-              </Text>
-            </View>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+    >
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={[styles.container, { backgroundColor: isDark ? "#121212" : "#ffffff" }]}>          
+          <View style={styles.imageContainer}>
+            <Image source={require("../assets/logo.png")} style={styles.image} />
+            <Text style={[styles.title, { color: isDark ? "#ffffff" : "#1a1a1a" }]}>Create Account</Text>
+            <Text style={[styles.subtitle, { color: isDark ? "#999" : "#b0abab" }]}>Join AgriHub to get started</Text>
+          </View>
 
+          <View style={styles.formContainer}>
             <StandardTextInput
               label="Full Name"
               icon2="account-circle"
-              value={name}
-              onChangeText={setName}
+              value={formData.name}
+              onChangeText={(value) => updateFormData('name', value)}
+              error={errors.name}
+              placeholder="Enter your full name"
+              autoCapitalize="words"
             />
-
             <StandardTextInput
-              label="Email"
+              label="Email Address"
               icon2="email"
-              value={email}
-              onChangeText={setEmail}
-              error={emailError}
+              value={formData.email}
+              onChangeText={(value) => updateFormData('email', value)}
+              error={errors.email}
+              placeholder="Enter your email"
+              keyboardType="email-address"
+              autoCapitalize="none"
             />
-            {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
-
             <StandardTextInput
               label="Password"
               icon2="lock"
               secureTextEntry={!showPassword}
-              onChangeText={setPassword}
-              error={passwordError}
+              value={formData.password}
+              onChangeText={(value) => updateFormData('password', value)}
+              error={errors.password}
               icon1={showPassword ? "eye-outline" : "eye-off-outline"}
               onPress={togglePasswordVisibility}
+              placeholder="Create a strong password"
+              autoCapitalize="none"
             />
-            {passwordError ? <Text style={styles.error}>{passwordError}</Text> : null}
-
-            <Text
-              style={{
-                fontSize: 15,
-                padding: 10,
-                color: isDark ? "#ccc" : "#333",
-                 fontFamily: FONTS.regular, 
-              }}
-            >
-              Select Role
-            </Text>
+            <Text style={[styles.roleLabel, { color: isDark ? "#ccc" : "#333" }]}>Select Your Role</Text>
             <Dropdown
-              options={roles}
-              selectedOption={role}
-              onSelect={setRole}
-              placeholder="Select your role"
+              options={ROLES.map(role => role.value)}
+              selectedOption={formData.role}
+              onSelect={(value) => updateFormData('role', value)}
+              placeholder="Choose your role"
+              error={errors.role}
             />
-          </ScrollView>
+            {errors.role && <Text style={styles.errorText}>{errors.role}</Text>}
+          </View>
 
-          <TouchableOpacity style={{ paddingVertical: 10 }}>
-            <Button title="Sign Up" onPress={handleRegister} loading={loading} />
-          </TouchableOpacity>
+          <View style={styles.buttonContainer}>
+            <Button
+              title={loading ? "Creating Account..." : "Create Account"}
+              onPress={handleRegister}
+              loading={loading}
+              disabled={loading}
+            />
+          </View>
 
           <View style={styles.loginContainer}>
-            <Text style={{ color: isDark ? "#ccc" : "#000", fontFamily: FONTS.regular,  }}>
-              Already have an account?{" "}
-            </Text>
-            <TouchableOpacity onPress={() => {
-              navigation.navigate("login");
-              }}>
-              <Text style={{ color: "#4ba26a", fontWeight: "bold" }}>Login</Text>
+            <Text style={[styles.loginText, { color: isDark ? "#ccc" : "#000" }]}>Already have an account? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate("login")}>                
+              <Text style={styles.loginLink}>Sign In</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -228,27 +170,58 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   imageContainer: {
-    marginBottom: 20,
+    marginBottom: 30,
+    alignItems: 'center',
   },
   image: {
-    height: 280,
-    width: 250,
-    alignSelf: "center",
+    height: 200,
+    width: 200,
+    marginBottom: 20,
   },
   title: {
-    fontSize: 35,
+    fontSize: 32,
     fontWeight: "600",
     textAlign: "center",
-    fontFamily: FONTS.semiBold, 
+    fontFamily: FONTS.semiBold,
+    marginBottom: 8,
   },
-  error: {
-    color: "red",
+  subtitle: {
+    textAlign: "center",
+    fontFamily: FONTS.regular,
+    fontSize: 16,
+  },
+  formContainer: {
+    marginBottom: 30,
+  },
+  roleLabel: {
+    fontSize: 15,
+    padding: 10,
+    fontFamily: FONTS.regular,
+    marginTop: 10,
+  },
+  errorText: {
+    color: "#e74c3c",
     fontSize: 13,
-    paddingLeft: 5,
+    paddingLeft: 10,
+    paddingTop: 5,
+    fontFamily: FONTS.regular,
+  },
+  buttonContainer: {
+    paddingVertical: 10,
   },
   loginContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    paddingBottom: 10,
+    paddingVertical: 20,
+  },
+  loginText: {
+    fontFamily: FONTS.regular,
+    fontSize: 15,
+  },
+  loginLink: {
+    color: "#4ba26a",
+    fontWeight: "bold",
+    fontFamily: FONTS.semiBold,
+    fontSize: 15,
   },
 });

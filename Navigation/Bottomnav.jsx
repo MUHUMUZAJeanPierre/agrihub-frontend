@@ -8,12 +8,12 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import BuyerDashboard from '../Screens/BuyerDashboard';
 import Cart from '../Screens/Cart';
 import ProfileScreen from '../Screens/Profile';
-import Addproduct from '../Screens/Farmer/Addproduct';
+// import Addproduct from '../Screens/Farmer/Addproduct';
 import Farmerdash from '../Screens/Farmer/Farmerdash';
 import Agronomistdash from '../Screens/Agronome/Agronomistdash';
 import Chat from '../Screens/Farmer/Chat';
 import AddBlog from '../Screens/Agronome/AddBlog';
-import AgroChat from '../Screens/Agronome/chat';
+// import AgroChat from '../Screens/Agronome/chat';
 import OrdersScreen from '../Screens/OrdersScreen';
 import SearchScreen from '../Screens/SearchScreen';
 import { useCart } from '../contexts/CartContext';
@@ -204,27 +204,15 @@ export default function BottomNav() {
                                 />
                             ),
                         }}
-                    />
-                    <Tab.Screen
-                        name="Chat"
-                        component={Chat}
+                    />                                                                                                                                 
+                   
+                       <Tab.Screen
+                        name="Orders"
+                        component={FarmerOrderDashboard}
                         options={{
                             tabBarIcon: ({ focused }) => (
                                 <TabBarIcon
-                                    iconName="chatbox-outline"
-                                    focused={focused}
-                                    theme={theme}
-                                />
-                            ),
-                        }}
-                    />
-                    <Tab.Screen
-                        name="Add Product"
-                        component={Addproduct}
-                        options={{
-                            tabBarIcon: ({ focused }) => (
-                                <TabBarIcon
-                                    iconName="add-to-photos"
+                                    iconName="receipt"
                                     iconType="MaterialIcons"
                                     focused={focused}
                                     theme={theme}
@@ -233,8 +221,8 @@ export default function BottomNav() {
                         }}
                     />
                        <Tab.Screen
-                        name="Orders"
-                        component={FarmerOrderDashboard}
+                        name="chat"
+                        component={Chat}
                         options={{
                             tabBarIcon: ({ focused }) => (
                                 <TabBarIcon
@@ -293,19 +281,6 @@ export default function BottomNav() {
                         }}
                     />
 
-                    <Tab.Screen
-                        name="Chat"
-                        component={AgroChat}
-                        options={{
-                            tabBarIcon: ({ focused }) => (
-                                <TabBarIcon
-                                    iconName="chatbox-outline"
-                                    focused={focused}
-                                    theme={theme}
-                                />
-                            ),
-                        }}
-                    />
                     <Tab.Screen
                         name="Add Blog"
                         component={AddBlog}
@@ -486,175 +461,3 @@ const getStyles = (Colors) => {
         },
     });
 };
-
-// import React, { useEffect, useState } from 'react';
-// import { View, Text, StyleSheet, Platform } from 'react-native';
-// import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-// import AsyncStorage from '@react-native-async-storage/async-storage';
-// import Ionicons from 'react-native-vector-icons/Ionicons';
-// import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-
-// import BuyerDashboard from '../Screens/BuyerDashboard';
-// import Cart from '../Screens/Cart';
-// import ProfileScreen from '../Screens/Profile';
-// import Addproduct from '../Screens/Farmer/Addproduct';
-// import Farmerdash from '../Screens/Farmer/Farmerdash';
-// import Agronomistdash from '../Screens/Agronome/Agronomistdash';
-// import Chat from '../Screens/Farmer/Chat';
-// import AddBlog from '../Screens/Agronome/AddBlog';
-// import AgroChat from '../Screens/Agronome/chat';
-// import OrdersScreen from '../Screens/OrdersScreen';
-// import SearchScreen from '../Screens/SearchScreen';
-// import WeatherComp from '../Screens/Agronome/WeatherComp';
-
-// import { useCart } from '../contexts/CartContext';
-// import { useTheme } from '../contexts/ThemeContext';
-
-// const Tab = createBottomTabNavigator();
-
-// export default function BottomNav() {
-//   const [userRole, setUserRole] = useState(null);
-//   const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
-//   const { cartItems } = useCart();
-//   const { theme } = useTheme();
-//   const styles = getStyles(theme);
-//   const isDark = theme === 'dark';
-
-//   // 👇 Development only: Mock login role
-//   useEffect(() => {
-//     const mockRole = async () => {
-//       await AsyncStorage.setItem('@user_data', JSON.stringify({ role: 'buyer' }));
-//     };
-//     mockRole();
-//   }, []);
-
-//   useEffect(() => {
-//     const fetchUserRole = async () => {
-//       try {
-//         const userData = await AsyncStorage.getItem('@user_data');
-//         const parsed = JSON.parse(userData);
-//         setUserRole(parsed?.role || null);
-//       } catch (err) {
-//         console.error('Error loading user role:', err);
-//       }
-//     };
-//     fetchUserRole();
-//   }, []);
-
-//   useEffect(() => {
-//     if (userRole === 'buyer') {
-//       setPendingOrdersCount(3); // mock
-//     }
-//   }, [userRole]);
-
-//   if (!userRole) return null;
-
-//   return (
-//     <Tab.Navigator
-//       screenOptions={{
-//         headerShown: false,
-//         tabBarStyle: styles.tabBarStyle,
-//         tabBarActiveTintColor: styles.activeColor,
-//         tabBarInactiveTintColor: styles.inactiveColor,
-//         tabBarLabelStyle: styles.tabBarLabelStyle,
-//       }}
-//     >
-//       {userRole === 'buyer' && (
-//         <>
-//           <Tab.Screen
-//             name="Home"
-//             component={BuyerDashboard}
-//             options={{
-//               tabBarIcon: ({ color }) => <Ionicons name="home-outline" size={24} color={color} />,
-//             }}
-//           />
-//           <Tab.Screen
-//             name="Search"
-//             component={SearchScreen}
-//             options={{
-//               tabBarIcon: ({ color }) => <Ionicons name="search-outline" size={24} color={color} />,
-//             }}
-//           />
-//           <Tab.Screen
-//             name="Orders"
-//             component={OrdersScreen}
-//             options={{
-//               tabBarIcon: ({ color }) => <Ionicons name="receipt-outline" size={24} color={color} />,
-//               tabBarBadge: pendingOrdersCount > 0 ? pendingOrdersCount : null,
-//             }}
-//           />
-//           <Tab.Screen
-//             name="Cart"
-//             component={Cart}
-//             options={{
-//               tabBarIcon: ({ color }) => <Ionicons name="cart-outline" size={24} color={color} />,
-//               tabBarBadge: cartItems.length > 0 ? cartItems.length : null,
-//             }}
-//           />
-//           <Tab.Screen
-//             name="Profile"
-//             component={ProfileScreen}
-//             options={{
-//               tabBarIcon: ({ color }) => <MaterialIcons name="person-outline" size={24} color={color} />,
-//             }}
-//           />
-//         </>
-//       )}
-
-//       {userRole === 'farmer' && (
-//         <>
-//           <Tab.Screen name="Home" component={Farmerdash} options={{
-//             tabBarIcon: ({ color }) => <Ionicons name="home-outline" size={24} color={color} />
-//           }} />
-//           <Tab.Screen name="Chat" component={Chat} options={{
-//             tabBarIcon: ({ color }) => <Ionicons name="chatbox-outline" size={24} color={color} />
-//           }} />
-//           <Tab.Screen name="Add Product" component={Addproduct} options={{
-//             tabBarIcon: ({ color }) => <MaterialIcons name="add-to-photos" size={24} color={color} />
-//           }} />
-//           <Tab.Screen name="Profile" component={ProfileScreen} options={{
-//             tabBarIcon: ({ color }) => <MaterialIcons name="person-outline" size={24} color={color} />
-//           }} />
-//         </>
-//       )}
-
-//       {userRole === 'plant pathologist' && (
-//         <>
-//           <Tab.Screen name="AgroHome" component={Agronomistdash} options={{
-//             tabBarIcon: ({ color }) => <Ionicons name="home-outline" size={24} color={color} />
-//           }} />
-//           <Tab.Screen name="Weather" component={WeatherComp} options={{
-//             tabBarIcon: ({ color }) => <Ionicons name="partly-sunny-outline" size={24} color={color} />
-//           }} />
-//           <Tab.Screen name="Chat" component={AgroChat} options={{
-//             tabBarIcon: ({ color }) => <Ionicons name="chatbox-outline" size={24} color={color} />
-//           }} />
-//           <Tab.Screen name="Add Blog" component={AddBlog} options={{
-//             tabBarIcon: ({ color }) => <MaterialIcons name="add-to-photos" size={24} color={color} />
-//           }} />
-//           <Tab.Screen name="Profile" component={ProfileScreen} options={{
-//             tabBarIcon: ({ color }) => <MaterialIcons name="person-outline" size={24} color={color} />
-//           }} />
-//         </>
-//       )}
-//     </Tab.Navigator>
-//   );
-// }
-
-// const getStyles = (theme) => {
-//   const isDark = theme === 'dark';
-//   return StyleSheet.create({
-//     tabBarStyle: {
-//       height: Platform.OS === 'ios' ? 80 : 60,
-//       backgroundColor: isDark ? '#1C1C1E' : '#ffffff',
-//       borderTopColor: isDark ? '#333' : '#e0e0e0',
-//     },
-//     tabBarLabelStyle: {
-//       fontSize: 11,
-//       fontWeight: '600',
-//       paddingBottom: 2,
-//     },
-//     activeColor: '#4BA26A',
-//     inactiveColor: isDark ? '#999' : '#666',
-//   });
-// };
