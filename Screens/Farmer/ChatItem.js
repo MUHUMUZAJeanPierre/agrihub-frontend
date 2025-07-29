@@ -5,10 +5,21 @@ import { Image } from 'expo-image';
 import { collection, doc, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { db } from '../../firebase';
 
-export default function ChatItem({ item, navigation, noBorder, currentUser }) {
+export default function ChatItem({ item, navigation, noBorder, currentUser, theme }) {
   const [lastMessage, setLastMessage] = useState(undefined);
 
   const blurhash = 'LEHV6nWB2yk8pyo0adR*.7kCMdnj'; 
+
+  // Dark mode colors
+  const Colors = {
+    background: theme === 'dark' ? '#121212' : '#FFFFFF',
+    surface: theme === 'dark' ? '#1E1E1E' : '#FFFFFF',
+    textPrimary: theme === 'dark' ? '#FFFFFF' : '#000000',
+    textSecondary: theme === 'dark' ? '#B0B0B0' : '#666666',
+    textTertiary: theme === 'dark' ? '#808080' : '#999999',
+    borderColor: theme === 'dark' ? '#3A3A3A' : '#E0E0E0',
+    cardBackground: theme === 'dark' ? '#1A1A1A' : '#FFFFFF',
+  };
 
   const formatDate = (date) => {
     if (!date) return '';
@@ -73,7 +84,8 @@ export default function ChatItem({ item, navigation, noBorder, currentUser }) {
       onPress={openChatRoom}
       style={[
         styles.container,
-        !noBorder && styles.borderBottom,
+        { backgroundColor: Colors.background },
+        !noBorder && { borderBottomColor: Colors.borderColor, borderBottomWidth: 1 },
       ]}
     >
       <Image
@@ -85,14 +97,14 @@ export default function ChatItem({ item, navigation, noBorder, currentUser }) {
 
       <View style={styles.textContainer}>
         <View style={styles.header}>
-          <Text style={styles.username}>
+          <Text style={[styles.username, { color: Colors.textPrimary }]}>
             {item?.name || item?.username || "Unknown User"}
           </Text>
-          <Text style={styles.time}>
+          <Text style={[styles.time, { color: Colors.textTertiary }]}>
             {renderTime() || "Time not available"}
           </Text>
         </View>
-        <Text style={styles.lastMessage}>
+        <Text style={[styles.lastMessage, { color: Colors.textSecondary }]}>
           {renderLastMessage() || "No message available"}
         </Text>
       </View>
@@ -110,10 +122,6 @@ const styles = StyleSheet.create({
     paddingBottom: hp(0.5),
     gap: wp(3),
   },
-  borderBottom: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e5e5', // neutral-200
-  },
   profileImage: {
     height: hp(6),
     width: hp(6),
@@ -130,16 +138,13 @@ const styles = StyleSheet.create({
   username: {
     fontSize: hp(1.8),
     fontWeight: '600',
-    color: '#262626', // text-neutral-800
   },
   time: {
     fontSize: hp(1.6),
     fontWeight: '500',
-    color: '#737373', // text-neutral-500
   },
   lastMessage: {
     fontSize: hp(1.6),
     fontWeight: '500',
-    color: '#737373',
   },
 });

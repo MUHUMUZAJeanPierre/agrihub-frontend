@@ -4,26 +4,40 @@ import { Entypo, Ionicons } from '@expo/vector-icons'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { Image } from 'expo-image';
 
-export default function ChatRoomHeader({ user, navigation }) {
+export default function ChatRoomHeader({ user, navigation, theme }) {
+  // Dark mode colors
+  const Colors = {
+    background: theme === 'dark' ? '#121212' : '#FFFFFF',
+    surface: theme === 'dark' ? '#1E1E1E' : '#FFFFFF',
+    textPrimary: theme === 'dark' ? '#FFFFFF' : '#000000',
+    textSecondary: theme === 'dark' ? '#B0B0B0' : '#666666',
+    textTertiary: theme === 'dark' ? '#808080' : '#999999',
+    borderColor: theme === 'dark' ? '#3A3A3A' : '#E0E0E0',
+    cardBackground: theme === 'dark' ? '#1A1A1A' : '#FFFFFF',
+  };
+
   return (
-    <View style={styles.header}>
+    <View style={[styles.header, { 
+      backgroundColor: Colors.background,
+      borderBottomColor: Colors.borderColor 
+    }]}>
       <View style={styles.leftContainer}>
         <TouchableOpacity onPress={() => navigation?.goBack()}>
-          <Entypo name="chevron-left" size={hp(4)} color="#737373" />
+          <Entypo name="chevron-left" size={hp(4)} color={Colors.textSecondary} />
         </TouchableOpacity>
         <View style={styles.userInfoContainer}>
           <Image
             source={user?.profileUrl}
             style={styles.profileImage}
           />
-          <Text style={styles.username}>
+          <Text style={[styles.username, { color: Colors.textPrimary }]}>
             {user?.username}
           </Text>
         </View>
       </View>
       <View style={styles.rightContainer}>
-        <Ionicons name="call" size={hp(2.8)} color={'#737373'} />
-        <Ionicons name="videocam" size={hp(2.8)} color={'#737373'} />
+        <Ionicons name="call" size={hp(2.8)} color={Colors.textSecondary} />
+        <Ionicons name="videocam" size={hp(2.8)} color={Colors.textSecondary} />
       </View>
     </View>
   )
@@ -36,9 +50,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: 'white',
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e5e5',
   },
   leftContainer: {
     flexDirection: 'row',
@@ -58,7 +70,6 @@ const styles = StyleSheet.create({
   username: {
     fontSize: hp(2.5),
     fontWeight: '500', // font-medium
-    color: '#374151', // text-neutral-700
   },
   rightContainer: {
     flexDirection: 'row',
