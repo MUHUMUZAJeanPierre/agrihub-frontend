@@ -313,11 +313,11 @@ export default function Farmerdash({ navigation }) {
 
       const token = await AsyncStorage.getItem('@auth_token');
 
-      if (!token) {
-        Alert.alert('Authentication required', 'Please log in to view orders.');
-        setOrders([]);
-        return;
-      }
+      // if (!token) {
+      //   Alert.alert('Authentication required', 'Please log in to view orders.');
+      //   setOrders([]);
+      //   return;
+      // }
 
       const response = await fetch(API_ENDPOINTS.ORDERS, {
         method: 'GET',
@@ -498,6 +498,10 @@ export default function Farmerdash({ navigation }) {
     </TouchableOpacity>
   );
 
+  //   const handleReadMore = () => {
+  //   navigation.navigate('ArticleDetail', { id: id }); 
+  // };
+
   const BlogCard = ({ item, onPress }) => (
     <TouchableOpacity onPress={onPress} style={[styles.blogCard, { backgroundColor: Colors.cardBackground }]}>
       <View style={styles.blogImageContainer}>
@@ -539,10 +543,10 @@ export default function Farmerdash({ navigation }) {
         )}
 
         <View style={styles.blogFooter}>
-          <View style={styles.readMoreContainer}>
+          {/* <TouchableOpacity onPress={handleReadMore}  style={styles.readMoreContainer}>
             <Text style={[styles.readMoreText, { color: Colors.success }]}>Read Article</Text>
             <Feather name="arrow-right" size={14} color={Colors.success} />
-          </View>
+          </TouchableOpacity> */}
 
           <View style={styles.actionButtons}>
             <TouchableOpacity key="bookmark" style={styles.actionButton}>
@@ -602,7 +606,7 @@ export default function Farmerdash({ navigation }) {
         />
         {/* Add search bar below header, with reduced top margin */}
         <View style={[styles.searchWrapper, { marginTop: 4 }]}>
-          <View style={[styles.searchContainer, { backgroundColor: Colors.inputBackground }]}>
+          <View style={[styles.searchContainer]}>
             <View style={[styles.searchInputContainer, { backgroundColor: Colors.inputBackground }]}>
               <Ionicons name="search-outline" size={20} color={Colors.textSecondary} />
               <TextInput
@@ -660,10 +664,10 @@ export default function Farmerdash({ navigation }) {
                 Stay ahead of crop diseases
               </Text>
             </View>
-            <TouchableOpacity style={styles.seeAllButton}>
+            {/* <TouchableOpacity style={styles.seeAllButton}>
               <Text style={[styles.seeAllText, { color: Colors.success }]}>See all</Text>
               <Feather name="arrow-right" size={16} color={Colors.success} />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
 
           {blogsLoading ? (
@@ -706,9 +710,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 4, // Reduce space below header
+    // paddingBottom: 4,
   },
   headerTop: {
     flexDirection: 'row',
@@ -1174,7 +1177,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   profileModalContent: {
-    width: "80%",
+    width: "90%",
     borderRadius: 20,
     padding: 25,
     alignItems: "center",

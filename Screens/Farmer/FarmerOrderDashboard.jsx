@@ -515,7 +515,7 @@ const createStyles = (Colors) => StyleSheet.create({
     marginBottom: 24,
   },
   refreshButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: '#4CAF50',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,

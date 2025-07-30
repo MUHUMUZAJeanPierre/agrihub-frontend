@@ -16,6 +16,7 @@ import Security from '../Screens/Security';
 import { useAuth } from '../contexts/AuthContext';
 import ChatItem from '../Screens/Farmer/ChatItem';
 import ChatRoom from '../Screens/Farmer/chatRoom';
+import ArticleDetailScreen from '../Screens/Farmer/ArticleDetailScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -60,6 +61,8 @@ export default function StackNavigation() {
                 <Stack.Screen name="farmerblog" component={Detail} />
                 <Stack.Screen name="chattem" component={ChatItem} />
                 <Stack.Screen name="chatRoom" component={ChatRoom} />
+                {/* <Stack.Screen name="ArticleDetail" component={ArticleDetailScreen} /> */}
+
               </>
             )}
             {logged === 'buyer' && (

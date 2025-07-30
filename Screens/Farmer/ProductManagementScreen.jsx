@@ -44,18 +44,18 @@ const THEME_COLORS = {
     text: '#1A202C',
     textSecondary: '#718096',
     textMuted: '#A0AEC0',
-    primary: '#10B981',
+    primary: '#4CAF50',
     primaryLight: '#D1FAE5',
     secondary: '#3B82F6',
     accent: '#F59E0B',
     shadow: '#000000',
     placeholder: '#9CA3AF',
-    success: '#10B981',
+    success: '#4CAF50',
     warning: '#F59E0B',
     error: '#EF4444',
     border: '#E5E7EB',
-    gradientStart: '#10B981',
-    gradientEnd: '#059669',
+    gradientStart: '#4CAF50',
+    gradientEnd: '#4CAF50',
   },
   dark: {
     background: '#000000',
@@ -63,18 +63,18 @@ const THEME_COLORS = {
     text: '#F9FAFB',
     textSecondary: '#D1D5DB',
     textMuted: '#9CA3AF',
-    primary: '#10B981',
-    primaryLight: '#064E3B',
+    primary: '#4CAF50',
+    primaryLight: '#4CAF50',
     secondary: '#3B82F6',
     accent: '#F59E0B',
     shadow: '#000000',
     placeholder: '#6B7280',
-    success: '#10B981',
+    success: '#4CAF50',
     warning: '#F59E0B',
     error: '#EF4444',
     border: '#374151',
-    gradientStart: '#10B981',
-    gradientEnd: '#059669',
+    gradientStart: '#4CAF50',
+    gradientEnd: '#4CAF50',
   },
 };
 
@@ -551,7 +551,7 @@ const ProductManagementScreen = () => {
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
       <Ionicons name="basket-outline" size={80} color={colors.textMuted} />
-      <Text style={[styles.emptyStateTitle, { color: colors.text }]}>{t('noProductsFound')}</Text>
+      <Text style={[styles.emptyStateTitle, { color: colors.text }]}>{t('No Products Found')}</Text>
       <Text style={[styles.emptyStateSubtitle, { color: colors.textSecondary }]}>
         {searchQuery || selectedCategory !== 'all' 
           ? t('tryAdjustingSearch')
@@ -851,7 +851,7 @@ const ProductManagementScreen = () => {
             </View>
           </Animated.View>
           <Text style={styles.loadingText}>
-            {t('loadingProducts')}
+            {t('Loading Products')}
           </Text>
         </View>
       </View>
@@ -1278,7 +1278,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: '#10B981',
+    backgroundColor: '#4CAF50',
     opacity: 0.6,
   },
 });

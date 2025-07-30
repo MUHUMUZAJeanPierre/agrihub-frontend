@@ -20,9 +20,9 @@ import { useAuth  } from '../contexts/AuthContext';
 import { wp, hp, fontSize, padding, margin, borderRadius, iconSize, fontSizes, spacing } from '../utils/responsive';
 
 const LightColors = {
-  primary: '#48BB78',
-  primaryDark: '#48BB78',
-  primaryLight: '#48BB78',
+  primary: '#4CAF50',
+  primaryDark: '#4CAF50',
+  primaryLight: '#4CAF50',
   secondary: '#FF6B35',
   secondaryLight: '#FF8A50',
   accent: '#FFA726',
@@ -32,8 +32,8 @@ const LightColors = {
   textPrimary: '#1A202C',
   textSecondary: '#4A5568',
   textTertiary: '#718096',
-  success: '#48BB78',
-  successLight: '#68D391',
+  success: '#4CAF50',
+  successLight: '#4CAF50',
   warning: '#ED8936',
   error: '#F56565',
   cardBackground: '#FFFFFF',
@@ -43,7 +43,7 @@ const LightColors = {
 };
 
 const DarkColors = {
-  primary: '#48BB78',
+  primary: '#4CAF50',
   primaryDark: '#3182CE',
   primaryLight: '#90CDF4',
   secondary: '#FF6B35',
@@ -55,8 +55,8 @@ const DarkColors = {
   textPrimary: '#F7FAFC',
   textSecondary: '#CBD5E0',
   textTertiary: '#A0AEC0',
-  success: '#68D391',
-  successLight: '#9AE6B4',
+  success: '#4CAF50',
+  successLight: '#4CAF50',
   warning: '#F6AD55',
   error: '#FC8181',
   cardBackground: '#1A1A1A',

@@ -204,9 +204,9 @@ export default function BottomNav() {
                                 />
                             ),
                         }}
-                    />                                                                                                                                 
-                   
-                       <Tab.Screen
+                    />
+
+                    <Tab.Screen
                         name="Orders"
                         component={FarmerOrderDashboard}
                         options={{
@@ -220,7 +220,7 @@ export default function BottomNav() {
                             ),
                         }}
                     />
-                       <Tab.Screen
+                    <Tab.Screen
                         name="chat"
                         component={Chat}
                         options={{
@@ -234,7 +234,7 @@ export default function BottomNav() {
                             ),
                         }}
                     />
-                       <Tab.Screen
+                    <Tab.Screen
                         name="Product Detail"
                         component={ProductManagementScreen}
                         options={{
@@ -274,6 +274,20 @@ export default function BottomNav() {
                             tabBarIcon: ({ focused }) => (
                                 <TabBarIcon
                                     iconName="home-outline"
+                                    focused={focused}
+                                    theme={theme}
+                                />
+                            ),
+                        }}
+                    />
+                    <Tab.Screen
+                        name="chat"
+                        component={Chat}
+                        options={{
+                            tabBarIcon: ({ focused }) => (
+                                <TabBarIcon
+                                    iconName="receipt"
+                                    iconType="MaterialIcons"
                                     focused={focused}
                                     theme={theme}
                                 />
